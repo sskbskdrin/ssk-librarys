@@ -17,7 +17,6 @@ import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -117,7 +116,7 @@ public class BaseActivity extends FragmentActivity implements IView {
 
     public void showToast(String text, boolean isLong) {
         if (!isFinishing()) {
-            Toast.makeText(this, text, isLong ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT).show();
+            mProxy.showToast(text, isLong);
         }
     }
 
