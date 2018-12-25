@@ -22,8 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author ex-keayuan001
- * @date 17/10/19
+ * Created by sskbskdrin on 2015/6/2.
  */
 @SuppressLint("Registered")
 public class BaseActivity extends FragmentActivity implements IView {

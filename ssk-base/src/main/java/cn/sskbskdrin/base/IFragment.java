@@ -16,7 +16,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 /**
- * Created by kay on 2015/5/25.
+ * Created by sskbskdrin on 2015/5/25.
  * Fragment 基类
  */
 public abstract class IFragment extends Fragment implements IView, Handler.Callback {
@@ -103,6 +103,7 @@ public abstract class IFragment extends Fragment implements IView, Handler.Callb
     /**
      * 当{@link IFragment#getLayoutId()} 返回值小于等于0时调用，可动态创建view
      *
+     * @param inflater 构建view用的inflater
      * @return 返回要显示的view
      */
     protected View generateRootView(LayoutInflater inflater) {

@@ -18,9 +18,7 @@ import android.widget.Toast;
 import java.lang.ref.WeakReference;
 
 /**
- * Created by ex-keayuan001 on 2018/9/19.
- *
- * @author ex-keayuan001
+ * Created by sskbskdrin on 2018/9/19.
  */
 public final class ProxyView {
 

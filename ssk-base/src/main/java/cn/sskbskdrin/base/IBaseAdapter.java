@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by keayuan on 2015/6/2.
+ * Created by sskbskdrin on 2015/6/2.
  */
 public abstract class IBaseAdapter<T> extends BaseAdapter implements IView {
     private static final int TAG_VALUE = 0xff0000ff;
@@ -49,7 +49,7 @@ public abstract class IBaseAdapter<T> extends BaseAdapter implements IView {
     /**
      * 更新数据，并通知view数据改变
      *
-     * @param list
+     * @param list 更新的list
      */
     public void updateList(List<T> list) {
         mList = list;
@@ -149,9 +149,9 @@ public abstract class IBaseAdapter<T> extends BaseAdapter implements IView {
     }
 
     /**
-     * @param view
-     * @param position
-     * @param t
+     * @param view     要操作的view
+     * @param position current position
+     * @param t        当前位置对应的bean
      */
     protected abstract void convert(View view, int position, T t);
 }
