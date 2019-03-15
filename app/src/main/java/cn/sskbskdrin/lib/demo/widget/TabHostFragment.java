@@ -1,28 +1,32 @@
-package cn.sskbskdrin.lib.demo;
+package cn.sskbskdrin.lib.demo.widget;
 
-import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import cn.sskbskdrin.base.BaseActivity;
+import cn.sskbskdrin.base.IFragment;
+import cn.sskbskdrin.lib.demo.R;
 import cn.sskbskdrin.widget.TabHostWidget;
 import cn.sskbskdrin.widget.TabWidget;
 
-public class TabHostActivity extends BaseActivity {
+public class TabHostFragment extends IFragment {
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_tab_host);
-        TabHostWidget tabHostWidget = findViewById(R.id.tab_host_tab_host);
+    protected int getLayoutId() {
+        return R.layout.f_tab_host_layout;
+    }
+
+    @Override
+    protected void initView() {
+        TabHostWidget tabHostWidget = getView(R.id.tab_host_tab_host);
         List<Class<? extends Fragment>> list = new ArrayList<>();
-        list.add(Test1Fragment.class);
-        list.add(Test2Fragment.class);
-        list.add(Test3Fragment.class);
         list.add(TestFragment.class);
-        tabHostWidget.setPager(getSupportFragmentManager(), list);
+        list.add(TestFragment.class);
+        list.add(TestFragment.class);
+        list.add(TestFragment.class);
+        tabHostWidget.setPager(getChildFragmentManager(), list);
         TabWidget tabWidget = tabHostWidget.getTabWidget();
 
         tabWidget.setItemLayout(R.layout.tab_host_item_layout);
@@ -46,5 +50,31 @@ public class TabHostActivity extends BaseActivity {
         });
         tabWidget.setIndicatorColor(0);
         tabWidget.setLineColor(0xffeeeeee);
+    }
+
+    @Override
+    protected void initData() {
+
+    }
+
+    public static class TestFragment extends IFragment {
+        static int count = 0;
+
+        @Override
+        protected int getLayoutId() {
+            return R.layout.simple_text_layout;
+        }
+
+        @Override
+        protected void initView() {
+            TextView text = getView(R.id.simple_text);
+            text.setTextSize(20 * getResources().getDisplayMetrics().density);
+            text.setText("Test " + ++count);
+        }
+
+        @Override
+        protected void initData() {
+
+        }
     }
 }

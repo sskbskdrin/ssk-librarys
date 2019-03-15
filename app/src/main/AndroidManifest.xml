@@ -17,8 +17,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".CommonFragmentActivity"/>
-        <activity android:name=".FlowActivity"/>
-        <activity android:name=".TabHostActivity"/>
     </application>
 
 </manifest>

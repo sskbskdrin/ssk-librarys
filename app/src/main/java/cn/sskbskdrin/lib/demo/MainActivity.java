@@ -12,6 +12,9 @@ import java.util.List;
 import cn.sskbskdrin.base.BaseActivity;
 import cn.sskbskdrin.lib.demo.simple.SampleListFragment;
 import cn.sskbskdrin.lib.demo.simple.SimpleAdapter;
+import cn.sskbskdrin.lib.demo.widget.FlowFragment;
+import cn.sskbskdrin.lib.demo.widget.PickerFragment;
+import cn.sskbskdrin.lib.demo.widget.TabHostFragment;
 
 public class MainActivity extends BaseActivity {
 
@@ -19,8 +22,9 @@ public class MainActivity extends BaseActivity {
 
     static {
         mList.add(new ClassItem(SampleListFragment.class, "SampleList", false));
-        mList.add(new ClassItem(FlowActivity.class, "FlowLayout", true));
-        mList.add(new ClassItem(TabHostActivity.class, "TabHost", true));
+        mList.add(new ClassItem(FlowFragment.class, "FlowLayout", false));
+        mList.add(new ClassItem(TabHostFragment.class, "TabHost", false));
+        mList.add(new ClassItem(PickerFragment.class, "PickerView", false));
     }
 
     @Override

@@ -21,4 +21,5 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(':ssk-all')
+    implementation 'cn.sskbskdrin:pull:0.0.2'
 }

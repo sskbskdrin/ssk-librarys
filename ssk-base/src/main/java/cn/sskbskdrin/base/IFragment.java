@@ -187,7 +187,7 @@ public abstract class IFragment extends Fragment implements IView, Handler.Callb
 
     @Override
     public boolean isFinish() {
-        return mActivity == null;
+        return mActivity == null || mActivity.isFinishing();
     }
 
     @SuppressWarnings("unchecked")

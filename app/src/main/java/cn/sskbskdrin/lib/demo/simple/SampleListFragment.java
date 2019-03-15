@@ -9,13 +9,11 @@ import android.widget.ListView;
 import java.util.ArrayList;
 import java.util.List;
 
-import cn.sskbskdrin.base.IBaseAdapter;
 import cn.sskbskdrin.base.IFragment;
 
 public class SampleListFragment extends IFragment implements OnItemClickListener {
 
     public static final String LIST_DATA = "list_data";
-    public static final String LIST_ADAPTER = "list_adapter";
     private ListView mListView;
     private OnItemClickListener mOnItemClickListener;
 
@@ -37,18 +35,15 @@ public class SampleListFragment extends IFragment implements OnItemClickListener
 
     @Override
     protected void initData() {
-        IBaseAdapter<Object> mListAdapter;
+        List<Object> list = null;
         if (mBundle != null) {
-            List<Object> list = (List<Object>) mBundle.getSerializable(LIST_DATA);
-            if (list != null) {
-                mListAdapter = new SimpleAdapter<>(getActivity(), list);
-                mListView.setAdapter(mListAdapter);
-                return;
-            }
+            list = (List<Object>) mBundle.getSerializable(LIST_DATA);
         }
-        List<Object> list = new ArrayList<>();
-        for (int i = 0; i < 20; i++) {
-            list.add("Simple item +" + i);
+        if (list == null) {
+            list = new ArrayList<>();
+            for (int i = 0; i < 20; i++) {
+                list.add("Simple item +" + i);
+            }
         }
         mListView.setAdapter(new SimpleAdapter<>(getActivity(), list));
     }
