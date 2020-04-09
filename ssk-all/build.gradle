@@ -25,4 +25,5 @@ dependencies {
     api project(':ssk-log')
     api project(':ssk-utils')
     api project(':ssk-view')
+    api project(path: ':ssk-base-fragment')
 }

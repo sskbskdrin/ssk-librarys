@@ -3,21 +3,20 @@ package cn.sskbskdrin.widget;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewCompat;
-import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.util.SparseArray;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.LinearLayout;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
 /**
  * Created by ex-keayuan001 on 2018/5/24.
@@ -35,11 +34,11 @@ public class TabHostWidget extends LinearLayout {
         this(context, null);
     }
 
-    public TabHostWidget(Context context, @Nullable AttributeSet attrs) {
+    public TabHostWidget(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public TabHostWidget(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public TabHostWidget(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }
@@ -53,7 +52,8 @@ public class TabHostWidget extends LinearLayout {
     private void init() {
         setOrientation(VERTICAL);
         mViewPager = new Pager(getContext());
-        mViewPager.setId(ViewCompat.generateViewId());
+        mViewPager.setId(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 ? View.generateViewId() :
+            0xff00003f);
         mViewPager.setOffscreenPageLimit(5);
         addView(mViewPager, new LayoutParams(LayoutParams.MATCH_PARENT, 0, 1));
         mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
@@ -127,7 +127,7 @@ public class TabHostWidget extends LinearLayout {
 
         private boolean mEnableScroll = true;
 
-        public Pager(@NonNull Context context) {
+        public Pager(Context context) {
             super(context);
         }
 

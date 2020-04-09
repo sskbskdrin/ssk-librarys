@@ -1,22 +1,21 @@
 package cn.sskbskdrin.lib.demo;
 
 import android.os.Bundle;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ListView;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import cn.sskbskdrin.base.BaseActivity;
+import cn.sskbskdrin.base.IFragmentActivity;
 import cn.sskbskdrin.lib.demo.simple.SampleListFragment;
 import cn.sskbskdrin.lib.demo.simple.SimpleAdapter;
+import cn.sskbskdrin.lib.demo.widget.BannerFragment;
 import cn.sskbskdrin.lib.demo.widget.FlowFragment;
 import cn.sskbskdrin.lib.demo.widget.PickerFragment;
 import cn.sskbskdrin.lib.demo.widget.TabHostFragment;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends IFragmentActivity {
 
     private static List<ClassItem> mList = new ArrayList<>();
 
@@ -25,6 +24,7 @@ public class MainActivity extends BaseActivity {
         mList.add(new ClassItem(FlowFragment.class, "FlowLayout", false));
         mList.add(new ClassItem(TabHostFragment.class, "TabHost", false));
         mList.add(new ClassItem(PickerFragment.class, "PickerView", false));
+        mList.add(new ClassItem(BannerFragment.class, "BannerView", false));
     }
 
     @Override
@@ -33,17 +33,14 @@ public class MainActivity extends BaseActivity {
         setContentView(R.layout.activity_main);
         ListView listView = findViewById(R.id.main_list);
         listView.setAdapter(new SimpleAdapter<>(this, mList));
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                ClassItem item = (ClassItem) parent.getAdapter().getItem(position);
-                if (item.isActivity) {
-                    openActivity(item.clazz);
-                } else {
-                    Bundle bundle = new Bundle();
-                    bundle.putString("fragment", item.clazz.getName());
-                    openActivity(CommonFragmentActivity.class, bundle);
-                }
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            ClassItem item = (ClassItem) parent.getAdapter().getItem(position);
+            if (item.isActivity) {
+                openActivity(item.clazz);
+            } else {
+                Bundle bundle = new Bundle();
+                bundle.putString("fragment", item.clazz.getName());
+                openActivity(CommonFragmentActivity.class, bundle);
             }
         });
     }

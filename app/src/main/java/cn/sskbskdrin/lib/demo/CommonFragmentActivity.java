@@ -1,16 +1,16 @@
 package cn.sskbskdrin.lib.demo;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import cn.sskbskdrin.base.BaseActivity;
+import androidx.fragment.app.FragmentTransaction;
+import cn.sskbskdrin.base.IFragment;
+import cn.sskbskdrin.base.IFragmentActivity;
 
-public class CommonFragmentActivity extends BaseActivity {
-    private List<Fragment> mFragments;
+public class CommonFragmentActivity extends IFragmentActivity {
+    private List<IFragment> mFragments;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,7 +21,7 @@ public class CommonFragmentActivity extends BaseActivity {
         if (bundle != null) {
             String name = bundle.getString("fragment");
             try {
-                Fragment fragment = (Fragment) Class.forName(name).newInstance();
+                IFragment fragment = (IFragment) Class.forName(name).newInstance();
                 replaceFragment(fragment);
             } catch (InstantiationException e) {
                 e.printStackTrace();
@@ -33,10 +33,10 @@ public class CommonFragmentActivity extends BaseActivity {
         }
     }
 
-    public void replaceFragment(Fragment fragment) {
+    public void replaceFragment(IFragment fragment) {
         mFragments.add(fragment);
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left);
+//        transaction.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left);
         transaction.replace(R.id.activity_fragment_content, fragment).commit();
         // 根据当前fragment页面改变菜单按钮功能
     }
@@ -48,7 +48,7 @@ public class CommonFragmentActivity extends BaseActivity {
         // 根据当前fragment页面改变菜单按钮功能
     }
 
-    private Fragment getCurrentFragment() {
+    private IFragment getCurrentFragment() {
         return mFragments.get(mFragments.size() - 1);
     }
 

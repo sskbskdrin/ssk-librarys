@@ -1,25 +1,23 @@
 package cn.sskbskdrin.base;
 
 import android.app.Activity;
-import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
+
+import androidx.fragment.app.Fragment;
 
 /**
  * Created by sskbskdrin on 2015/5/25.
  * Fragment 基类
  */
-public abstract class IFragment extends Fragment implements IView, Handler.Callback {
+public abstract class IFragment extends Fragment implements IA, Handler.Callback {
     protected final String TAG;
     /**
      * 在initData中可直接使用
@@ -30,12 +28,10 @@ public abstract class IFragment extends Fragment implements IView, Handler.Callb
 
     private Handler mHandler;
     private Activity mActivity;
-    protected final ProxyView mProxy;
 
     public IFragment() {
         super();
         TAG = getClass().getSimpleName();
-        mProxy = new ProxyView(this);
     }
 
     /**
@@ -51,7 +47,7 @@ public abstract class IFragment extends Fragment implements IView, Handler.Callb
     /**
      * 在{@link IFragment#onActivityCreated(Bundle)}被调用时调用
      */
-    protected abstract void initData();
+    protected void initData() {}
 
     @Override
     public boolean handleMessage(Message msg) {
@@ -78,8 +74,9 @@ public abstract class IFragment extends Fragment implements IView, Handler.Callb
     public final View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (mRootView == null) {
             Log.v(TAG, "onCreateView new");
-            if (getLayoutId() > 0) {
-                mRootView = inflater.inflate(getLayoutId(), null);
+            int layoutId = getLayoutId();
+            if (layoutId > 0) {
+                mRootView = inflater.inflate(layoutId, null);
             }
         }
         if (mRootView == null) {
@@ -118,38 +115,8 @@ public abstract class IFragment extends Fragment implements IView, Handler.Callb
         initData();
     }
 
-    public final View getRootView() {
+    protected final View getRootView() {
         return mRootView;
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        Log.v(TAG, "onStart");
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.v(TAG, "onResume");
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        Log.v(TAG, "onPause");
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        Log.v(TAG, "onStop");
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        Log.v(TAG, "onDestroyView");
     }
 
     @Override
@@ -170,16 +137,6 @@ public abstract class IFragment extends Fragment implements IView, Handler.Callb
         Log.v(TAG, "onDetach");
     }
 
-    public void showToast(String text) {
-        showToast(text, false);
-    }
-
-    public void showToast(String text, boolean isLong) {
-        if (mActivity != null && !mActivity.isFinishing()) {
-            Toast.makeText(mActivity, text, isLong ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT).show();
-        }
-    }
-
     @Override
     public Context context() {
         return mActivity;
@@ -196,15 +153,15 @@ public abstract class IFragment extends Fragment implements IView, Handler.Callb
         return (T) mRootView.findViewById(id);
     }
 
-    @Override
-    public Dialog generateLoadingDialog(String content) {
-        return ProgressDialog.show(mActivity, "", content);
-    }
-
     protected Handler getMainHandler() {
         if (mHandler == null) {
             mHandler = new Handler(Looper.getMainLooper(), this);
         }
         return mHandler;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        requestPermissionsResult(requestCode, permissions, grantResults);
     }
 }

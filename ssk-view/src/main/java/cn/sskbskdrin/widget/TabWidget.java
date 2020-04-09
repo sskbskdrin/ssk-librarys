@@ -31,7 +31,6 @@ import java.util.Set;
 
 /**
  * @author ex-keayuan001
- * @date 2018/5/23
  */
 public class TabWidget extends LinearLayout implements View.OnClickListener {
     private static final String TAG = "TabWidget";
@@ -240,6 +239,10 @@ public class TabWidget extends LinearLayout implements View.OnClickListener {
         }
         mAdapter.mList.add(tab);
         notifyDataSetChanged();
+    }
+
+    public void addTab(String name, int normalResId, int selectResId, String tip) {
+        addTab(new Tab(name, normalResId, selectResId, tip));
     }
 
     public void setAdapter(ListAdapter adapter) {
@@ -588,9 +591,9 @@ public class TabWidget extends LinearLayout implements View.OnClickListener {
          * states to colors.
          */
         public ColorState() {
-            super(new int[][]{new int[]{android.R.attr.state_pressed}, new int[0]}, new int[]{Color.rgb
-                (mFocusColor[1], mFocusColor[2], mFocusColor[3]), Color.rgb(mNormalColor[1], mNormalColor[2],
-                mNormalColor[3])});
+            super(new int[][]{new int[]{android.R.attr.state_pressed}, new int[0]},
+                new int[]{Color.rgb(mFocusColor[1], mFocusColor[2], mFocusColor[3]), Color.rgb(mNormalColor[1],
+                    mNormalColor[2], mNormalColor[3])});
         }
 
         public void setLevel(int level) {

@@ -1,9 +1,6 @@
 package cn.sskbskdrin.base;
 
-import android.app.Dialog;
 import android.content.Context;
-import android.support.annotation.IdRes;
-import android.support.annotation.LayoutRes;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,9 +16,8 @@ public abstract class IBaseAdapter<T> extends BaseAdapter implements IView {
     private static final int TAG_VALUE = 0xff0000ff;
     protected Context mContext;
     protected List<T> mList;
-    protected ProxyView mProxy;
 
-    private int mLayoutId = 0;
+    private int mLayoutId;
 
     private View mCurrentView;
 
@@ -29,8 +25,7 @@ public abstract class IBaseAdapter<T> extends BaseAdapter implements IView {
         this(context, list, 0);
     }
 
-    public IBaseAdapter(Context context, List<T> list, @LayoutRes int layoutId) {
-        mProxy = new ProxyView(this);
+    public IBaseAdapter(Context context, List<T> list, int layoutId) {
         mContext = context;
         mLayoutId = layoutId;
         mList = list;
@@ -94,7 +89,7 @@ public abstract class IBaseAdapter<T> extends BaseAdapter implements IView {
     }
 
     @SuppressWarnings("unchecked")
-    public final <V extends View> V getView(@IdRes int id) {
+    public final <V extends View> V getView(int id) {
         SparseArray<View> array = (SparseArray<View>) mCurrentView.getTag(TAG_VALUE);
         if (array == null) {
             array = new SparseArray<>();
@@ -113,25 +108,14 @@ public abstract class IBaseAdapter<T> extends BaseAdapter implements IView {
         return mContext;
     }
 
-    @Override
-    public boolean isFinish() {
-        return mContext == null;
-    }
-
-    @Override
-    public Dialog generateLoadingDialog(String content) {
-        return null;
-    }
-
     @SuppressWarnings("unchecked")
-    protected final <V extends View> V getView(View parent, @IdRes int id) {
+    protected final <V extends View> V getView(View parent, int id) {
         if (parent != null) {
             return (V) parent.findViewById(id);
         }
         return null;
     }
 
-    @LayoutRes
     protected int getLayoutId(int type) {
         return mLayoutId;
     }

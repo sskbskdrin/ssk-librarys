@@ -27,3 +27,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     api "com.android.support:support-v4:$support_v"
 }
+
+apply from: "bintray.gradle"

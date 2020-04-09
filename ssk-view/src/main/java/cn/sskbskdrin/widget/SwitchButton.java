@@ -13,7 +13,6 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.v4.content.ContextCompat;
 import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
@@ -43,10 +42,10 @@ public class SwitchButton extends CompoundButton {
     public static final int DEFAULT_ANIMATION_DURATION = 250;
     public static final int DEFAULT_TINT_COLOR = 0x327FC2;
 
-    private static int[] CHECKED_PRESSED_STATE = new int[]{android.R.attr.state_checked, android.R.attr
-        .state_enabled, android.R.attr.state_pressed};
-    private static int[] UNCHECKED_PRESSED_STATE = new int[]{-android.R.attr.state_checked, android.R.attr
-        .state_enabled, android.R.attr.state_pressed};
+    private static int[] CHECKED_PRESSED_STATE = new int[]{android.R.attr.state_checked, android.R.attr.state_enabled
+        , android.R.attr.state_pressed};
+    private static int[] UNCHECKED_PRESSED_STATE = new int[]{-android.R.attr.state_checked,
+        android.R.attr.state_enabled, android.R.attr.state_pressed};
 
     private Drawable mThumbDrawable, mBackDrawable;
     private ColorStateList mBackColor, mThumbColor;
@@ -219,8 +218,8 @@ public class SwitchButton extends CompoundButton {
 
 
     private Layout makeLayout(CharSequence text) {
-        return new StaticLayout(text, mTextPaint, (int) Math.ceil(Layout.getDesiredWidth(text, mTextPaint)), Layout
-            .Alignment.ALIGN_CENTER, 1.f, 0, false);
+        return new StaticLayout(text, mTextPaint, (int) Math.ceil(Layout.getDesiredWidth(text, mTextPaint)),
+            Layout.Alignment.ALIGN_CENTER, 1.f, 0, false);
     }
 
     @Override
@@ -321,8 +320,8 @@ public class SwitchButton extends CompoundButton {
         if (mOnLayout != null && mOffLayout != null) {
             if (mThumbMargin.top + mThumbMargin.bottom > 0) {
                 // back is higher than thumb
-                float addition = (getMeasuredHeight() - getPaddingBottom() - getPaddingTop() - mThumbSizeF.y -
-                    mThumbMargin.top - mThumbMargin.bottom) / 2;
+                float addition =
+                    (getMeasuredHeight() - getPaddingBottom() - getPaddingTop() - mThumbSizeF.y - mThumbMargin.top - mThumbMargin.bottom) / 2;
                 thumbTop += addition;
             }
         }
@@ -335,13 +334,12 @@ public class SwitchButton extends CompoundButton {
         mThumbRectF.set(thumbLeft, thumbTop, thumbLeft + mThumbSizeF.x, thumbTop + mThumbSizeF.y);
 
         float backLeft = mThumbRectF.left - mThumbMargin.left;
-        float textDiffWidth = Math.min(0, (Math.max(mThumbSizeF.x * mBackMeasureRatio, mThumbSizeF.x + mTextWidth) -
-            mThumbRectF.width() - mTextWidth) / 2);
-        float textDiffHeight = Math.min(0, (mThumbRectF.height() + mThumbMargin.top + mThumbMargin.bottom -
-            mTextHeight) / 2);
-        mBackRectF.set(backLeft + textDiffWidth, mThumbRectF.top - mThumbMargin.top + textDiffHeight, backLeft +
-            mThumbMargin.left + Math.max(mThumbSizeF.x * mBackMeasureRatio, mThumbSizeF.x + mTextWidth) +
-            mThumbMargin.right - textDiffWidth, mThumbRectF.bottom + mThumbMargin.bottom - textDiffHeight);
+        float textDiffWidth = Math.min(0,
+            (Math.max(mThumbSizeF.x * mBackMeasureRatio, mThumbSizeF.x + mTextWidth) - mThumbRectF.width() - mTextWidth) / 2);
+        float textDiffHeight = Math.min(0,
+            (mThumbRectF.height() + mThumbMargin.top + mThumbMargin.bottom - mTextHeight) / 2);
+        mBackRectF.set(backLeft + textDiffWidth, mThumbRectF.top - mThumbMargin.top + textDiffHeight,
+            backLeft + mThumbMargin.left + Math.max(mThumbSizeF.x * mBackMeasureRatio, mThumbSizeF.x + mTextWidth) + mThumbMargin.right - textDiffWidth, mThumbRectF.bottom + mThumbMargin.bottom - textDiffHeight);
 
         mSafeRectF.set(mThumbRectF.left, 0, mBackRectF.right - mThumbMargin.right - mThumbRectF.width(), 0);
 
@@ -349,13 +347,13 @@ public class SwitchButton extends CompoundButton {
         mBackRadius = Math.min(minBackRadius, mBackRadius);
 
         if (mBackDrawable != null) {
-            mBackDrawable.setBounds((int) mBackRectF.left, (int) mBackRectF.top, ceil(mBackRectF.right), ceil
-                (mBackRectF.bottom));
+            mBackDrawable.setBounds((int) mBackRectF.left, (int) mBackRectF.top, ceil(mBackRectF.right),
+                ceil(mBackRectF.bottom));
         }
 
         if (mOnLayout != null) {
-            float marginOnX = mBackRectF.left + (mBackRectF.width() - mThumbRectF.width() - mThumbMargin.right -
-                mOnLayout.getWidth()) / 2 + (mThumbMargin.left < 0 ? mThumbMargin.left * -0.5f : 0);
+            float marginOnX =
+                mBackRectF.left + (mBackRectF.width() - mThumbRectF.width() - mThumbMargin.right - mOnLayout.getWidth()) / 2 + (mThumbMargin.left < 0 ? mThumbMargin.left * -0.5f : 0);
             if (!mIsBackUseDrawable && mAutoAdjustTextPosition) {
                 marginOnX += mBackRadius / 4;
             }
@@ -364,15 +362,14 @@ public class SwitchButton extends CompoundButton {
         }
 
         if (mOffLayout != null) {
-            float marginOffX = mBackRectF.right - (mBackRectF.width() - mThumbRectF.width() - mThumbMargin.left -
-                mOffLayout.getWidth()) / 2 - mOffLayout.getWidth() + (mThumbMargin.right < 0 ? mThumbMargin.right *
-                0.5f : 0);
+            float marginOffX =
+                mBackRectF.right - (mBackRectF.width() - mThumbRectF.width() - mThumbMargin.left - mOffLayout.getWidth()) / 2 - mOffLayout.getWidth() + (mThumbMargin.right < 0 ? mThumbMargin.right * 0.5f : 0);
             if (!mIsBackUseDrawable && mAutoAdjustTextPosition) {
                 marginOffX -= mBackRadius / 4;
             }
             float marginOffY = mBackRectF.top + (mBackRectF.height() - mOffLayout.getHeight()) / 2;
-            mTextOffRectF.set(marginOffX, marginOffY, marginOffX + mOffLayout.getWidth(), marginOffY + mOffLayout
-                .getHeight());
+            mTextOffRectF.set(marginOffX, marginOffY, marginOffX + mOffLayout.getWidth(),
+                marginOffY + mOffLayout.getHeight());
         }
     }
 
@@ -432,13 +429,13 @@ public class SwitchButton extends CompoundButton {
         Layout switchText = getProcess() > 0.5 ? mOnLayout : mOffLayout;
         RectF textRectF = getProcess() > 0.5 ? mTextOnRectF : mTextOffRectF;
         if (switchText != null && textRectF != null) {
-            int alpha = (int) (255 * (getProcess() >= 0.75 ? getProcess() * 4 - 3 : (getProcess() < 0.25 ? 1 -
-                getProcess() * 4 : 0)));
+            int alpha = (int) (255 * (getProcess() >= 0.75 ? getProcess() * 4 - 3 : (getProcess() < 0.25 ?
+                1 - getProcess() * 4 : 0)));
             int textColor = getProcess() > 0.5 ? mOnTextColor : mOffTextColor;
             int colorAlpha = Color.alpha(textColor);
             colorAlpha = colorAlpha * alpha / 255;
-            switchText.getPaint().setARGB(colorAlpha, Color.red(textColor), Color.green(textColor), Color.blue
-                (textColor));
+            switchText.getPaint().setARGB(colorAlpha, Color.red(textColor), Color.green(textColor),
+                Color.blue(textColor));
             canvas.save();
             canvas.translate(textRectF.left, textRectF.top);
             switchText.draw(canvas);
@@ -449,8 +446,8 @@ public class SwitchButton extends CompoundButton {
         mPresentThumbRectF.set(mThumbRectF);
         mPresentThumbRectF.offset(mProcess * mSafeRectF.width(), 0);
         if (mIsThumbUseDrawable) {
-            mThumbDrawable.setBounds((int) mPresentThumbRectF.left, (int) mPresentThumbRectF.top, ceil
-                (mPresentThumbRectF.right), ceil(mPresentThumbRectF.bottom));
+            mThumbDrawable.setBounds((int) mPresentThumbRectF.left, (int) mPresentThumbRectF.top,
+                ceil(mPresentThumbRectF.right), ceil(mPresentThumbRectF.bottom));
             mThumbDrawable.draw(canvas);
         } else {
             mPaint.setColor(mCurrThumbColor);
@@ -723,7 +720,7 @@ public class SwitchButton extends CompoundButton {
     }
 
     public void setThumbDrawableRes(int thumbDrawableRes) {
-        setThumbDrawable(ContextCompat.getDrawable(getContext(), thumbDrawableRes));
+        setThumbDrawable(getResources().getDrawable(thumbDrawableRes));
     }
 
     public Drawable getBackDrawable() {
@@ -740,7 +737,7 @@ public class SwitchButton extends CompoundButton {
     }
 
     public void setBackDrawableRes(int backDrawableRes) {
-        setBackDrawable(ContextCompat.getDrawable(getContext(), backDrawableRes));
+        setBackDrawable(getResources().getDrawable(backDrawableRes));
     }
 
     public ColorStateList getBackColor() {
@@ -756,7 +753,7 @@ public class SwitchButton extends CompoundButton {
     }
 
     public void setBackColorRes(int backColorRes) {
-        setBackColor(ContextCompat.getColorStateList(getContext(), backColorRes));
+        setBackColor(getResources().getColorStateList(backColorRes));
     }
 
     public ColorStateList getThumbColor() {
@@ -771,7 +768,7 @@ public class SwitchButton extends CompoundButton {
     }
 
     public void setThumbColorRes(int thumbColorRes) {
-        setThumbColor(ContextCompat.getColorStateList(getContext(), thumbColorRes));
+        setThumbColor(getResources().getColorStateList(thumbColorRes));
     }
 
     public float getBackMeasureRatio() {
@@ -955,8 +952,8 @@ public class SwitchButton extends CompoundButton {
         int[][] states = new int[][]{{-ENABLE_ATTR, CHECKED_ATTR}, {-ENABLE_ATTR}, {CHECKED_ATTR, PRESSED_ATTR},
             {-CHECKED_ATTR, PRESSED_ATTR}, {CHECKED_ATTR}, {-CHECKED_ATTR}};
 
-        int[] colors = new int[]{tintColor - 0xE1000000, 0x10000000, tintColor - 0xD0000000, 0x20000000, tintColor -
-            0xD0000000, 0x20000000};
+        int[] colors = new int[]{tintColor - 0xE1000000, 0x10000000, tintColor - 0xD0000000, 0x20000000,
+            tintColor - 0xD0000000, 0x20000000};
         return new ColorStateList(states, colors);
     }
 }

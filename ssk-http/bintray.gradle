@@ -1,0 +1,149 @@
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+
+// load properties
+Properties properties = new Properties()
+File localPropertiesFile = project.rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    properties.load(localPropertiesFile.newDataInputStream())
+}
+File projectPropertiesFile = project.file("project.properties")
+if (projectPropertiesFile.exists()) {
+    properties.load(projectPropertiesFile.newDataInputStream())
+}
+
+// read properties
+String proName = properties.getProperty("project.name")
+String proGroupId = properties.getProperty("project.groupId")
+String proArtifactId = properties.getProperty("project.artifactId")
+String proVersion = properties.getProperty("project.version")
+String proSiteUrl = properties.getProperty("project.url.site")
+String proGitUrl = properties.getProperty("project.url.git")
+String proScmConnectionUrl = properties.getProperty("project.scm.connection")
+String proScmDeveloperUrl = properties.getProperty("project.scm.developer")
+String proDescription = properties.getProperty("project.description")
+String proPkgExt = properties.getProperty("project.pkg.ext")
+String proPkg = properties.getProperty("project.pkg")
+if (proPkgExt == null || proPkgExt.length() == 0) {
+    proPkgExt = "aar"
+}
+
+String devName = properties.getProperty("developer.name")
+String devEmail = properties.getProperty("developer.email")
+if (devName == null || devName.length() == 0) {
+    devName = "sskbskdrin"
+}
+if (devEmail == null || devEmail.length() == 0) {
+    devEmail = "keayuan_1991.com@163.com"
+}
+
+String bintrayUser = properties.getProperty("bintray.user")
+String bintrayApikey = properties.getProperty("bintray.apikey")
+String gpgPass = properties.getProperty("bintray.gpg.password")
+
+group = proGroupId
+
+// This generates POM.xml with proper parameters
+install {
+    repositories.mavenInstaller {
+        pom {
+            project {
+                packaging proPkgExt
+                groupId proGroupId
+                artifactId proArtifactId
+                version proVersion
+                name proName
+                description proDescription
+                url proSiteUrl
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        name devName
+                        email devEmail
+                    }
+                }
+                scm {
+                    connection proScmConnectionUrl
+                    developerConnection proScmDeveloperUrl
+                    url proSiteUrl
+                }
+            }
+        }
+    }
+}
+
+// This generates sources.jar
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+if (proPkgExt == 'jar') {
+    task makeJar(type: Jar) {
+        delete 'build/libs/ssk-http-0.0.2.jar'
+        from('build/intermediates/javac/release/classes/'+proPkg)
+        into proPkg
+        exclude('BuildConfig.class', 'R.class')
+    }
+//    makeJar.dependsOn(build)
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+    if (proPkgExt == 'jar') {
+        archives makeJar
+    }
+}
+
+// javadoc configuration
+javadoc {
+    options {
+        encoding "UTF-8"
+        charSet 'UTF-8'
+        author true
+        version proVersion
+        links "http://docs.oracle.com/javase/8/docs/api"
+        title proName
+    }
+}
+
+bintray {
+    user = bintrayUser
+    key = bintrayApikey
+    configurations = ['archives']
+    pkg {
+        repo = "maven"
+        name = proName
+        websiteUrl = proSiteUrl
+        vcsUrl = proGitUrl
+        licenses = ["Apache-2.0"]
+        publish = true
+        publicDownloadNumbers = true
+        version {
+            name = proVersion
+            desc = proDescription
+            vcsTag = 'master'
+            gpg {
+                sign = true
+                //Determines whether to GPG sign the files. The default is false
+                passphrase = gpgPass    //Optional. The passphrase for GPG signing'
+            }
+        }
+    }
+}

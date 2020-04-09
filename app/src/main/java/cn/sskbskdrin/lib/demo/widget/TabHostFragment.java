@@ -1,11 +1,11 @@
 package cn.sskbskdrin.lib.demo.widget;
 
-import android.support.v4.app.Fragment;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.fragment.app.Fragment;
 import cn.sskbskdrin.base.IFragment;
 import cn.sskbskdrin.lib.demo.R;
 import cn.sskbskdrin.widget.TabHostWidget;
@@ -30,10 +30,10 @@ public class TabHostFragment extends IFragment {
         TabWidget tabWidget = tabHostWidget.getTabWidget();
 
         tabWidget.setItemLayout(R.layout.tab_host_item_layout);
-        tabWidget.addTab(new TabWidget.Tab("首页", R.mipmap.home_normal, R.mipmap.home_selected, "88"));
-        tabWidget.addTab(new TabWidget.Tab("通讯录", R.mipmap.category_normal, R.mipmap.category_selected, ""));
-        tabWidget.addTab(new TabWidget.Tab("发现", R.drawable.find_icon, R.drawable.find_icon1, "99+"));
-        tabWidget.addTab(new TabWidget.Tab("我", R.mipmap.mine_normal, R.mipmap.mine_selected, "0"));
+        tabWidget.addTab("首页", R.mipmap.home_normal, R.mipmap.home_selected, "88");
+        tabWidget.addTab("通讯录", R.mipmap.category_normal, R.mipmap.category_selected, "");
+        tabWidget.addTab("发现", R.drawable.find_icon, R.drawable.find_icon1, "99+");
+        tabWidget.addTab("我", R.mipmap.mine_normal, R.mipmap.mine_selected, "0");
         tabWidget.setTextColor(0xff00ac00, 0xff939393);
         tabWidget.setLineColor(0xff939393);
         tabWidget.setOnDoubleClickListener(new TabWidget.OnDoubleClickListener() {
