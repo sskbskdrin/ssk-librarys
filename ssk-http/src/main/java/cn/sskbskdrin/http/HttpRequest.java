@@ -1,15 +1,10 @@
 package cn.sskbskdrin.http;
 
 import java.io.File;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import cn.sskbskdrin.http.impl.UrlRequest;
 
@@ -18,31 +13,24 @@ import cn.sskbskdrin.http.impl.UrlRequest;
  *
  * @author keayuan
  */
-class HttpRequest<V> implements IRequest<V>, IResponseCallback<V>, IRequestBody {
-
-    static Executor executor = new ThreadPoolExecutor(2, 10, 10, TimeUnit.SECONDS,
-        new LinkedBlockingQueue<Runnable>(), new DefaultThreadFactory());
+class HttpRequest<V> implements IRequest<V>, IResponseCallback, IRequestBody {
 
     private static final HashMap<String, String> globalHeader = new HashMap<>();
-    private static IMap<String, String> iMapGlobalHeader;
-
-    private static IRealRequestFactory mRealRequestFactory;
-    private Class<?> responseClazz;
 
     private final HashMap<String, String> mHeader = new HashMap<>();
-    private final HashMap<String, String> mParams = new HashMap<>();
+    private final HashMap<String, Object> mParams = new HashMap<>();
     private final HashMap<String, File> mFileParams = new HashMap<>();
 
     private String mContentType;
 
-    private IMap<String, String> header;
-    private IMap<String, String> params;
+    private IMap<String, String> iHeader;
+    private IMap<String, Object> iParams;
 
     private IPreRequest mPreRequest;
-    private IResponse<V> mResponse;
     private IParseResponse<V> mParseResponse;
     private IProgress mProgress;
     private ISuccess<V> mSuccess;
+    private ISuccess<V> mSuccessIO;
     private IError mError;
     private IComplete mComplete;
 
@@ -53,44 +41,50 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback<V>, IRequestBody 
     private long readTimeout = 15000;
     private long connectedTimeout = 15000;
 
-    private AtomicBoolean isCancel = new AtomicBoolean(false);
+    private AtomicBoolean isContinue = new AtomicBoolean(true);
+    private Type mType;
 
     public HttpRequest(String url) {
-        mUrl = url;
+        this(url, null);
+    }
+
+    public HttpRequest(String url, Type type) {
+        mUrl = Config.fixUrl(url);
+        mType = type;
     }
 
     @Override
-    public IRequest<V> get() {
+    public void get() {
         mContentType = CONTENT_TYPE_GET;
-        return this;
+        request();
     }
 
     @Override
-    public IRequest<V> post() {
+    public void post() {
         mContentType = CONTENT_TYPE_FORM;
-        return this;
+        request();
     }
 
     @Override
-    public IRequest<V> postJson() {
+    public void postJson() {
         mContentType = CONTENT_TYPE_JSON;
-        return this;
+        request();
     }
 
     @Override
-    public IRequest<V> postFile() {
+    public void postFile() {
         mContentType = CONTENT_TYPE_MULTIPART;
-        return this;
+        request();
     }
 
     @Override
-    public IRequest<V> download(String filePath) {
+    public void download(String filePath) {
         mContentType = CONTENT_TYPE_DOWN;
         mFilePath = filePath;
         if (mFilePath == null) {
             throw new IllegalArgumentException("filepath is null");
         }
-        return this;
+        request();
     }
 
     @Override
@@ -101,12 +95,12 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback<V>, IRequestBody 
 
     @Override
     public IRequest<V> headers(IMap<String, String> iMap) {
-        header = iMap;
+        iHeader = iMap;
         return this;
     }
 
     @Override
-    public IRequest<V> addParams(String key, String value) {
+    public IRequest<V> addParams(String key, Object value) {
         mParams.put(key, value);
         return this;
     }
@@ -118,8 +112,8 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback<V>, IRequestBody 
     }
 
     @Override
-    public IRequest<V> params(IMap<String, String> iMap) {
-        params = iMap;
+    public IRequest<V> params(IMap<String, Object> iMap) {
+        iParams = iMap;
         return this;
     }
 
@@ -132,12 +126,6 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback<V>, IRequestBody 
     @Override
     public IRequest<V> readTimeout(long ms) {
         readTimeout = ms;
-        return this;
-    }
-
-    @Override
-    public IRequest<V> response(IResponse<V> response) {
-        mResponse = response;
         return this;
     }
 
@@ -160,12 +148,6 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback<V>, IRequestBody 
     }
 
     @Override
-    public IRequest<V> parseResponse(Class<?> clazz) {
-        responseClazz = clazz;
-        return this;
-    }
-
-    @Override
     public IRequest<V> progress(IProgress progress) {
         mProgress = progress;
         return this;
@@ -174,6 +156,12 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback<V>, IRequestBody 
     @Override
     public IRequest<V> success(ISuccess<V> success) {
         mSuccess = success;
+        return this;
+    }
+
+    @Override
+    public IRequest<V> successIO(ISuccess<V> success) {
+        mSuccessIO = success;
         return this;
     }
 
@@ -189,30 +177,23 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback<V>, IRequestBody 
         return this;
     }
 
-    @Override
-    public void request() {
-        IRealRequest<V> realRequest;
-        if (mRealRequestFactory == null) {
-            mRealRequestFactory = new IRealRequestFactory() {
-                @Override
-                public <T> IRealRequest<T> generateRealRequest() {
-                    return new UrlRequest<>(true);
-                }
-            };
-        }
-        realRequest = mRealRequestFactory.generateRealRequest();
+    private void request() {
+        IRealRequest realRequest = getConfig().iRealRequestFactory == null ? new UrlRequest(false) :
+            getConfig().iRealRequestFactory
+            .generateRealRequest();
         if (realRequest == null) {
-            onError("-1", "没找到请求实现类，请先设置请求工厂", new IllegalAccessException("IRealRequestFactory not impl"));
+            onError(ERROR_REAL_REQUEST, "没找到请求实现类，请先设置请求工厂", new IllegalAccessException("IRealRequestFactory not " +
+                "impl or IRealRequest is null"));
             return;
         }
-        final IRealRequest<V> request = realRequest;
+        final IRealRequest request = realRequest;
         Platform.get().callback(new Runnable() {
             @Override
             public void run() {
                 if (mPreRequest != null) {
                     mPreRequest.onPreRequest(mTag);
                 }
-                executor.execute(new Runnable() {
+                Config.executor.execute(new Runnable() {
                     @Override
                     public void run() {
                         request(request);
@@ -222,8 +203,11 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback<V>, IRequestBody 
         });
     }
 
-    @SuppressWarnings("unchecked")
-    private void request(IRealRequest<V> request) {
+    private Config getConfig() {
+        return Config.INSTANCE;
+    }
+
+    private void request(IRealRequest request) {
         if (!getHeader().containsKey("Content-Type")) {
             addHeader("Content-Type", mContentType);
         }
@@ -241,89 +225,59 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback<V>, IRequestBody 
                 request.postFile(this, this);
                 break;
             case CONTENT_TYPE_DOWN:
-                request.download(this, mFilePath, (IResponseCallback<File>) this);
+                request.download(this, mFilePath, this);
                 break;
         }
     }
 
     @Override
-    public void request(Callback<V> callback) {
-        mSuccess = callback;
-        mError = callback;
-        mComplete = callback;
-        request();
-    }
-
-    @Override
     public void cancel() {
-        isCancel.set(true);
+        isContinue.set(false);
     }
 
     public static void putGlobalHeader(String key, String value) {
         globalHeader.put(key, value);
     }
 
-    public static void globalHeader(IMap<String, String> global) {
-        iMapGlobalHeader = global;
-    }
-
-    public static void setRealRequestFactory(IRealRequestFactory factory) {
-        mRealRequestFactory = factory;
-    }
-
     @Override
     public void onResponseData(byte[] data) {
-        if (isCancel.get()) return;
-        parse(data, null);
+        if (isNotCancel()) {
+            IResponse<V> response = new Response<>(data);
+            IParseResult<V> parseResult;
+            try {
+                if (mParseResponse != null) {
+                    parseResult = mParseResponse.parse(mTag, response, mType);
+                } else {
+                    parseResult = (IParseResult<V>) getConfig().iParseResponse.parse(mTag, response, mType);
+                }
+                if (parseResult == null) {
+                    onError(ERROR_NO_PARSE, response.string(), null);
+                    return;
+                } else if (parseResult.isCancel()) {
+                    complete();
+                    return;
+                }
+            } catch (Exception e) {
+                onError(ERROR_PARSE, "解析错误", e);
+                return;
+            }
+            success(parseResult, response);
+        }
     }
 
     @Override
     public void onResponseFile(File file) {
-        if (isCancel.get()) return;
-        parse(null, file);
-    }
-
-    private void parse(byte[] data, File file) {
-        Response<V> response = null;
-        if (mResponse != null) {
-            response = mResponse.generate();
+        if (isNotCancel()) {
+            Res<File> result = new Res<>();
+            result.isSuccess = true;
+            result.setBean(file);
+            success((IParseResult<V>) result, null);
         }
-        if (response == null) {
-            response = new Response<>();
-        }
-
-        if (file != null) {
-            response.setBean((V) file);
-            responseClazz = File.class;
-            response.isSuccess = true;
-        } else {
-            try {
-                response.bodyData = data;
-                if (response.parse(mTag, data, responseClazz)) {
-                    if (mParseResponse != null && response.isSuccess()) {
-                        mParseResponse.parse(mTag, response, responseClazz);
-                    }
-                } else {
-                    Platform.get().callback(new Runnable() {
-                        @Override
-                        public void run() {
-                            complete();
-                        }
-                    });
-                    return;
-                }
-            } catch (Exception e) {
-                onError("-2", "解析错误", e);
-                return;
-            }
-        }
-        success(response);
     }
 
     @Override
     public void onProgress(final float progress) {
-        if (isCancel.get()) return;
-        if (mProgress != null) {
+        if (isNotCancel() && mProgress != null) {
             Platform.get().callback(new Runnable() {
                 @Override
                 public void run() {
@@ -332,43 +286,68 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback<V>, IRequestBody 
                     }
                 }
             });
+        } else {
+            mProgress = null;
         }
     }
 
-    private void success(final Response<V> response) {
-        if (isCancel.get()) return;
-        if (response.isSuccess()) {
-            Platform.get().callback(new Runnable() {
-                @Override
-                public void run() {
-                    if (mSuccess != null) {
-                        mSuccess.success(mTag, response.getBean(), response);
-                    }
-                    complete();
+    private void success(final IParseResult<V> result, final IResponse<V> response) {
+        if (isNotCancel()) {
+            if (result.isSuccess()) {
+                if (mSuccessIO != null) {
+                    mSuccessIO.success(mTag, result.getT(), response);
                 }
-            });
-        } else {
-            onError(response.code(), response.msg(), response.getException());
+                if (isNotCancel()) {
+                    Platform.get().callback(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (isNotCancel() && mSuccess != null) {
+                                mSuccess.success(mTag, result.getT(), response);
+                            }
+                            complete();
+                        }
+                    });
+                }
+            } else {
+                onError(result.getCode(), result.getMessage(), result.getException());
+            }
         }
     }
 
     @Override
     public void onError(final String code, final String desc, final Exception e) {
-        if (isCancel.get()) return;
-        Platform.get().callback(new Runnable() {
-            @Override
-            public void run() {
-                if (mError != null) {
-                    mError.error(mTag, code, desc, e);
+        if (isNotCancel()) {
+            Platform.get().callback(new Runnable() {
+                @Override
+                public void run() {
+                    if (mError != null) {
+                        mError.error(mTag, code, desc, e);
+                    }
+                    complete();
                 }
-                complete();
-            }
-        });
+            });
+        }
+    }
+
+    private boolean isNotCancel() {
+        if (!isContinue.get()) {
+            complete();
+        }
+        return isContinue.get();
     }
 
     private void complete() {
-        if (mComplete != null) {
-            mComplete.complete(mTag);
+        if (Platform.get().isCallbackThread()) {
+            if (mComplete != null) {
+                mComplete.complete(mTag);
+            }
+        } else {
+            Platform.get().callback(new Runnable() {
+                @Override
+                public void run() {
+                    complete();
+                }
+            });
         }
     }
 
@@ -381,9 +360,9 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback<V>, IRequestBody 
     }
 
     @Override
-    public HashMap<String, String> getParams() {
-        if (params != null) {
-            params.apply(mParams);
+    public HashMap<String, Object> getParams() {
+        if (iParams != null) {
+            iParams.apply(mParams);
         }
         return mParams;
     }
@@ -395,11 +374,11 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback<V>, IRequestBody 
 
     @Override
     public HashMap<String, String> getHeader() {
-        if (header != null) {
-            header.apply(mHeader);
+        if (getConfig().iHeader != null) {
+            getConfig().iHeader.apply(mHeader);
         }
-        if (iMapGlobalHeader != null) {
-            iMapGlobalHeader.apply(mHeader);
+        if (iHeader != null) {
+            iHeader.apply(mHeader);
         }
         HashMap<String, String> map = new HashMap<>(mHeader.size() + globalHeader.size());
         map.putAll(mHeader);
@@ -418,13 +397,13 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback<V>, IRequestBody 
     }
 
     private String parseParams() {
-        HashMap<String, String> map = getParams();
+        HashMap<String, Object> map = getParams();
         if (map == null) {
             return "";
         }
 
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<String, String> entry : map.entrySet()) {
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
             sb.append(entry.getKey());
             sb.append('=');
             sb.append(entry.getValue());
@@ -434,29 +413,5 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback<V>, IRequestBody 
             sb.setLength(sb.length() - 1);
         }
         return sb.toString();
-    }
-
-    private static class DefaultThreadFactory implements ThreadFactory {
-        private static final AtomicInteger poolNumber = new AtomicInteger(1);
-        private final ThreadGroup group;
-        private final AtomicInteger threadNumber = new AtomicInteger(1);
-        private final String namePrefix;
-
-        DefaultThreadFactory() {
-            SecurityManager s = System.getSecurityManager();
-            group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-            namePrefix = "HttpThreadPool-" + poolNumber.getAndIncrement();
-        }
-
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement(), 0);
-            if (t.isDaemon()) {
-                t.setDaemon(false);
-            }
-            if (t.getPriority() != Thread.NORM_PRIORITY) {
-                t.setPriority(Thread.NORM_PRIORITY);
-            }
-            return t;
-        }
     }
 }

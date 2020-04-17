@@ -12,5 +12,5 @@ public interface IRealRequestFactory {
      *
      * @param <T> 返回请求结果对象类型
      */
-    <T> IRealRequest<T> generateRealRequest();
+    IRealRequest generateRealRequest();
 }

@@ -30,6 +30,10 @@ class Platform {
         return new Platform();
     }
 
+    boolean isCallbackThread() {
+        return true;
+    }
+
     void callback(Runnable runnable) {
         Executors.newCachedThreadPool().execute(runnable);
     }
@@ -44,6 +48,11 @@ class Platform {
         @Override
         void callback(Runnable runnable) {
             mainHandler.post(runnable);
+        }
+
+        @Override
+        boolean isCallbackThread() {
+            return Thread.currentThread() == Looper.getMainLooper().getThread();
         }
     }
 }

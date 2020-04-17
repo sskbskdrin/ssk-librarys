@@ -9,6 +9,10 @@ import java.io.File;
  */
 public interface IRequest<V> {
 
+    String ERROR_REAL_REQUEST = "-1001";
+    String ERROR_PARSE = "-1002";
+    String ERROR_NO_PARSE = "-1003";
+
     /**
      * 请求参数类型为json
      */
@@ -31,29 +35,29 @@ public interface IRequest<V> {
     /**
      * 发起get请求，忽略CONTENT_TYPE
      */
-    IRequest<V> get();
+    void get();
 
     /**
      * 发起post请求，content_type为表单{@link #CONTENT_TYPE_FORM}
      */
-    IRequest<V> post();
+    void post();
 
     /**
      * 发起post请求，content_type为json数据类型{@link #CONTENT_TYPE_JSON}
      */
-    IRequest<V> postJson();
+    void postJson();
 
     /**
      * 发起post请求，content_type为表单{@link #CONTENT_TYPE_MULTIPART}
      */
-    IRequest<V> postFile();
+    void postFile();
 
     /**
      * 下载文件
      *
      * @param filePath 保存到本地的文件路径
      */
-    IRequest<V> download(String filePath);
+    void download(String filePath);
 
     /**
      * 添加请求头信息
@@ -76,7 +80,7 @@ public interface IRequest<V> {
      * @param key   请求参数的key信息
      * @param value 请求参数的value信息
      */
-    IRequest<V> addParams(String key, String value);
+    IRequest<V> addParams(String key, Object value);
 
     /**
      * 添加文件类型请求参数，仅文件请求时有效{@link #postFile()}
@@ -91,7 +95,7 @@ public interface IRequest<V> {
      *
      * @param iMap 提供一个请求参数的接口
      */
-    IRequest<V> params(IMap<String, String> iMap);
+    IRequest<V> params(IMap<String, Object> iMap);
 
     /**
      * 连接超时时间
@@ -106,13 +110,6 @@ public interface IRequest<V> {
      * @param time 超时时间，单位ms
      */
     IRequest<V> readTimeout(long time);
-
-    /**
-     * 建造响应实体
-     *
-     * @param response 响应实体
-     */
-    IRequest<V> response(IResponse<V> response);
 
     /**
      * 设置请求的tag信息
@@ -131,11 +128,6 @@ public interface IRequest<V> {
     IRequest<V> parseResponse(IParseResponse<V> parse);
 
     /**
-     * @param clazz 如果V为List，则class应为List中实体类的类型
-     */
-    IRequest<V> parseResponse(Class<?> clazz);
-
-    /**
      * 下载文件时回调进度
      */
     IRequest<V> progress(IProgress progress);
@@ -146,6 +138,13 @@ public interface IRequest<V> {
      * @param success 回调监听器
      */
     IRequest<V> success(ISuccess<V> success);
+
+    /**
+     * 设置请求解析成功回调，在IO线程回调，调用在{@link #success(ISuccess)}之前
+     *
+     * @param success 回调监听器
+     */
+    IRequest<V> successIO(ISuccess<V> success);
 
     /**
      * 设置请求解析失败回调
@@ -160,13 +159,6 @@ public interface IRequest<V> {
      * @param complete 回调监听器
      */
     IRequest<V> complete(IComplete complete);
-
-    /**
-     * 发起请求
-     */
-    void request();
-
-    void request(Callback<V> callback);
 
     /**
      * 取消请求

@@ -2,7 +2,7 @@ package cn.sskbskdrin.http;
 
 import java.io.File;
 
-public interface IResponseCallback<V> {
+public interface IResponseCallback {
 
     void onResponseData(byte[] data);
 

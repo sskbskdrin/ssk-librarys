@@ -37,7 +37,7 @@ import cn.sskbskdrin.http.IResponseCallback;
  *
  * @author keayuan
  */
-public class UrlRequest<V> implements IRealRequest<V> {
+public class UrlRequest implements IRealRequest {
     private static final String TAG = "UrlRequest";
     private static final int GET = 1001;
     private static final int POST = 1002;
@@ -112,37 +112,38 @@ public class UrlRequest<V> implements IRealRequest<V> {
     }
 
     @Override
-    public void get(IRequestBody request, IResponseCallback<V> callback) {
+    public void get(IRequestBody request, IResponseCallback callback) {
         exec(request, GET, callback);
     }
 
     @Override
-    public void post(IRequestBody request, IResponseCallback<V> callback) {
+    public void post(IRequestBody request, IResponseCallback callback) {
         exec(request, POST, callback);
     }
 
     @Override
-    public void postJson(IRequestBody request, IResponseCallback<V> callback) {
+    public void postJson(IRequestBody request, IResponseCallback callback) {
         exec(request, POST_JSON, callback);
     }
 
     @Override
-    public void postFile(IRequestBody request, IResponseCallback<V> callback) {
+    public void postFile(IRequestBody request, IResponseCallback callback) {
         exec(request, POST_FILE, callback);
     }
 
     @Override
-    public void download(IRequestBody request, String filePath, IResponseCallback<File> callback) {
+    public void download(IRequestBody request, String filePath, IResponseCallback callback) {
         exec(request, filePath, callback);
     }
 
-    private void exec(IRequestBody request, int method, IResponseCallback<V> callback) {
+    private void exec(IRequestBody request, int method, IResponseCallback callback) {
         HttpURLConnection conn = null;
         try {
             conn = generate(request.getUrl(), request.getConnectedTimeout(), request.getReadTimeout(), method == GET
-                ? "GET" : "POST", request.getHeader());
+                ? "GET" : "POST", request
+                .getHeader());
 
-            HashMap<String, String> params = method == GET ? null : request.getParams();
+            HashMap<String, Object> params = method == GET ? null : request.getParams();
             if (openLog) {
                 Log.d(TAG, "url: " + request.getUrl());
                 Log.d(TAG, "connectedTimeout: " + request.getConnectedTimeout() + "ms");
@@ -153,7 +154,7 @@ public class UrlRequest<V> implements IRealRequest<V> {
                     Log.d(TAG, "header: " + entry.getKey() + "=" + entry.getValue());
                 }
                 if (params != null) {
-                    for (Map.Entry<String, String> entry : params.entrySet()) {
+                    for (Map.Entry<String, Object> entry : params.entrySet()) {
                         Log.d(TAG, "params: " + entry.getKey() + "=" + entry.getValue());
                     }
                 }
@@ -231,7 +232,7 @@ public class UrlRequest<V> implements IRealRequest<V> {
         return sb.toString();
     }
 
-    private void exec(IRequestBody request, String filePath, IResponseCallback<File> callback) {
+    private void exec(IRequestBody request, String filePath, IResponseCallback callback) {
         HttpURLConnection conn = null;
         try {
             conn = generate(request.getUrl(), request.getConnectedTimeout(), request.getReadTimeout(), "GET",
@@ -305,14 +306,14 @@ public class UrlRequest<V> implements IRealRequest<V> {
         return file;
     }
 
-    private static void doPost(HttpURLConnection conn, Map<String, String> params) throws IOException {
+    private static void doPost(HttpURLConnection conn, Map<String, Object> params) throws IOException {
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStream out = conn.getOutputStream();
 
         StringBuilder strBuf = new StringBuilder();
         if (params != null) {
-            for (Map.Entry<String, String> entry : params.entrySet()) {
+            for (Map.Entry<String, Object> entry : params.entrySet()) {
                 strBuf.append(entry.getKey()).append("=").append(entry.getValue()).append('&');
             }
             if (strBuf.length() > 0) {
@@ -326,7 +327,7 @@ public class UrlRequest<V> implements IRealRequest<V> {
         out.close();
     }
 
-    private static void doPostFile(HttpURLConnection conn, Map<String, String> params, Map<String, File> fileMap) throws IOException {
+    private static void doPostFile(HttpURLConnection conn, Map<String, Object> params, Map<String, File> fileMap) throws IOException {
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStream out = conn.getOutputStream();
@@ -336,7 +337,7 @@ public class UrlRequest<V> implements IRealRequest<V> {
 
         StringBuilder strBuf = new StringBuilder();
         if (params != null) {
-            for (Map.Entry<String, String> entry : params.entrySet()) {
+            for (Map.Entry<String, Object> entry : params.entrySet()) {
                 strBuf.append(end).append(twoHyphens).append(BOUNDARY).append(end);
                 strBuf.append("Content-Disposition: form-data; name=");
                 strBuf.append('"').append(entry.getKey()).append('"').append(end);
@@ -371,7 +372,7 @@ public class UrlRequest<V> implements IRealRequest<V> {
         out.close();
     }
 
-    private static void doPostJson(HttpURLConnection conn, Map<String, String> params) throws IOException {
+    private static void doPostJson(HttpURLConnection conn, Map<String, Object> params) throws IOException {
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStream out = new DataOutputStream(conn.getOutputStream());

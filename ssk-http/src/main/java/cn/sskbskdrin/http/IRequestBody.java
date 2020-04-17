@@ -7,7 +7,7 @@ public interface IRequestBody {
 
     String getUrl();
 
-    HashMap<String, String> getParams();
+    HashMap<String, Object> getParams();
 
     HashMap<String, File> getFileParams();
 

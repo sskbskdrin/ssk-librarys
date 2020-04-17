@@ -12,5 +12,5 @@ public interface ISuccess<V> {
      * @param tag    请求的tag
      * @param result 解析成功结果
      */
-    void success(String tag, V result, Response<V> response);
+    void success(String tag, V result, IResponse response);
 }
