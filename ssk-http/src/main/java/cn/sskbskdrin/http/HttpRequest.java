@@ -6,20 +6,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import cn.sskbskdrin.http.impl.UrlRequest;
-
 /**
  * Created by keayuan on 2019-11-29.
  *
  * @author keayuan
  */
-class HttpRequest<V> implements IRequest<V>, IResponseCallback, IRequestBody {
-
-    private static final HashMap<String, String> globalHeader = new HashMap<>();
+final class HttpRequest<V> implements IRequest<V>, IRequestCallback, IRequestBody {
 
     private final HashMap<String, String> mHeader = new HashMap<>();
     private final HashMap<String, Object> mParams = new HashMap<>();
-    private final HashMap<String, File> mFileParams = new HashMap<>();
 
     private String mContentType;
 
@@ -38,17 +33,13 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback, IRequestBody {
 
     private String mTag;
     private String mUrl;
-    private long readTimeout = 15000;
-    private long connectedTimeout = 15000;
+    private long readTimeout = -1;
+    private long connectedTimeout = -1;
 
     private AtomicBoolean isContinue = new AtomicBoolean(true);
     private Type mType;
 
-    public HttpRequest(String url) {
-        this(url, null);
-    }
-
-    public HttpRequest(String url, Type type) {
+    HttpRequest(String url, Type type) {
         mUrl = Config.fixUrl(url);
         mType = type;
     }
@@ -102,12 +93,6 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback, IRequestBody {
     @Override
     public IRequest<V> addParams(String key, Object value) {
         mParams.put(key, value);
-        return this;
-    }
-
-    @Override
-    public IRequest<V> addParams(String key, File value) {
-        mFileParams.put(key, value);
         return this;
     }
 
@@ -178,9 +163,7 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback, IRequestBody {
     }
 
     private void request() {
-        IRealRequest realRequest = getConfig().iRealRequestFactory == null ? new UrlRequest(false) :
-            getConfig().iRealRequestFactory
-            .generateRealRequest();
+        IRealRequest realRequest = getConfig().getRealRequest();
         if (realRequest == null) {
             onError(ERROR_REAL_REQUEST, "没找到请求实现类，请先设置请求工厂", new IllegalAccessException("IRealRequestFactory not " +
                 "impl or IRealRequest is null"));
@@ -193,7 +176,7 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback, IRequestBody {
                 if (mPreRequest != null) {
                     mPreRequest.onPreRequest(mTag);
                 }
-                Config.executor.execute(new Runnable() {
+                getConfig().execute(new Runnable() {
                     @Override
                     public void run() {
                         request(request);
@@ -235,10 +218,6 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback, IRequestBody {
         isContinue.set(false);
     }
 
-    public static void putGlobalHeader(String key, String value) {
-        globalHeader.put(key, value);
-    }
-
     @Override
     public void onResponseData(byte[] data) {
         if (isNotCancel()) {
@@ -248,7 +227,7 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback, IRequestBody {
                 if (mParseResponse != null) {
                     parseResult = mParseResponse.parse(mTag, response, mType);
                 } else {
-                    parseResult = (IParseResult<V>) getConfig().iParseResponse.parse(mTag, response, mType);
+                    parseResult = getConfig().parse(mTag, response, mType);
                 }
                 if (parseResult == null) {
                     onError(ERROR_NO_PARSE, response.string(), null);
@@ -268,10 +247,7 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback, IRequestBody {
     @Override
     public void onResponseFile(File file) {
         if (isNotCancel()) {
-            Res<File> result = new Res<>();
-            result.isSuccess = true;
-            result.setBean(file);
-            success((IParseResult<V>) result, null);
+            success(new Result<>(true, (V) file), null);
         }
     }
 
@@ -368,32 +344,22 @@ class HttpRequest<V> implements IRequest<V>, IResponseCallback, IRequestBody {
     }
 
     @Override
-    public HashMap<String, File> getFileParams() {
-        return mFileParams;
-    }
-
-    @Override
     public HashMap<String, String> getHeader() {
-        if (getConfig().iHeader != null) {
-            getConfig().iHeader.apply(mHeader);
-        }
+        getConfig().applyHeader(mHeader);
         if (iHeader != null) {
             iHeader.apply(mHeader);
         }
-        HashMap<String, String> map = new HashMap<>(mHeader.size() + globalHeader.size());
-        map.putAll(mHeader);
-        map.putAll(globalHeader);
-        return map;
+        return new HashMap<>(mHeader);
     }
 
     @Override
     public long getReadTimeout() {
-        return readTimeout;
+        return readTimeout < 0 ? getConfig().readTimeout : readTimeout;
     }
 
     @Override
     public long getConnectedTimeout() {
-        return connectedTimeout;
+        return connectedTimeout < 0 ? getConfig().connectedTimeout : connectedTimeout;
     }
 
     private String parseParams() {

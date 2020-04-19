@@ -1,6 +1,7 @@
 package cn.sskbskdrin.http;
 
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
@@ -17,31 +18,58 @@ public final class Config {
 
     private static String BASE_URL;
 
-    static Executor executor = new ThreadPoolExecutor(0, 10, 10, TimeUnit.SECONDS,
+    private static Executor executor = new ThreadPoolExecutor(0, 10, 10, TimeUnit.SECONDS,
         new LinkedBlockingQueue<Runnable>(), new DefaultThreadFactory());
-    IMap<String, String> iHeader;
+    private IMap<String, String> iHeader;
 
-    IRealRequestFactory iRealRequestFactory;
-    IParseResponse<?> iParseResponse;
+    private IRealRequestFactory iRealRequestFactory;
+
+    private IParseResponse<?> iParseResponse;
 
     long readTimeout = 15000;
     long connectedTimeout = 15000;
 
-    public final static Config INSTANCE = new Config();
+    final static Config INSTANCE = new Config();
 
     private Config() {}
 
-    public static void setBaseUrl(String url) {
+    /**
+     * 设置base url
+     *
+     * @param url baseUrl
+     */
+    public void setBaseUrl(String url) {
         BASE_URL = url;
     }
 
+    /**
+     * 设置全局header
+     *
+     * @param header header添加器
+     */
     public Config setHeader(IMap<String, String> header) {
         iHeader = header;
         return this;
     }
 
-    <T> IParseResult<T> parse(IResponse<T> response, Type type) {
-        return null;
+    /**
+     * 设置全局解析器
+     *
+     * @param parseResponse 解析器
+     */
+    public Config setParseResponse(IParseResponse<?> parseResponse) {
+        this.iParseResponse = parseResponse;
+        return this;
+    }
+
+    /**
+     * 设置实际请求工厂
+     *
+     * @param factory 请求构建工厂
+     */
+    public Config setRealRequestFactory(IRealRequestFactory factory) {
+        this.iRealRequestFactory = factory;
+        return this;
     }
 
     /**
@@ -51,16 +79,6 @@ public final class Config {
      */
     public Config connectedTimeout(long time) {
         connectedTimeout = time;
-        return this;
-    }
-
-    public Config setParseResponse(IParseResponse<?> parseResponse) {
-        this.iParseResponse = parseResponse;
-        return this;
-    }
-
-    public Config setRealRequestFactory(IRealRequestFactory factory) {
-        this.iRealRequestFactory = factory;
         return this;
     }
 
@@ -74,9 +92,38 @@ public final class Config {
         return this;
     }
 
+    /**
+     * 设置请求执行器
+     *
+     * @param executor 执行者
+     */
     public Config setExecuteService(Executor executor) {
         if (executor != null) Config.executor = executor;
         return this;
+    }
+
+    void applyHeader(HashMap<String, String> map) {
+        if (iHeader != null) {
+            iHeader.apply(map);
+        }
+    }
+
+    IRealRequest getRealRequest() {
+        if (iRealRequestFactory != null) {
+            return iRealRequestFactory.generateRealRequest();
+        }
+        return new DefaultRealRequest(false);
+    }
+
+    void execute(Runnable runnable) {
+        executor.execute(runnable);
+    }
+
+    <T> IParseResult<T> parse(String tag, IResponse response, Type type) {
+        if (iParseResponse != null) {
+            return (IParseResult<T>) iParseResponse.parse(tag, response, type);
+        }
+        return new Result<>();
     }
 
     /**
@@ -101,7 +148,7 @@ public final class Config {
         DefaultThreadFactory() {
             SecurityManager s = System.getSecurityManager();
             group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-            namePrefix = "HttpThreadPool-" + poolNumber.getAndIncrement();
+            namePrefix = poolNumber.getAndIncrement() + "-HttpThreadPool-";
         }
 
         public Thread newThread(Runnable r) {

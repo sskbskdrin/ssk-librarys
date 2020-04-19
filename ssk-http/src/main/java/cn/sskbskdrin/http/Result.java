@@ -5,15 +5,23 @@ package cn.sskbskdrin.http;
  *
  * @author keayuan
  */
-public class Res<T> implements IParseResult<T> {
-    protected boolean isSuccess;
-    protected Exception exception;
-
-    protected String code;
-    protected String msg;
+public class Result<T> implements IParseResult<T> {
+    private boolean isSuccess = true;
+    private String code;
+    private String msg;
+    private Exception exception;
     private T bean;
 
-    public Res() {
+    public Result() {
+    }
+
+    public Result(boolean success) {
+        isSuccess = success;
+    }
+
+    public Result(boolean success, T t) {
+        isSuccess = success;
+        bean = t;
     }
 
     public void setBean(T bean) {
@@ -33,6 +41,7 @@ public class Res<T> implements IParseResult<T> {
      *
      * @return 成功为true，否则false
      */
+    @Override
     public boolean isSuccess() {
         return isSuccess;
     }
@@ -77,14 +86,5 @@ public class Res<T> implements IParseResult<T> {
      */
     public int getCodeInt() {
         return code == null || code.length() == 0 ? 0 : Integer.parseInt(code);
-    }
-
-    /**
-     * 解析出的实体类
-     *
-     * @return 结果
-     */
-    public T getBean() {
-        return bean;
     }
 }

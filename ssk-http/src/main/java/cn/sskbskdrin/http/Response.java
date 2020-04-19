@@ -5,7 +5,7 @@ package cn.sskbskdrin.http;
  *
  * @author keayuan
  */
-class Response<V> implements IResponse<V> {
+final class Response<V> implements IResponse<V> {
 
     private byte[] bodyData;
     private String bodyString;

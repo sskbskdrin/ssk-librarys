@@ -1,7 +1,5 @@
 package cn.sskbskdrin.http;
 
-import java.io.File;
-
 /**
  * Created by keayuan on 2019-11-29.
  *
@@ -83,14 +81,6 @@ public interface IRequest<V> {
     IRequest<V> addParams(String key, Object value);
 
     /**
-     * 添加文件类型请求参数，仅文件请求时有效{@link #postFile()}
-     *
-     * @param key   请求参数的key信息
-     * @param value 请求参数的文件对象
-     */
-    IRequest<V> addParams(String key, File value);
-
-    /**
      * 设置请求参数的提供者，流式编程使用
      *
      * @param iMap 提供一个请求参数的接口
@@ -118,10 +108,15 @@ public interface IRequest<V> {
      */
     IRequest<V> tag(String tag);
 
+    /**
+     * 设置请求前回调监听
+     *
+     * @param request 回调
+     */
     IRequest<V> pre(IPreRequest request);
 
     /**
-     * 设置请求结果解析方法，在子线程处理
+     * 设置请求结果解析方法，在子线程处理，设置此解析时，全局解析器不会再调用
      *
      * @param parse 解析器
      */

@@ -1,23 +1,26 @@
 package cn.sskbskdrin.http;
 
-import android.content.Context;
-
 /**
  * Created by keayuan on 2019-11-29.
  *
  * @author keayuan
  */
-public class HTTP {
-    private static String BASE_URL;
+public final class HTTP {
+    private HTTP() {}
 
-    public static void init(Context context) {
+    public static Config globalConfig() {
+        return Config.INSTANCE;
     }
 
-    public static <T> IRequest<T> url(String url, Class<T> tClass) {
+    public static <V> IRequest<V> url(String url) {
+        return new HttpRequest<>(url, null);
+    }
+
+    public static <V> IRequest<V> url(String url, Class<V> tClass) {
         return new HttpRequest<>(url, tClass);
     }
 
-    public static <V> IRequest<V> url(String url, TypeToken<V> res) {
-        return new HttpRequest<>(url, res.getType());
+    public static <V> IRequest<V> url(String url, TypeToken<V> token) {
+        return new HttpRequest<>(url, token.getType());
     }
 }

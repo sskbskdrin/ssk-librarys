@@ -3,8 +3,7 @@ package cn.sskbskdrin.http;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-
-import java.util.concurrent.Executors;
+import android.util.Log;
 
 /**
  * Created by keayuan on 2019-12-02.
@@ -15,7 +14,7 @@ import java.util.concurrent.Executors;
 class Platform {
     private static final Platform PLATFORM = findPlatform();
 
-    public static Platform get() {
+    static Platform get() {
         return PLATFORM;
     }
 
@@ -35,7 +34,18 @@ class Platform {
     }
 
     void callback(Runnable runnable) {
-        Executors.newCachedThreadPool().execute(runnable);
+        Config.INSTANCE.execute(runnable);
+    }
+
+    void log(String tag, String msg) {
+        log(tag, msg, null);
+    }
+
+    void log(String tag, String msg, Exception e) {
+        System.out.println(tag + ":" + msg);
+        if (e != null) {
+            e.printStackTrace();
+        }
     }
 
     static class Android extends Platform {
@@ -53,6 +63,11 @@ class Platform {
         @Override
         boolean isCallbackThread() {
             return Thread.currentThread() == Looper.getMainLooper().getThread();
+        }
+
+        @Override
+        void log(String tag, String msg, Exception e) {
+            Log.d(tag, msg, e);
         }
     }
 }
