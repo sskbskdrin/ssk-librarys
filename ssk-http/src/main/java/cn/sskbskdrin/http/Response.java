@@ -74,4 +74,9 @@ public final class Response implements IResponse {
     public boolean isSuccess() {
         return "200".equals(code);
     }
+
+    @Override
+    public boolean isFile() {
+        return bodyData == null && bodyString != null;
+    }
 }

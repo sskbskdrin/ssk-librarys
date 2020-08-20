@@ -45,7 +45,7 @@ class HRequest<V> implements IRequest<V>, IRequestBody {
     private IProgress inProgress = new IProgress() {
         @Override
         public void progress(final float progress) {
-            if (isNotCancel() && mProgress != null) {
+            if (mProgress != null && !isCancel.get()) {
                 Platform.get().callback(new Runnable() {
                     @Override
                     public void run() {
@@ -186,13 +186,19 @@ class HRequest<V> implements IRequest<V>, IRequestBody {
     private void request() {
         IRealRequest realRequest = getConfig().getRealRequest();
         if (realRequest == null) {
-            onError(ERROR_REAL_REQUEST, "没找到请求实现类，请先设置请求工厂", new IllegalAccessException("IRealRequestFactory not " +
-                "impl or IRealRequest is null"));
+            new FlowProcess().main(mError == null ? null : new IProcess<Object>() {
+                @Override
+                public Object process(int[] jump, Object... params) {
+                    mError.error(mTag, ERROR_REAL_REQUEST, "没找到请求实现类，请先设置请求工厂", new IllegalAccessException(
+                        "IRealRequestFactory " + "not " + "impl or IRealRequest is null"));
+                    return null;
+                }
+            }).start();
             return;
         }
-        final IRRequest request = null;
-        
-        final FlowProcess process = new FlowProcess(request);
+        final IRRequest request = null;//TODO 未实现
+
+        FlowProcess process = new FlowProcess(request);
         process.main(mPreRequest == null ? null : new IProcess<Object>() {
             @Override
             public Object process(int[] jump, Object... params) {
@@ -229,6 +235,9 @@ class HRequest<V> implements IRequest<V>, IRequestBody {
             public Response process(int[] jump, Object... params) {
                 if (checkCancel(jump)) return null;
                 Response res = (Response) params[0];
+                if (res.isFile()) {
+                    return res;
+                }
                 try {
                     res.result = getConfig().parse(mTag, (IResponse) params[0], mType);
                     if (res.result == null) {
@@ -244,7 +253,11 @@ class HRequest<V> implements IRequest<V>, IRequestBody {
             public Response process(int[] jump, Object... params) {
                 if (checkCancel(jump)) return null;
                 Response res = (Response) params[0];
-                if (isNotCancel() && mSuccessIO != null && res.isSuccess()) {
+                if (mSuccessIO != null && res.isSuccess()) {
+                    if (res.isFile()) {
+                        mSuccessIO.success(mTag, (V) new File(res.string()), res);
+                        return res;
+                    }
                     IParseResult<V> ret = res.result;
                     if (ret != null && ret.isSuccess()) {
                         mSuccessIO.success(mTag, (V) ret.getT(), res);
@@ -257,7 +270,11 @@ class HRequest<V> implements IRequest<V>, IRequestBody {
             public Response process(int[] jump, Object... params) {
                 if (checkCancel(jump)) return null;
                 Response res = (Response) params[0];
-                if (isNotCancel() && mSuccess != null && res.isSuccess()) {
+                if (mSuccess != null && res.isSuccess()) {
+                    if (res.isFile()) {
+                        mSuccess.success(mTag, (V) new File(res.string()), res);
+                        return res;
+                    }
                     IParseResult<V> ret = res.result;
                     if (ret != null && ret.isSuccess()) {
                         mSuccess.success(mTag, (V) ret.getT(), res);
@@ -270,7 +287,7 @@ class HRequest<V> implements IRequest<V>, IRequestBody {
             public Response process(int[] jump, Object... params) {
                 if (checkCancel(jump)) return null;
                 Response res = (Response) params[0];
-                if (isNotCancel() && mError != null) {
+                if (mError != null) {
                     IParseResult<V> ret = res.result;
                     if (!res.isSuccess()) {
                         mError.error(mTag, res.code(), res.desc(), res.exception());
@@ -319,126 +336,13 @@ class HRequest<V> implements IRequest<V>, IRequestBody {
 
     @Override
     public void cancel() {
-        isContinue.set(false);
+        isCancel.set(true);
     }
 
     private boolean checkCancel(int[] jump) {
         boolean cancel = isCancel.get();
         if (cancel) jump[0] = -1;
         return cancel;
-    }
-
-    @Override
-    public void onResponseData(byte[] data) {
-        if (isNotCancel()) {
-            IResponse<V> response = new Response<>(data);
-            IParseResult<V> parseResult;
-            try {
-                if (mParseResponse != null) {
-                    parseResult = mParseResponse.parse(mTag, response, mType);
-                } else {
-                    parseResult = getConfig().parse(mTag, response, mType);
-                }
-                if (parseResult == null) {
-                    onError(ERROR_NO_PARSE, response.string(), null);
-                    return;
-                } else if (parseResult.isCancel()) {
-                    complete();
-                    return;
-                }
-            } catch (Exception e) {
-                onError(ERROR_PARSE, "解析错误", e);
-                return;
-            }
-            success(parseResult, response);
-        }
-    }
-
-    @Override
-    public void onResponseFile(File file) {
-        if (isNotCancel()) {
-            success(new Result<>(true, (V) file), null);
-        }
-    }
-
-    @Override
-    public void onProgress(final float progress) {
-        if (isNotCancel() && mProgress != null) {
-            Platform.get().callback(new Runnable() {
-                @Override
-                public void run() {
-                    if (mProgress != null) {
-                        mProgress.progress(progress);
-                    }
-                }
-            });
-        } else {
-            mProgress = null;
-        }
-    }
-
-    private void success(final IParseResult<V> result, final IResponse<V> response) {
-        if (isNotCancel()) {
-            if (result.isSuccess()) {
-                if (mSuccessIO != null) {
-                    mSuccessIO.success(mTag, result.getT(), response);
-                }
-                if (isNotCancel()) {
-                    Platform.get().callback(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (isNotCancel() && mSuccess != null) {
-                                mSuccess.success(mTag, result.getT(), response);
-                            }
-                            complete();
-                        }
-                    });
-                }
-            } else {
-                onError(result.getCode(), result.getMessage(), result.getException());
-            }
-        }
-    }
-
-    @Override
-    public void onError(final String code, final String desc, final Exception e) {
-        if (isNotCancel()) {
-            Platform.get().callback(new Runnable() {
-                @Override
-                public void run() {
-                    if (mError != null) {
-                        mError.error(mTag, code, desc, e);
-                    }
-                    complete();
-                }
-            });
-        }
-    }
-
-    private boolean isCancel() {
-        return isCancel.get();
-    }
-
-    private boolean isNotCancel() {
-        if (!isContinue.get()) {
-            complete();
-        }
-        return isContinue.get();
-    }
-
-    private void complete() {
-        if (Platform.get().isCallbackThread()) {
-            if (mComplete != null) {
-                mComplete.complete(mTag);
-            }
-        } else {
-            Platform.get().callback(new Runnable() {
-                @Override
-                public void run() {
-                    complete();
-                }
-            });
-        }
     }
 
     @Override

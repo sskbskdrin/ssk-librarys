@@ -27,4 +27,6 @@ public interface IResponse {
     Exception exception();
 
     boolean isSuccess();
+
+    boolean isFile();
 }
