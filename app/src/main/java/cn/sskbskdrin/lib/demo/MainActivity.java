@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cn.sskbskdrin.base.IFragmentActivity;
+import cn.sskbskdrin.flow.FlowProcess;
 import cn.sskbskdrin.lib.demo.simple.SimpleAdapter;
 import cn.sskbskdrin.lib.demo.tool.HttpFragment;
 import cn.sskbskdrin.lib.demo.widget.BannerFragment;
@@ -43,6 +44,28 @@ public class MainActivity extends IFragmentActivity {
                 openActivity(CommonFragmentActivity.class, bundle);
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        getWindow().getDecorView().postDelayed(this::test,100);
+    }
+
+    private void test(){
+        new FlowProcess().main(params -> {
+            System.out.println(Thread.currentThread().getName() + "=main " + System.currentTimeMillis());
+            return 8;
+        }).io(params -> {
+            System.out.println(Thread.currentThread().getName() + "=io " + System.currentTimeMillis());
+            return params[0].toString();
+        }).main(params -> {
+            System.out.println(Thread.currentThread().getName() + "=main " + System.currentTimeMillis());
+            return Long.parseLong(params[0].toString());
+        }).main(params -> {
+            System.out.println(Thread.currentThread().getName() + "=main " + System.currentTimeMillis());
+            return Long.parseLong(params[0].toString());
+        }).start();
     }
 
     public static class ClassItem implements Serializable {

@@ -3,30 +3,36 @@ package cn.sskbskdrin.util;
 import android.content.Context;
 import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
+
 /**
  * @ClassName: ToastUtil
  * @Description: 土司通知类
- * @author: ayke
+ * @author: keayuan
  * @date: 2014-5-13 下午4:10:41
  */
 public class ToastUtil {
 
-    private static Toast toast;
+    private static WeakReference<Toast> toast;
 
     public static void show(Context context, CharSequence info, boolean longTime) {
         if (toast != null) {
-            toast.cancel();
+            Toast t = toast.get();
+            if (t != null) {
+                t.cancel();
+            }
             toast = null;
         }
-        toast = Toast.makeText(context, info, longTime ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT);
-        toast.show();
+        Toast t = Toast.makeText(context, info, longTime ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT);
+        t.show();
+        toast = new WeakReference<>(t);
     }
 
     public static void show(Context context, int resId) {
         show(context, context.getResources().getText(resId), false);
     }
 
-    public static void showToast(Context context, int resId, boolean longTime) {
+    public static void show(Context context, int resId, boolean longTime) {
         show(context, context.getResources().getText(resId), longTime);
     }
 

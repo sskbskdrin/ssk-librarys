@@ -7,6 +7,7 @@ package cn.sskbskdrin.http;
  */
 public interface IRequest<V> {
 
+    String ERROR_UNKNOWN = "-1";
     String ERROR_REAL_REQUEST = "-1001";
     String ERROR_PARSE = "-1002";
     String ERROR_NO_PARSE = "-1003";

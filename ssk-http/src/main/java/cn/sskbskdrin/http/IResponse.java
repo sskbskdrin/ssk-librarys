@@ -5,7 +5,7 @@ package cn.sskbskdrin.http;
  *
  * @author keayuan
  */
-public interface IResponse<T> {
+public interface IResponse {
     /**
      * 返回byte数据
      *
@@ -19,4 +19,12 @@ public interface IResponse<T> {
      * @return 返回的字符串
      */
     String string();
+
+    String code();
+
+    String desc();
+
+    Exception exception();
+
+    boolean isSuccess();
 }

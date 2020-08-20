@@ -342,7 +342,9 @@ public class CommonUtils {
      */
     public static int random(int start, int end) {
         Random random = new Random();
-        return start + random.nextInt(end - start);
+        int min = Math.min(start, end);
+        int max = Math.max(start, end);
+        return min + random.nextInt(max - min);
     }
 
     /**

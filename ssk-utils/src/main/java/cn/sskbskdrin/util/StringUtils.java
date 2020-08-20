@@ -147,18 +147,18 @@ public class StringUtils {
     }
 
     /**
-     * encoded in utf-8, if exception, return defultReturn
+     * encoded in utf-8, if exception, return defaultReturn
      *
      * @param str
-     * @param defultReturn
+     * @param defaultReturn
      * @return
      */
-    public static String utf8Encode(String str, String defultReturn) {
+    public static String utf8Encode(String str, String defaultReturn) {
         if (!isEmpty(str) && str.getBytes().length != str.length()) {
             try {
                 return URLEncoder.encode(str, "UTF-8");
             } catch (UnsupportedEncodingException e) {
-                return defultReturn;
+                return defaultReturn;
             }
         }
         return str;
