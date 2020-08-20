@@ -20,6 +20,7 @@ import java.util.Map;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
@@ -31,7 +32,7 @@ import javax.net.ssl.X509TrustManager;
  *
  * @author keayuan
  */
-public final class DefaultRealRequest implements IRealRequest {
+public class DefaultRealRequest implements IRealRequest {
     private static final String TAG = "UrlRequest";
     private static final int GET = 1001;
     private static final int POST = 1002;
@@ -61,7 +62,7 @@ public final class DefaultRealRequest implements IRealRequest {
                     return true;
                 }
             });
-            SSLContext sslContext = SSLContext.getInstance("SSL");
+            SSLContext sslContext = SSLContext.getInstance("TLS");
             TrustManager[] tm = {new X509TrustManager() {
                 @Override
                 public void checkClientTrusted(X509Certificate[] chain, String authType) {
@@ -76,7 +77,7 @@ public final class DefaultRealRequest implements IRealRequest {
                     return new X509Certificate[0];
                 }
             }};
-            sslContext.init(null, tm, new java.security.SecureRandom());
+            sslContext.init(new KeyManager[0], tm, new java.security.SecureRandom());
             ssl = sslContext.getSocketFactory();
         } else {
             ssl = mSSL;
@@ -134,7 +135,8 @@ public final class DefaultRealRequest implements IRealRequest {
         HttpURLConnection conn = null;
         try {
             conn = generate(request.getUrl(), request.getConnectedTimeout(), request.getReadTimeout(), method == GET
-                ? "GET" : "POST", request.getHeader());
+                ? "GET" : "POST", request
+                .getHeader());
 
             HashMap<String, Object> params = method == GET ? null : request.getParams();
             if (openLog) {
@@ -153,20 +155,25 @@ public final class DefaultRealRequest implements IRealRequest {
                     }
                 }
             }
+            long startTime = System.currentTimeMillis();
             // params
-            switch (method) {
-                case GET:
-                    doGet(conn);
-                    break;
-                case POST:
-                    doPost(conn, params);
-                    break;
-                case POST_JSON:
-                    doPostJson(conn, params);
-                    break;
-                case POST_FILE:
-                    doPostFile(conn, params);
-                    break;
+            if (!doDeal(conn, params)) {
+                switch (method) {
+                    case GET:
+                        doGet(conn);
+                        break;
+                    case POST:
+                        doPost(conn, params);
+                        break;
+                    case POST_JSON:
+                        doPostJson(conn, params);
+                        break;
+                    case POST_FILE:
+                        doPostFile(conn, params);
+                        break;
+                    default:
+                        break;
+                }
             }
 
             // response
@@ -181,16 +188,17 @@ public final class DefaultRealRequest implements IRealRequest {
                 buf = os.toByteArray();
                 in.close();
                 if (openLog) {
+                    Platform.get().log(TAG, "response: time=" + (System.currentTimeMillis() - startTime));
                     Platform.get().log(TAG, "response:" + new String(buf));
                 }
                 if (callback != null) {
                     callback.onResponseData(buf);
                 }
-
             } else {
                 if (openLog) {
-                    Platform.get().log(TAG,
-                        "response error: code=" + conn.getResponseCode() + " msg=" + conn.getResponseMessage());
+                    Platform.get()
+                        .log(TAG,
+                            "response error: code=" + conn.getResponseCode() + " msg=" + conn.getResponseMessage());
                 }
                 if (callback != null) {
                     callback.onError(String.valueOf(conn.getResponseCode()), conn.getResponseMessage(), null);
@@ -244,6 +252,11 @@ public final class DefaultRealRequest implements IRealRequest {
                 conn.disconnect();
             }
         }
+    }
+
+
+    protected boolean doDeal(HttpURLConnection conn, HashMap<String, Object> params) {
+        return false;
     }
 
     private static void doGet(HttpURLConnection conn) throws IOException {

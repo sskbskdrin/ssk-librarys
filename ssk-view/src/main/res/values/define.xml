@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ============================COLORS============================ -->
+    <color name="white">@android:color/white</color>
+    <color name="black">@android:color/black</color>
+    <color name="gray_1">#FF111111</color>
+    <color name="gray_3">#FF333333</color>
+    <color name="gray_6">#FF666666</color>
+    <color name="gray_9">#FF999999</color>
+    <color name="gray_c">#FFcccccc</color>
+    <color name="gray_e">#FFeeeeee</color>
+
+    <color name="main_color">#FFFABE00</color>
+    <color name="main_unable">#80FABE00</color>
+
+    <!--透明色-->
+    <color name="transparent">@android:color/transparent</color>
+    <color name="translucent_light">#80FFFFFF</color>
+    <color name="translucent_dark">#80000000</color>
+
+    <!--主标题颜色-->
+    <color name="font_major">@color/gray_1</color>
+    <color name="font_major_unable">#80111111</color>
+    <!--副标题颜色-->
+    <color name="font_minor">@color/gray_9</color>
+
+    <color name="touch_color">#a0dbdbdb</color>
+    <color name="line">#FFDDDDDD</color>
+
+
+    <!-- ============================DIMENS============================ -->
+    <dimen name="button_height">40dp</dimen>
+    <dimen name="font_mini">12sp</dimen>
+    <dimen name="font_small">14sp</dimen>
+    <dimen name="font_normal">16sp</dimen>
+    <dimen name="font_large">18sp</dimen>
+
+    <dimen name="round_small">5dp</dimen>
+    <dimen name="round_normal">8dp</dimen>
+    <dimen name="round_large">16dp</dimen>
+
+    <item name="window_fill" type="dimen">100%</item>
+    <item name="dialog_width" type="dimen">80%</item>
+    <item name="dialog_large_width" type="dimen">60%</item>
+
+
+    <!-- ============================INTEGERS============================ -->
+    <integer name="animation_default_duration">300</integer>
+    <integer name="animation_fast_duration">20</integer>
+
+
+    <!-- ============================IDS============================ -->
+    <item name="dialog_ok" type="id" />
+    <item name="dialog_cancel" type="id" />
+
+
+    <!-- ============================STYLES============================ -->
+    <style name="main_theme" parent="android:Theme.Holo.Light.NoActionBar">
+        <item name="android:screenOrientation">portrait</item>
+        <item name="android:textColorHint">@color/font_minor</item>
+        <item name="android:windowSoftInputMode">adjustResize|stateAlwaysHidden</item>
+        <item name="android:textSize">@dimen/font_normal</item>
+        <item name="android:textColor">@color/font_major</item>
+        <item name="android:listSelector">@drawable/rect_transparent_bg</item>
+        <item name="android:listDivider">@color/line</item>
+        <item name="android:dividerHeight">0.5dp</item>
+        <item name="android:editTextColor">@color/font_major</item>
+    </style>
+
+    <style name="text">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/font_normal</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="text.major">
+        <item name="android:textColor">@drawable/main_text_color</item>
+    </style>
+
+    <style name="text.minor">
+        <item name="android:textColor">@drawable/main_text_color</item>
+    </style>
+
+    <style name="edit" parent="text">
+        <item name="android:textColorHint">@color/font_minor</item>
+        <item name="android:background">@null</item>
+    </style>
+
+    <style name="button" parent="text">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/button_height</item>
+        <item name="android:textColor">@drawable/main_text_color</item>
+        <item name="android:background">@drawable/main_button_bg</item>
+    </style>
+
+    <style name="line">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">@color/line</item>
+    </style>
+
+    <style name="line_v">
+        <item name="android:layout_width">1dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">@color/line</item>
+    </style>
+
+    <style name="slide_bottom">
+        <item name="android:windowEnterAnimation">@anim/slide_in_bottom</item>
+        <item name="android:windowExitAnimation">@anim/slide_out_bottom</item>
+    </style>
+
+    <style name="dialog_theme" parent="android:Theme.Holo.Light.Dialog.NoActionBar.MinWidth">
+        <item name="android:windowIsFloating">true</item>
+        <!-- 设置未浮动窗口 -->
+        <item name="android:windowFrame">@null</item>
+        <!-- 设置无边框 -->
+        <item name="android:windowNoTitle">true</item>
+        <!-- 设置无标题 -->
+        <item name="android:windowBackground">@color/transparent</item>
+        <!-- 设置完全透明 -->
+        <item name="android:backgroundDimEnabled">true</item>
+        <!-- 设置屏幕变暗 -->>
+    </style>
+
+    <style name="dialog_theme.bottom">
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@color/transparent</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowAnimationStyle">@style/slide_bottom</item>
+        <item name="android:windowMinWidthMinor">@dimen/window_fill</item>
+    </style>
+
+</resources>

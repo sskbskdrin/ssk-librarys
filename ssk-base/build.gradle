@@ -26,4 +26,5 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 }
 
-apply from: "https://sskbskdrin.github.io/bintray.gradle"
+//apply from: "https://sskbskdrin.github.io/bintray.gradle"
+apply from: "../bintray.gradle"

@@ -6,7 +6,13 @@ package cn.sskbskdrin.http;
  * @author keayuan
  */
 public interface IResponse<T> {
+    /**
+     * 返回byte数据
+     *
+     * @return 数据数组
+     */
     byte[] bytes();
+
     /**
      * 返回数据转字符串
      *

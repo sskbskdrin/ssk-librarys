@@ -95,8 +95,8 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 
 if (proPkgExt == 'jar') {
     task makeJar(type: Jar) {
-        delete 'build/libs/ssk-http-0.0.2.jar'
-        from('build/intermediates/javac/release/classes/'+proPkg)
+        delete 'build/libs/ssk-http-$proVersion.jar'
+        from('build/intermediates/javac/release/classes/' + proPkg)
         into proPkg
         exclude('BuildConfig.class', 'R.class')
     }

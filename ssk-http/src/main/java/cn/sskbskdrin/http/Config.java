@@ -28,6 +28,7 @@ public final class Config {
 
     long readTimeout = 15000;
     long connectedTimeout = 15000;
+    private boolean openLog = false;
 
     final static Config INSTANCE = new Config();
 
@@ -37,15 +38,18 @@ public final class Config {
      * 设置base url
      *
      * @param url baseUrl
+     * @return Config
      */
-    public void setBaseUrl(String url) {
+    public Config setBaseUrl(String url) {
         BASE_URL = url;
+        return this;
     }
 
     /**
      * 设置全局header
      *
      * @param header header添加器
+     * @return Config
      */
     public Config setHeader(IMap<String, String> header) {
         iHeader = header;
@@ -53,9 +57,21 @@ public final class Config {
     }
 
     /**
+     * 设置是否打开log
+     *
+     * @param log 是否打开
+     * @return Config
+     */
+    public Config setOpenLog(boolean log) {
+        openLog = log;
+        return this;
+    }
+
+    /**
      * 设置全局解析器
      *
      * @param parseResponse 解析器
+     * @return Config
      */
     public Config setParseResponse(IParseResponse<?> parseResponse) {
         this.iParseResponse = parseResponse;
@@ -66,6 +82,7 @@ public final class Config {
      * 设置实际请求工厂
      *
      * @param factory 请求构建工厂
+     * @return Config
      */
     public Config setRealRequestFactory(IRealRequestFactory factory) {
         this.iRealRequestFactory = factory;
@@ -76,6 +93,7 @@ public final class Config {
      * 连接超时时间
      *
      * @param time 超时时间，单位ms
+     * @return Config
      */
     public Config connectedTimeout(long time) {
         connectedTimeout = time;
@@ -86,6 +104,7 @@ public final class Config {
      * 读取超时时间
      *
      * @param time 超时时间，单位ms
+     * @return Config
      */
     public Config readTimeout(long time) {
         readTimeout = time;
@@ -96,6 +115,7 @@ public final class Config {
      * 设置请求执行器
      *
      * @param executor 执行者
+     * @return Config
      */
     public Config setExecuteService(Executor executor) {
         if (executor != null) Config.executor = executor;
@@ -112,7 +132,7 @@ public final class Config {
         if (iRealRequestFactory != null) {
             return iRealRequestFactory.generateRealRequest();
         }
-        return new DefaultRealRequest(false);
+        return new DefaultRealRequest(openLog);
     }
 
     void execute(Runnable runnable) {
@@ -123,7 +143,7 @@ public final class Config {
         if (iParseResponse != null) {
             return (IParseResult<T>) iParseResponse.parse(tag, response, type);
         }
-        return new Result<>();
+        return new Result<>(true);
     }
 
     /**

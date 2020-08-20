@@ -67,7 +67,11 @@ class Platform {
 
         @Override
         void log(String tag, String msg, Exception e) {
-            Log.d(tag, msg, e);
+            if (e != null) {
+                Log.w(tag, msg, e);
+            } else {
+                Log.d(tag, msg, e);
+            }
         }
     }
 }

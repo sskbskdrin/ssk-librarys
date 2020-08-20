@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cn.sskbskdrin.base.IFragmentActivity;
-import cn.sskbskdrin.lib.demo.simple.SampleListFragment;
 import cn.sskbskdrin.lib.demo.simple.SimpleAdapter;
+import cn.sskbskdrin.lib.demo.tool.HttpFragment;
 import cn.sskbskdrin.lib.demo.widget.BannerFragment;
 import cn.sskbskdrin.lib.demo.widget.FlowFragment;
 import cn.sskbskdrin.lib.demo.widget.PickerFragment;
@@ -20,11 +20,11 @@ public class MainActivity extends IFragmentActivity {
     private static List<ClassItem> mList = new ArrayList<>();
 
     static {
-        mList.add(new ClassItem(SampleListFragment.class, "SampleList", false));
         mList.add(new ClassItem(FlowFragment.class, "FlowLayout", false));
         mList.add(new ClassItem(TabHostFragment.class, "TabHost", false));
         mList.add(new ClassItem(PickerFragment.class, "PickerView", false));
         mList.add(new ClassItem(BannerFragment.class, "BannerView", false));
+        mList.add(new ClassItem(HttpFragment.class, "HTTP", false));
     }
 
     @Override

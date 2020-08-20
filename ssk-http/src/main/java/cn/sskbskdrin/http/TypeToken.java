@@ -50,6 +50,8 @@ public abstract class TypeToken<T> {
 
     /**
      * Returns the raw (non-generic) type for this type.
+     *
+     * @return raw type
      */
     public final Class<? super T> getRawType() {
         return rawType;
@@ -57,6 +59,8 @@ public abstract class TypeToken<T> {
 
     /**
      * Gets underlying {@code Type} instance.
+     *
+     * @return type
      */
     public final Type getType() {
         return type;
@@ -81,6 +85,9 @@ public abstract class TypeToken<T> {
      * Returns a type that is functionally equal but not necessarily equal
      * according to {@link Object#equals(Object) Object.equals()}. The returned
      * type is {@link java.io.Serializable}.
+     *
+     * @param type canonicalize type
+     * @return type
      */
     public static Type canonicalize(Type type) {
         if (type instanceof Class) {
@@ -328,7 +335,8 @@ public abstract class TypeToken<T> {
             // TODO: save a .clone() call
             ParameterizedType pa = (ParameterizedType) a;
             ParameterizedType pb = (ParameterizedType) b;
-            return equal(pa.getOwnerType(), pb.getOwnerType()) && pa.getRawType().equals(pb.getRawType()) && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
+            return equal(pa.getOwnerType(), pb.getOwnerType()) && pa.getRawType()
+                .equals(pb.getRawType()) && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
 
         } else if (a instanceof GenericArrayType) {
             if (!(b instanceof GenericArrayType)) {
