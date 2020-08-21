@@ -25,18 +25,15 @@ public class FlowProcess {
     public FlowProcess() {
     }
 
+    /**
+     * 构造方法
+     *
+     * @param first 执行第一条IProcess时传的参数
+     */
     public FlowProcess(Object first) {
         lastResult = first;
     }
 
-    /**
-     * 运行在主线程
-     *
-     * @param p    Process处理器
-     * @param args process参数
-     * @param <T>  process参数返回值类型
-     * @return process计算结果
-     */
     public <T, L> FlowProcess main(IProcess<T, L> p, Object... args) {
         main(null, p, args);
         return this;
@@ -47,15 +44,6 @@ public class FlowProcess {
         return this;
     }
 
-
-    /**
-     * 运行在io线程
-     *
-     * @param p    Process处理器
-     * @param args process参数
-     * @param <T>  process参数返回值类型
-     * @return process计算结果
-     */
     public <T, L> FlowProcess io(IProcess<T, L> p, Object... args) {
         io(null, p, args);
         return this;
@@ -84,7 +72,12 @@ public class FlowProcess {
     public void start() {
         if (isStart) return;
         isStart = true;
-        Platform.get().callback(new Flow(this));
+        if (head == null) return;
+        if (head.isMain) {
+            Platform.get().callback(new Flow(this));
+        } else {
+            executor.execute(new Flow(this));
+        }
     }
 
     /**

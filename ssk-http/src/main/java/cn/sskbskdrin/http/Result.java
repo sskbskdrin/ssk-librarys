@@ -59,17 +59,14 @@ public class Result<T> implements IParseResult<T> {
         return false;
     }
 
-    @Override
     public String getCode() {
         return code;
     }
 
-    @Override
     public String getMessage() {
         return msg;
     }
 
-    @Override
     public Exception getException() {
         return exception;
     }

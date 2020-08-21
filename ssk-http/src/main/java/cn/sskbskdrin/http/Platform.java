@@ -70,7 +70,7 @@ class Platform {
             if (e != null) {
                 Log.w(tag, msg, e);
             } else {
-                Log.d(tag, msg, e);
+                Log.d(tag, msg);
             }
         }
     }

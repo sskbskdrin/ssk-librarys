@@ -22,27 +22,6 @@ public interface IParseResult<T> {
     boolean isCancel();
 
     /**
-     * 获取解析的状态码
-     *
-     * @return 返回状态码
-     */
-    String getCode();
-
-    /**
-     * msg信息
-     *
-     * @return msg信息
-     */
-    String getMessage();
-
-    /**
-     * 获取解析异常
-     *
-     * @return 返回异常
-     */
-    Exception getException();
-
-    /**
      * 解析出的实体类
      *
      * @return 结果

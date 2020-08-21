@@ -29,7 +29,7 @@ class Platform {
         return new Platform();
     }
 
-    boolean isCallbackThread() {
+    boolean isMainThread() {
         return true;
     }
 
@@ -63,7 +63,7 @@ class Platform {
         }
 
         @Override
-        boolean isCallbackThread() {
+        boolean isMainThread() {
             return Thread.currentThread() == Looper.getMainLooper().getThread();
         }
 
@@ -72,7 +72,7 @@ class Platform {
             if (e != null) {
                 Log.w(tag, msg, e);
             } else {
-                Log.d(tag, msg, e);
+                Log.d(tag, msg);
             }
         }
     }

@@ -15,7 +15,8 @@ import cn.sskbskdrin.flow.IProcess;
  *
  * @author sskbskdrin
  */
-class HRequest<V> implements IRequest<V>, IRequestBody {
+class HttpRequest<V> implements IRequest<V>, IRequestBody {
+    private static final String TAG = "HttpRequest";
 
     private final HashMap<String, String> mHeader = new HashMap<>();
     private final HashMap<String, Object> mParams = new HashMap<>();
@@ -26,7 +27,7 @@ class HRequest<V> implements IRequest<V>, IRequestBody {
     private IMap<String, Object> iParams;
 
     private IPreRequest mPreRequest;
-    private IParseResponse<?> mParseResponse;
+    private IParseResponse<V> mParseResponse;
     private IProgress mProgress;
     private ISuccess<V> mSuccess;
     private ISuccess<V> mSuccessIO;
@@ -61,7 +62,7 @@ class HRequest<V> implements IRequest<V>, IRequestBody {
         }
     };
 
-    HRequest(String url, Type type) {
+    HttpRequest(String url, Type type) {
         mUrl = Config.fixUrl(url);
         mType = type;
     }
@@ -187,9 +188,9 @@ class HRequest<V> implements IRequest<V>, IRequestBody {
     private void request() {
         IRealRequest realRequest = getConfig().getRealRequest();
         if (realRequest == null) {
-            new FlowProcess().main(mError == null ? null : new IProcess<Object>() {
+            new FlowProcess().main(mError == null ? null : new IProcess<Object, Object>() {
                 @Override
-                public Object process(IFlow flow, Object... params) {
+                public Object process(IFlow flow, Object last, Object... params) {
                     mError.error(mTag, ERROR_REAL_REQUEST, "没找到请求实现类，请先设置请求工厂", new IllegalAccessException(
                         "IRealRequestFactory " + "not " + "impl or IRealRequest is null"));
                     return null;
@@ -197,104 +198,99 @@ class HRequest<V> implements IRequest<V>, IRequestBody {
             }).start();
             return;
         }
-        final IRRequest request = null;//TODO 未实现
-
-        FlowProcess process = new FlowProcess(request);
-        process.main(mPreRequest == null ? null : new IProcess<Object>() {
+        FlowProcess process = new FlowProcess(realRequest);
+        process.main(mPreRequest == null ? null : new IProcess<IRealRequest, IRealRequest>() {
             @Override
-            public Object process(IFlow flow, Object... params) {
+            public IRealRequest process(IFlow flow, IRealRequest last, Object... params) {
+                Platform.get().log(TAG, "pre");
                 mPreRequest.onPreRequest(mTag);
-                return params[0];
+                return last;
             }
-        }).io(new IProcess<Response>() {
+        }).io(new IProcess<Response, IRealRequest>() {
             @Override
-            public Response process(IFlow flow, Object... params) {
+            public Response process(IFlow flow, IRealRequest last, Object... params) {
+                Platform.get().log(TAG, "request");
                 if (isCancel(flow)) return null;
-                Response res = request((IRRequest) params[0]);
+                Response res = request(last);
                 if (res == null || !res.isSuccess()) {
                     flow.remove("parse");
                     flow.remove("successIO");
                     flow.remove("success");
                 } else {
-                    if (res.isFile()) flow.remove("parse");
+                    if (res.isFile()) {
+                        flow.remove("parse");
+                        flow.remove("error");
+                    }
                 }
                 return res;
             }
-        }).io("parse", new IProcess<Response>() {
+        }).io("parse", new IProcess<Response, Response>() {
             @Override
-            public Response process(IFlow flow, Object... params) {
+            public Response process(IFlow flow, Response last, Object... params) {
+                Platform.get().log(TAG, "parse");
                 if (isCancel(flow)) return null;
-                Response res = (Response) params[0];
                 try {
-                    if (mParseResponse != null) {
-                        res.result = mParseResponse.parse(mTag, (IResponse) params[0], mType);
+                    IParseResponse response = mParseResponse == null ? getConfig().iParseResponse : mParseResponse;
+                    if (response != null) {
+                        last.result = response.parse(mTag, last, mType);
                     } else {
-                        res.result = getConfig().parse(mTag, (IResponse) params[0], mType);
-                    }
-                    if (res.result == null) {
-                        res = Response.get(ERROR_NO_PARSE, res.string(), null);
+                        last.result = new Result(true);
                     }
                 } catch (Exception e) {
-                    res = Response.get(ERROR_PARSE, res.string(), e);
+                    last.error(ERROR_PARSE, last.string(), e);
                 }
-                return res;
-            }
-        }).io("successIO", mSuccessIO == null ? null : new IProcess<Response>() {
-            @Override
-            public Response process(IFlow flow, Object... params) {
-                if (isCancel(flow)) return null;
-                Response res = (Response) params[0];
-                if (mSuccessIO != null && res.isSuccess()) {
-                    if (res.isFile()) {
-                        mSuccessIO.success(mTag, (V) new File(res.string()), res);
-                        return res;
-                    }
-                    IParseResult<V> ret = res.result;
-                    if (ret != null && ret.isSuccess()) {
-                        mSuccessIO.success(mTag, ret.getT(), res);
-                    }
+                if (last.result != null && last.result.isCancel()) {
+                    flow.remove("success");
+                    flow.remove("error");
                 }
-                flow.remove("error");
-                return res;
+                if (last.isSuccess() && (last.result == null || last.result.isSuccess())) flow.remove("error");
+                else flow.remove("success");
+                return last;
             }
-        }).main("success", mSuccess == null ? null : new IProcess<Response>() {
+        }).io("success", mSuccessIO == null ? null : new IProcess<Response, Response>() {
             @Override
-            public Response process(IFlow flow, Object... params) {
+            public Response process(IFlow flow, Response last, Object... params) {
+                Platform.get().log(TAG, "successIO");
                 if (isCancel(flow)) return null;
-                Response res = (Response) params[0];
-                if (mSuccess != null && res.isSuccess()) {
-                    if (res.isFile()) {
-                        mSuccess.success(mTag, (V) new File(res.string()), res);
-                        return res;
-                    }
-                    IParseResult<V> ret = res.result;
-                    if (ret != null && ret.isSuccess()) {
-                        mSuccess.success(mTag, ret.getT(), res);
+                if (mSuccessIO != null && last.isSuccess()) {
+                    if (last.isFile()) {
+                        mSuccessIO.success(mTag, (V) new File(last.string()), last);
+                    } else {
+                        IParseResult<V> ret = last.result;
+                        mSuccessIO.success(mTag, ret != null ? ret.getT() : null, last);
                     }
                 }
-                flow.remove("error");
-                return res;
+                return last;
             }
-        }).main("error", mError == null ? null : new IProcess<Response>() {
+        }).main("success", mSuccess == null ? null : new IProcess<Response, Response>() {
             @Override
-            public Response process(IFlow flow, Object... params) {
+            public Response process(IFlow flow, Response last, Object... params) {
+                Platform.get().log(TAG, "success");
                 if (isCancel(flow)) return null;
-                Response res = (Response) params[0];
+                if (mSuccess != null && last.isSuccess()) {
+                    if (last.isFile()) {
+                        mSuccess.success(mTag, (V) new File(last.string()), last);
+                    } else {
+                        IParseResult<V> ret = last.result;
+                        mSuccess.success(mTag, ret != null ? ret.getT() : null, last);
+                    }
+                }
+                return last;
+            }
+        }).main("error", mError == null ? null : new IProcess<Object, Response>() {
+            @Override
+            public Object process(IFlow flow, Response last, Object... params) {
+                Platform.get().log(TAG, "error", last.exception());
+                if (isCancel(flow)) return null;
                 if (mError != null) {
-                    IParseResult<V> ret = res.result;
-                    if (!res.isSuccess()) {
-                        mError.error(mTag, res.code(), res.desc(), res.exception());
-                    } else if (ret == null) {
-                        mError.error(mTag, ERROR_UNKNOWN, "未知错误", null);
-                    } else if (!ret.isSuccess()) {
-                        mError.error(mTag, ret.getCode(), ret.getMessage(), ret.getException());
-                    }
+                    mError.error(mTag, last.code(), last.desc(), last.exception());
                 }
-                return res;
+                return last;
             }
-        }).main(mComplete == null ? null : new IProcess<Object>() {
+        }).main(mComplete == null ? null : new IProcess<Object, Object>() {
             @Override
-            public Object process(IFlow flow, Object... params) {
+            public Object process(IFlow flow, Object last, Object... params) {
+                Platform.get().log(TAG, "complete");
                 if (mComplete != null) mComplete.complete(mTag);
                 return null;
             }
@@ -305,7 +301,7 @@ class HRequest<V> implements IRequest<V>, IRequestBody {
         return Config.INSTANCE;
     }
 
-    private Response request(IRRequest request) {
+    private Response request(IRealRequest request) {
         if (!getHeader().containsKey("Content-Type")) {
             addHeader("Content-Type", mContentType);
         }
@@ -333,7 +329,6 @@ class HRequest<V> implements IRequest<V>, IRequestBody {
         boolean cancel = isCancel.get();
         if (cancel) {
             flow.remove("parse");
-            flow.remove("successIO");
             flow.remove("success");
             flow.remove("error");
         }

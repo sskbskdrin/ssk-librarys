@@ -32,7 +32,7 @@ import javax.net.ssl.X509TrustManager;
  *
  * @author keayuan
  */
-public class DefaultRRequest implements IRealRequest {
+public class DefaultRealRequest implements IRealRequest {
     private static final String TAG = "UrlRequest";
     private static final int GET = 1001;
     private static final int POST = 1002;
@@ -45,7 +45,7 @@ public class DefaultRRequest implements IRealRequest {
     private final boolean openLog;
     private SSLSocketFactory mSSL;
 
-    public DefaultRRequest(boolean openLog) {
+    public DefaultRealRequest(boolean openLog) {
         this.openLog = openLog;
     }
 

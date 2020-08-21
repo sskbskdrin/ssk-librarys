@@ -1,6 +1,5 @@
 package cn.sskbskdrin.http;
 
-import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -24,7 +23,7 @@ public final class Config {
 
     private IRealRequestFactory iRealRequestFactory;
 
-    private IParseResponse<?> iParseResponse;
+    IParseResponse<?> iParseResponse;
 
     long readTimeout = 15000;
     long connectedTimeout = 15000;
@@ -137,13 +136,6 @@ public final class Config {
 
     void execute(Runnable runnable) {
         executor.execute(runnable);
-    }
-
-    <T> IParseResult<T> parse(String tag, IResponse response, Type type) {
-        if (iParseResponse != null) {
-            return (IParseResult<T>) iParseResponse.parse(tag, response, type);
-        }
-        return new Result<>(true);
     }
 
     /**

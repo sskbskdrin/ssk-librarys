@@ -28,5 +28,4 @@ public interface IResponse {
 
     boolean isSuccess();
 
-    boolean isFile();
 }

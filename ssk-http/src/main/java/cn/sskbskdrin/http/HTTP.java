@@ -20,7 +20,7 @@ public final class HTTP {
         return new HttpRequest<>(url, tClass);
     }
 
-    public static <V> IRequest<V> url(String url, TypeToken<V> token) {
+    public static <V, T> IRequest<V> url(String url, TypeToken<T> token) {
         return new HttpRequest<>(url, token.getType());
     }
 }

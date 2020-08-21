@@ -15,29 +15,34 @@ public final class Response implements IResponse {
     private Exception e;
     IParseResult result;
 
-
     private Response() {
         code = "200";
     }
 
-    static Response get(String str) {
+    public static Response get(String str) {
         Response res = new Response();
         res.bodyString = str;
         return res;
     }
 
-    static Response get(byte[] data) {
+    public static Response get(byte[] data) {
         Response res = new Response();
         res.bodyData = data;
         return res;
     }
 
-    static Response get(String code, String desc, Exception e) {
+    public static Response get(String code, String desc, Exception e) {
         Response res = new Response();
         res.code = code;
         res.desc = desc;
         res.e = e;
         return res;
+    }
+
+    public void error(String code, String desc, Exception e) {
+        this.code = code;
+        this.desc = desc;
+        this.e = e;
     }
 
     @Override
@@ -75,8 +80,7 @@ public final class Response implements IResponse {
         return "200".equals(code);
     }
 
-    @Override
-    public boolean isFile() {
+    boolean isFile() {
         return bodyData == null && bodyString != null;
     }
 }
