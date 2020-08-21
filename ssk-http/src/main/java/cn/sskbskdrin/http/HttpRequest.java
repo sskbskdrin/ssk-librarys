@@ -7,14 +7,15 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import cn.sskbskdrin.flow.FlowProcess;
+import cn.sskbskdrin.flow.IFlow;
 import cn.sskbskdrin.flow.IProcess;
 
 /**
- * Created by keayuan on 2019-11-29.
+ * Created by sskbskdrin on 2020/8/20.
  *
- * @author keayuan
+ * @author sskbskdrin
  */
-final class HttpRequest<V> implements IRequest<V>, IRequestCallback, IRequestBody {
+class HRequest<V> implements IRequest<V>, IRequestBody {
 
     private final HashMap<String, String> mHeader = new HashMap<>();
     private final HashMap<String, Object> mParams = new HashMap<>();
@@ -25,7 +26,7 @@ final class HttpRequest<V> implements IRequest<V>, IRequestCallback, IRequestBod
     private IMap<String, Object> iParams;
 
     private IPreRequest mPreRequest;
-    private IParseResponse<V> mParseResponse;
+    private IParseResponse<?> mParseResponse;
     private IProgress mProgress;
     private ISuccess<V> mSuccess;
     private ISuccess<V> mSuccessIO;
@@ -39,10 +40,28 @@ final class HttpRequest<V> implements IRequest<V>, IRequestCallback, IRequestBod
     private long readTimeout = -1;
     private long connectedTimeout = -1;
 
-    private AtomicBoolean isContinue = new AtomicBoolean(true);
+    private AtomicBoolean isCancel = new AtomicBoolean(false);
     private Type mType;
 
-    HttpRequest(String url, Type type) {
+    private IProgress inProgress = new IProgress() {
+        @Override
+        public void progress(final float progress) {
+            if (mProgress != null && !isCancel.get()) {
+                Platform.get().callback(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mProgress != null) {
+                            mProgress.progress(progress);
+                        }
+                    }
+                });
+            } else {
+                mProgress = null;
+            }
+        }
+    };
+
+    HRequest(String url, Type type) {
         mUrl = Config.fixUrl(url);
         mType = type;
     }
@@ -168,36 +187,115 @@ final class HttpRequest<V> implements IRequest<V>, IRequestCallback, IRequestBod
     private void request() {
         IRealRequest realRequest = getConfig().getRealRequest();
         if (realRequest == null) {
-            onError(ERROR_REAL_REQUEST, "没找到请求实现类，请先设置请求工厂", new IllegalAccessException("IRealRequestFactory not " +
-                "impl or IRealRequest is null"));
+            new FlowProcess().main(mError == null ? null : new IProcess<Object>() {
+                @Override
+                public Object process(IFlow flow, Object... params) {
+                    mError.error(mTag, ERROR_REAL_REQUEST, "没找到请求实现类，请先设置请求工厂", new IllegalAccessException(
+                        "IRealRequestFactory " + "not " + "impl or IRealRequest is null"));
+                    return null;
+                }
+            }).start();
             return;
         }
-        final IRealRequest request = realRequest;
-        Platform.get().callback(new Runnable() {
+        final IRRequest request = null;//TODO 未实现
+
+        FlowProcess process = new FlowProcess(request);
+        process.main(mPreRequest == null ? null : new IProcess<Object>() {
             @Override
-            public void run() {
-                if (mPreRequest != null) {
-                    mPreRequest.onPreRequest(mTag);
-                }
-                getConfig().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        request(request);
-                    }
-                });
-            }
-        });
-        final FlowProcess process = new FlowProcess();
-        process.main(new IProcess<Object>() {
-            @Override
-            public Object process(Object... params) {
+            public Object process(IFlow flow, Object... params) {
                 mPreRequest.onPreRequest(mTag);
-                return null;
+                return params[0];
             }
-        }).io(new IProcess<Object>() {
+        }).io(new IProcess<Response>() {
             @Override
-            public Object process(Object... params) {
-                request(request);
+            public Response process(IFlow flow, Object... params) {
+                if (isCancel(flow)) return null;
+                Response res = request((IRRequest) params[0]);
+                if (res == null || !res.isSuccess()) {
+                    flow.remove("parse");
+                    flow.remove("successIO");
+                    flow.remove("success");
+                } else {
+                    if (res.isFile()) flow.remove("parse");
+                }
+                return res;
+            }
+        }).io("parse", new IProcess<Response>() {
+            @Override
+            public Response process(IFlow flow, Object... params) {
+                if (isCancel(flow)) return null;
+                Response res = (Response) params[0];
+                try {
+                    if (mParseResponse != null) {
+                        res.result = mParseResponse.parse(mTag, (IResponse) params[0], mType);
+                    } else {
+                        res.result = getConfig().parse(mTag, (IResponse) params[0], mType);
+                    }
+                    if (res.result == null) {
+                        res = Response.get(ERROR_NO_PARSE, res.string(), null);
+                    }
+                } catch (Exception e) {
+                    res = Response.get(ERROR_PARSE, res.string(), e);
+                }
+                return res;
+            }
+        }).io("successIO", mSuccessIO == null ? null : new IProcess<Response>() {
+            @Override
+            public Response process(IFlow flow, Object... params) {
+                if (isCancel(flow)) return null;
+                Response res = (Response) params[0];
+                if (mSuccessIO != null && res.isSuccess()) {
+                    if (res.isFile()) {
+                        mSuccessIO.success(mTag, (V) new File(res.string()), res);
+                        return res;
+                    }
+                    IParseResult<V> ret = res.result;
+                    if (ret != null && ret.isSuccess()) {
+                        mSuccessIO.success(mTag, ret.getT(), res);
+                    }
+                }
+                flow.remove("error");
+                return res;
+            }
+        }).main("success", mSuccess == null ? null : new IProcess<Response>() {
+            @Override
+            public Response process(IFlow flow, Object... params) {
+                if (isCancel(flow)) return null;
+                Response res = (Response) params[0];
+                if (mSuccess != null && res.isSuccess()) {
+                    if (res.isFile()) {
+                        mSuccess.success(mTag, (V) new File(res.string()), res);
+                        return res;
+                    }
+                    IParseResult<V> ret = res.result;
+                    if (ret != null && ret.isSuccess()) {
+                        mSuccess.success(mTag, ret.getT(), res);
+                    }
+                }
+                flow.remove("error");
+                return res;
+            }
+        }).main("error", mError == null ? null : new IProcess<Response>() {
+            @Override
+            public Response process(IFlow flow, Object... params) {
+                if (isCancel(flow)) return null;
+                Response res = (Response) params[0];
+                if (mError != null) {
+                    IParseResult<V> ret = res.result;
+                    if (!res.isSuccess()) {
+                        mError.error(mTag, res.code(), res.desc(), res.exception());
+                    } else if (ret == null) {
+                        mError.error(mTag, ERROR_UNKNOWN, "未知错误", null);
+                    } else if (!ret.isSuccess()) {
+                        mError.error(mTag, ret.getCode(), ret.getMessage(), ret.getException());
+                    }
+                }
+                return res;
+            }
+        }).main(mComplete == null ? null : new IProcess<Object>() {
+            @Override
+            public Object process(IFlow flow, Object... params) {
+                if (mComplete != null) mComplete.complete(mTag);
                 return null;
             }
         }).start();
@@ -207,141 +305,39 @@ final class HttpRequest<V> implements IRequest<V>, IRequestCallback, IRequestBod
         return Config.INSTANCE;
     }
 
-    private void request(IRealRequest request) {
+    private Response request(IRRequest request) {
         if (!getHeader().containsKey("Content-Type")) {
             addHeader("Content-Type", mContentType);
         }
         switch (mContentType) {
             case CONTENT_TYPE_GET:
-                request.get(this, this);
-                break;
+                return request.get(this);
             case CONTENT_TYPE_FORM:
-                request.post(this, this);
-                break;
+                return request.post(this);
             case CONTENT_TYPE_JSON:
-                request.postJson(this, this);
-                break;
+                return request.postJson(this);
             case CONTENT_TYPE_MULTIPART:
-                request.postFile(this, this);
-                break;
+                return request.postFile(this, inProgress);
             case CONTENT_TYPE_DOWN:
-                request.download(this, mFilePath, this);
-                break;
+                return request.download(this, mFilePath, inProgress);
         }
+        return null;
     }
 
     @Override
     public void cancel() {
-        isContinue.set(false);
+        isCancel.set(true);
     }
 
-    @Override
-    public void onResponseData(byte[] data) {
-        if (isNotCancel()) {
-            IResponse<V> response = new Response<>(data);
-            IParseResult<V> parseResult;
-            try {
-                if (mParseResponse != null) {
-                    parseResult = mParseResponse.parse(mTag, response, mType);
-                } else {
-                    parseResult = getConfig().parse(mTag, response, mType);
-                }
-                if (parseResult == null) {
-                    onError(ERROR_NO_PARSE, response.string(), null);
-                    return;
-                } else if (parseResult.isCancel()) {
-                    complete();
-                    return;
-                }
-            } catch (Exception e) {
-                onError(ERROR_PARSE, "解析错误", e);
-                return;
-            }
-            success(parseResult, response);
+    private boolean isCancel(IFlow flow) {
+        boolean cancel = isCancel.get();
+        if (cancel) {
+            flow.remove("parse");
+            flow.remove("successIO");
+            flow.remove("success");
+            flow.remove("error");
         }
-    }
-
-    @Override
-    public void onResponseFile(File file) {
-        if (isNotCancel()) {
-            success(new Result<>(true, (V) file), null);
-        }
-    }
-
-    @Override
-    public void onProgress(final float progress) {
-        if (isNotCancel() && mProgress != null) {
-            Platform.get().callback(new Runnable() {
-                @Override
-                public void run() {
-                    if (mProgress != null) {
-                        mProgress.progress(progress);
-                    }
-                }
-            });
-        } else {
-            mProgress = null;
-        }
-    }
-
-    private void success(final IParseResult<V> result, final IResponse<V> response) {
-        if (isNotCancel()) {
-            if (result.isSuccess()) {
-                if (mSuccessIO != null) {
-                    mSuccessIO.success(mTag, result.getT(), response);
-                }
-                if (isNotCancel()) {
-                    Platform.get().callback(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (isNotCancel() && mSuccess != null) {
-                                mSuccess.success(mTag, result.getT(), response);
-                            }
-                            complete();
-                        }
-                    });
-                }
-            } else {
-                onError(result.getCode(), result.getMessage(), result.getException());
-            }
-        }
-    }
-
-    @Override
-    public void onError(final String code, final String desc, final Exception e) {
-        if (isNotCancel()) {
-            Platform.get().callback(new Runnable() {
-                @Override
-                public void run() {
-                    if (mError != null) {
-                        mError.error(mTag, code, desc, e);
-                    }
-                    complete();
-                }
-            });
-        }
-    }
-
-    private boolean isNotCancel() {
-        if (!isContinue.get()) {
-            complete();
-        }
-        return isContinue.get();
-    }
-
-    private void complete() {
-        if (Platform.get().isCallbackThread()) {
-            if (mComplete != null) {
-                mComplete.complete(mTag);
-            }
-        } else {
-            Platform.get().callback(new Runnable() {
-                @Override
-                public void run() {
-                    complete();
-                }
-            });
-        }
+        return cancel;
     }
 
     @Override

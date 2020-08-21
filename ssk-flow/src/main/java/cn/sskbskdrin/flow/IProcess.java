@@ -5,6 +5,6 @@ package cn.sskbskdrin.flow;
  *
  * @author keayuan
  */
-public interface IProcess<R> {
-    R process(int[] jump, Object... params);
+public interface IProcess<R, L> {
+    R process(IFlow flowProcess, L last, Object... params);
 }

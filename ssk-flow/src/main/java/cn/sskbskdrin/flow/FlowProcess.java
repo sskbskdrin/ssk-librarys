@@ -37,11 +37,16 @@ public class FlowProcess {
      * @param <T>  process参数返回值类型
      * @return process计算结果
      */
-    public <T> FlowProcess main(IProcess<T> p, Object... args) {
-        if (isStart) return this;
-        add(p, true, args);
+    public <T, L> FlowProcess main(IProcess<T, L> p, Object... args) {
+        main(null, p, args);
         return this;
     }
+
+    public <T, L> FlowProcess main(String tag, IProcess<T, L> p, Object... args) {
+        add(tag, p, true, args);
+        return this;
+    }
+
 
     /**
      * 运行在io线程
@@ -51,15 +56,19 @@ public class FlowProcess {
      * @param <T>  process参数返回值类型
      * @return process计算结果
      */
-    public <T> FlowProcess io(IProcess<T> p, Object... args) {
-        if (isStart) return this;
-        add(p, false, args);
+    public <T, L> FlowProcess io(IProcess<T, L> p, Object... args) {
+        io(null, p, args);
         return this;
     }
 
-    private <T> void add(IProcess<T> p, boolean isMain, Object... args) {
-        if (p == null) return;
-        Node<T> node = new Node<>(p, isMain, args);
+    public <T, L> FlowProcess io(String tag, IProcess<T, L> p, Object... args) {
+        add(tag, p, false, args);
+        return this;
+    }
+
+    private <T, L> void add(String tag, IProcess<T, L> p, boolean isMain, Object... args) {
+        if (p == null || isStart) return;
+        Node<T, L> node = new Node<>(tag, p, isMain, args);
         if (head == null) {
             head = node;
             tail = node;
@@ -75,7 +84,7 @@ public class FlowProcess {
     public void start() {
         if (isStart) return;
         isStart = true;
-        Platform.get().callback(circuit);
+        Platform.get().callback(new Flow(this));
     }
 
     /**
@@ -87,22 +96,26 @@ public class FlowProcess {
         FlowProcess.executor = executor;
     }
 
-    private Runnable circuit = new Runnable() {
+    private static class Flow implements IFlow, Runnable {
+
+        private Node head;
+        private Node tail;
+        private Object lastResult;
+
+        private Flow(FlowProcess process) {
+            head = process.head;
+            tail = process.tail;
+            lastResult = process.lastResult;
+        }
+
         @Override
         public void run() {
             if (head == null) return;
             boolean isMain = head.isMain;
             Thread.currentThread().setName("flow-" + (isMain ? "main" : "io"));
-            int[] jump = new int[1];
             while (head != null && head.isMain == isMain) {
-                jump[0] = 0;
-                lastResult = head.process(jump, lastResult);
+                lastResult = head.process(Flow.this, lastResult);
                 head = head.next;
-                if (jump[0] == -1) head = null;
-                while (head != null && jump[0] > 0) {
-                    head = head.next;
-                    jump[0]--;
-                }
             }
             if (head != null) {
                 if (isMain) {
@@ -110,37 +123,92 @@ public class FlowProcess {
                 } else {
                     Platform.get().callback(this);
                 }
+            } else {
+                tail = null;
             }
         }
-    };
 
-    private static class Node<T> implements IProcess<T> {
+        @Override
+        public <T, L> IFlow main(IProcess<T, L> p, Object... args) {
+            main(null, p, args);
+            return this;
+        }
+
+        @Override
+        public <T, L> IFlow main(String tag, IProcess<T, L> p, Object... args) {
+            add(tag, p, true, args);
+            return this;
+        }
+
+        private <T, L> void add(String tag, IProcess<T, L> p, boolean main, Object... args) {
+            if (p == null) return;
+            Node<T, L> node = new Node<>(tag, p, main, args);
+            if (head == null) {
+                head = node;
+                tail = node;
+            } else {
+                tail.next = node;
+            }
+            tail = node;
+        }
+
+        @Override
+        public <T, L> IFlow io(IProcess<T, L> p, Object... args) {
+            io(null, p, args);
+            return this;
+        }
+
+        @Override
+        public <T, L> IFlow io(String tag, IProcess<T, L> p, Object... args) {
+            add(tag, p, false, args);
+            return this;
+        }
+
+        @Override
+        public void remove(String tag) {
+            Node pre = head;
+            Node next = head.next;
+            while (next != null) {
+                while (next != null && (tag == next.tag || (tag != null && tag.equals(next.tag)))) {
+                    next = next.next;
+                }
+                pre.next = next;
+                tail = pre;
+                pre = next;
+                if (pre != null) {
+                    tail = pre;
+                    next = pre.next;
+                }
+            }
+        }
+
+        @Override
+        public void removeAll() {
+            head.next = null;
+            tail = head;
+        }
+    }
+
+    private static class Node<T, L> implements IProcess<T, L> {
+        private String tag;
         private Object[] params;
-        private IProcess<T> process;
+        private IProcess<T, L> process;
         private boolean isMain;
         private Node next;
 
-        private Node(IProcess<T> p, boolean main, Object... args) {
+        private Node(String tag, IProcess<T, L> p, boolean main, Object... args) {
+            this.tag = tag;
             process = p;
             isMain = main;
             if (args.length > 0) params = args;
         }
 
         @Override
-        public T process(int[] interrupt, Object... objects) {
-            Object obj = objects.length > 0 ? objects[0] : null;
-            if (obj == null) {
-                if (params == null) {
-                    return process.process(interrupt);
-                } else {
-                    return process.process(interrupt, params);
-                }
+        public T process(IFlow flow, L last, Object... objects) {
+            if (params == null) {
+                return process.process(flow, last);
             } else {
-                if (params == null) {
-                    return process.process(interrupt, obj);
-                } else {
-                    return process.process(interrupt, obj, params);
-                }
+                return process.process(flow, last, params);
             }
         }
     }

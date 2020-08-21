@@ -8,7 +8,6 @@ android {
         targetSdkVersion TARGET_SDK_VERSION as int
         versionCode VERSION_CODE as int
         versionName VERSION_NAME
-
     }
 
     buildTypes {
@@ -18,6 +17,17 @@ android {
         }
     }
 }
+
+def proPkg = 'cn/sskbskdrin/flow'
+task makeJar(type: Jar) {
+    delete "build/libs/ssk-flow-${VERSION_NAME}.jar"
+    from('build/intermediates/javac/release/classes/' + proPkg)
+    into proPkg
+    exclude('BuildConfig.class', 'R.class')
+    rename("ssk-flow.jar", "ssk-flow-${VERSION_CODE}.jar")
+}
+
+makeJar.dependsOn(build)
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])

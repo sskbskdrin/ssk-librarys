@@ -32,7 +32,7 @@ import javax.net.ssl.X509TrustManager;
  *
  * @author keayuan
  */
-public class DefaultRealRequest implements IRealRequest {
+public class DefaultRRequest implements IRealRequest {
     private static final String TAG = "UrlRequest";
     private static final int GET = 1001;
     private static final int POST = 1002;
@@ -45,7 +45,7 @@ public class DefaultRealRequest implements IRealRequest {
     private final boolean openLog;
     private SSLSocketFactory mSSL;
 
-    public DefaultRealRequest(boolean openLog) {
+    public DefaultRRequest(boolean openLog) {
         this.openLog = openLog;
     }
 
@@ -107,31 +107,31 @@ public class DefaultRealRequest implements IRealRequest {
     }
 
     @Override
-    public void get(IRequestBody request, IRequestCallback callback) {
-        exec(request, GET, callback);
+    public Response get(IRequestBody request) {
+        return exec(request, GET, null);
     }
 
     @Override
-    public void post(IRequestBody request, IRequestCallback callback) {
-        exec(request, POST, callback);
+    public Response post(IRequestBody request) {
+        return exec(request, POST, null);
     }
 
     @Override
-    public void postJson(IRequestBody request, IRequestCallback callback) {
-        exec(request, POST_JSON, callback);
+    public Response postJson(IRequestBody request) {
+        return exec(request, POST_JSON, null);
     }
 
     @Override
-    public void postFile(IRequestBody request, IRequestCallback callback) {
-        exec(request, POST_FILE, callback);
+    public Response postFile(IRequestBody request, IProgress progress) {
+        return exec(request, POST_FILE, progress);
     }
 
     @Override
-    public void download(IRequestBody request, String filePath, IRequestCallback callback) {
-        exec(request, filePath, callback);
+    public Response download(IRequestBody request, String filePath, IProgress progress) {
+        return exec(request, filePath, progress);
     }
 
-    private void exec(IRequestBody request, int method, IRequestCallback callback) {
+    private Response exec(IRequestBody request, int method, IProgress progress) {
         HttpURLConnection conn = null;
         try {
             conn = generate(request.getUrl(), request.getConnectedTimeout(), request.getReadTimeout(), method == GET
@@ -169,7 +169,7 @@ public class DefaultRealRequest implements IRealRequest {
                         doPostJson(conn, params);
                         break;
                     case POST_FILE:
-                        doPostFile(conn, params);
+                        doPostFile(conn, params, progress);
                         break;
                     default:
                         break;
@@ -191,26 +191,20 @@ public class DefaultRealRequest implements IRealRequest {
                     Platform.get().log(TAG, "response: time=" + (System.currentTimeMillis() - startTime));
                     Platform.get().log(TAG, "response:" + new String(buf));
                 }
-                if (callback != null) {
-                    callback.onResponseData(buf);
-                }
+                return Response.get(buf);
             } else {
                 if (openLog) {
                     Platform.get()
                         .log(TAG,
                             "response error: code=" + conn.getResponseCode() + " msg=" + conn.getResponseMessage());
                 }
-                if (callback != null) {
-                    callback.onError(String.valueOf(conn.getResponseCode()), conn.getResponseMessage(), null);
-                }
+                return Response.get(String.valueOf(conn.getResponseCode()), conn.getResponseMessage(), null);
             }
         } catch (Exception e) {
             if (openLog) {
                 Platform.get().log(TAG, "response error: " + e.getLocalizedMessage(), e);
             }
-            if (callback != null) {
-                callback.onError("-1", "", e);
-            }
+            return Response.get("-1", "", e);
         } finally {
             if (conn != null) {
                 conn.disconnect();
@@ -218,7 +212,7 @@ public class DefaultRealRequest implements IRealRequest {
         }
     }
 
-    private void exec(IRequestBody request, String filePath, IRequestCallback callback) {
+    private Response exec(IRequestBody request, String filePath, IProgress callback) {
         HttpURLConnection conn = null;
         try {
             conn = generate(request.getUrl(), request.getConnectedTimeout(), request.getReadTimeout(), "GET",
@@ -235,18 +229,12 @@ public class DefaultRealRequest implements IRealRequest {
                 InputStream in = conn.getInputStream();
                 File file = doDown(in, conn.getContentLength(), filePath, callback);
                 in.close();
-                if (callback != null) {
-                    callback.onResponseFile(file);
-                }
+                return Response.get(filePath);
             } else {
-                if (callback != null) {
-                    callback.onError(String.valueOf(conn.getResponseCode()), conn.getResponseMessage(), null);
-                }
+                return Response.get(String.valueOf(conn.getResponseCode()), conn.getResponseMessage(), null);
             }
         } catch (Exception e) {
-            if (callback != null) {
-                callback.onError("-1", "", e);
-            }
+            return Response.get("-1", "", e);
         } finally {
             if (conn != null) {
                 conn.disconnect();
@@ -265,7 +253,7 @@ public class DefaultRealRequest implements IRealRequest {
         conn.connect();
     }
 
-    private File doDown(InputStream in, int totalLen, String filePath, IRequestCallback callback) throws IOException {
+    private File doDown(InputStream in, int totalLen, String filePath, IProgress callback) throws IOException {
         File file = new File(filePath);
         if (file.exists()) {
             file.delete();
@@ -278,7 +266,7 @@ public class DefaultRealRequest implements IRealRequest {
         byte[] buf = new byte[1024 * 10];
         int ret, len = 0;
         if (callback != null) {
-            callback.onProgress(0);
+            callback.progress(0);
         }
         while ((ret = in.read(buf)) >= 0) {
             os.write(buf, 0, ret);
@@ -286,12 +274,12 @@ public class DefaultRealRequest implements IRealRequest {
             if (System.currentTimeMillis() - start > 500) {
                 start = System.currentTimeMillis();
                 if (callback != null) {
-                    callback.onProgress(len * 1f / totalLen);
+                    callback.progress(len * 1f / totalLen);
                 }
             }
         }
         if (callback != null) {
-            callback.onProgress(1);
+            callback.progress(1);
         }
         in.close();
         return file;
@@ -318,7 +306,7 @@ public class DefaultRealRequest implements IRealRequest {
         out.close();
     }
 
-    private static void doPostFile(HttpURLConnection conn, Map<String, Object> params) throws IOException {
+    private static void doPostFile(HttpURLConnection conn, Map<String, Object> params, IProgress progress) throws IOException {
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStream out = conn.getOutputStream();
