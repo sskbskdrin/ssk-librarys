@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="button_height">40dp</dimen>
+    <dimen name="font_mini">12sp</dimen>
+    <dimen name="font_small">14sp</dimen>
+    <dimen name="font_normal">16sp</dimen>
+    <dimen name="font_large">18sp</dimen>
+    <integer name="animation_default_duration">200</integer>
+
+    <item name="window_fill" type="dimen">100%</item>
+    <item name="dialog_width" type="dimen">80%</item>
+    <item name="dialog_large_width" type="dimen">60%</item>
+</resources>
