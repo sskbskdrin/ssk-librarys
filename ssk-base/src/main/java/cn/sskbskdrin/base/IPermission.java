@@ -7,6 +7,8 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -17,27 +19,14 @@ import java.util.List;
  */
 public interface IPermission extends IContext {
     class IPermissionC {
-        PermissionCallback callback;
+        private PermissionCallback callback;
 
         private IPermissionC(PermissionCallback callback) {
             this.callback = callback;
         }
     }
 
-    IPermissionC mC = new IPermissionC(null);
-
-    /**
-     * 检查权限，没有则申请
-     * 在{@link IPermission#onRequestPermissions(int, List)}中回调
-     * activity中权限申请回调需要调用{@link IPermission#requestPermissionsResult(int, String[], int[])}才能成功回调到callback
-     *
-     * @param requestCode 申请码
-     * @param permissions 权限列表
-     * @return 返回当前权限列表是否已经拥有权限
-     */
-    default boolean checkPermission(int requestCode, String... permissions) {
-        return checkPermission(requestCode, null, permissions);
-    }
+    IPermissionC mPC = new IPermissionC(null);
 
     /**
      * 只检查，不申请
@@ -63,6 +52,19 @@ public interface IPermission extends IContext {
 
     /**
      * 检查权限，没有则申请
+     * 在{@link IPermission#onRequestPermissions(int, List, List)}中回调
+     * activity中权限申请回调需要调用{@link IPermission#requestPermissionsResult(int, String[], int[])}才能成功回调到callback
+     *
+     * @param requestCode 申请码
+     * @param permissions 权限列表
+     * @return 返回当前权限列表是否已经拥有权限
+     */
+    default boolean checkPermission(int requestCode, String... permissions) {
+        return checkPermission(requestCode, null, permissions);
+    }
+
+    /**
+     * 检查权限，没有则申请
      * activity中权限申请回调需要调用{@link IPermission#requestPermissionsResult(int, String[], int[])}才能成功回调到callback
      *
      * @param requestCode 申请码
@@ -71,27 +73,40 @@ public interface IPermission extends IContext {
      * @return 返回当前权限列表是否已经拥有权限
      */
     default boolean checkPermission(int requestCode, PermissionCallback callback, String... permissions) {
-        mC.callback = callback;
+        mPC.callback = callback;
+        Context context = context();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            List<String> list = new ArrayList<>();
-            Context context = context();
-            if (context instanceof Activity) {
-                for (String permission : permissions) {
-                    if (context.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
-                        list.add(permission);
-                    }
+            boolean flag = false;
+            for (String permission : permissions) {
+                if (context.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+                    flag = true;
+                    break;
                 }
-                if (list.size() > 0) {
-                    String[] array = new String[list.size()];
-                    list.toArray(array);
-                    ((Activity) context).requestPermissions(array, requestCode);
-                    return false;
-                } else {
-                    return true;
-                }
+            }
+            if (flag) {
+                PermissionFragment.request((Activity) context, this, requestCode, permissions);
+                return false;
+            } else {
+                callback.onRequestPermissions(requestCode, Collections.emptyList(), Arrays.asList(permissions));
+                return true;
             }
         }
         return checkPermissionUnderM(permissions);
+    }
+
+    default List<String> getNoShowTipPermission(String... permissions) {
+        Context context = context();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context instanceof Activity) {
+            List<String> list = new ArrayList<>();
+            for (String permission : permissions) {
+                if (context.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED && !((Activity) context)
+                    .shouldShowRequestPermissionRationale(permission)) {
+                    list.add(permission);
+                }
+            }
+            return list;
+        }
+        return Collections.emptyList();
     }
 
     /**
@@ -112,18 +127,21 @@ public interface IPermission extends IContext {
      * @param grantResults 申请结果列表
      */
     default void requestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        List<String> list = new ArrayList<>();
+        List<String> grantedList = new ArrayList<>();
+        List<String> deniedList = new ArrayList<>();
         for (int i = 0; i < permissions.length; i++) {
-            if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                list.add(permissions[i]);
+            if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                grantedList.add(permissions[i]);
+            } else {
+                deniedList.add(permissions[i]);
             }
         }
-        if (mC.callback != null) {
-            mC.callback.onRequestPermissions(requestCode, list);
+        if (mPC.callback != null) {
+            mPC.callback.onRequestPermissions(requestCode, deniedList, grantedList);
         } else {
-            onRequestPermissions(requestCode, list);
+            onRequestPermissions(requestCode, deniedList, grantedList);
         }
-        mC.callback = null;
+        mPC.callback = null;
     }
 
     /**
@@ -131,9 +149,9 @@ public interface IPermission extends IContext {
      *
      * @param requestCode 请求码
      * @param deniedList  被拒绝列表，为空时表明申请成功
+     * @param grantedList 请求成功的列表
      */
-    default void onRequestPermissions(int requestCode, List<String> deniedList) {
-
+    default void onRequestPermissions(int requestCode, List<String> deniedList, List<String> grantedList) {
     }
 
     /**
@@ -148,7 +166,8 @@ public interface IPermission extends IContext {
         for (String permission : deniedList) {
             if (Manifest.permission.RECORD_AUDIO.equals(permission)) {
                 builder.append("录音");
-            } else if (Manifest.permission.READ_EXTERNAL_STORAGE.equals(permission) || Manifest.permission.WRITE_EXTERNAL_STORAGE.equals(permission)) {
+            } else if (Manifest.permission.READ_EXTERNAL_STORAGE.equals(permission) || Manifest.permission.WRITE_EXTERNAL_STORAGE
+                .equals(permission)) {
                 builder.append("存储");
             } else if (Manifest.permission.CAMERA.equals(permission)) {
                 builder.append("相机");
@@ -168,7 +187,8 @@ public interface IPermission extends IContext {
          *
          * @param requestCode 请求码
          * @param deniedList  被拒绝列表，为空时表明申请成功
+         * @param grantedList 请求成功的列表
          */
-        void onRequestPermissions(int requestCode, List<String> deniedList);
+        void onRequestPermissions(int requestCode, List<String> deniedList, List<String> grantedList);
     }
 }

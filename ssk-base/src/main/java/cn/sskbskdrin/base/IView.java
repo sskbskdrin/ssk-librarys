@@ -16,8 +16,8 @@ public interface IView extends IContext, IResource {
      * @param <T> view 的类型
      * @return 返回找到的view，找不到则返回空
      */
-    default <T extends View> T getView(int id){
-        return getView((View) this,id);
+    default <T extends View> T getView(int id) {
+        return getView((View) this, id);
     }
 
     @SuppressWarnings("unchecked")
@@ -29,8 +29,8 @@ public interface IView extends IContext, IResource {
     }
 
     default int dp2px(float dp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
-            context().getResources().getDisplayMetrics());
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context().getResources()
+            .getDisplayMetrics());
     }
 
     default void showView(boolean show, int... ids) {
@@ -96,10 +96,7 @@ public interface IView extends IContext, IResource {
     }
 
     default void setText(int viewId, CharSequence text) {
-        TextView view = getView(viewId);
-        if (view != null) {
-            view.setText(text != null ? text : "");
-        }
+        setText(getView(viewId), text);
     }
 
     default void setImageDrawable(int viewId, Drawable drawable) {

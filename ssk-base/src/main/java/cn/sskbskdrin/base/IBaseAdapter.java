@@ -14,19 +14,17 @@ import java.util.List;
  */
 public abstract class IBaseAdapter<T> extends BaseAdapter implements IView {
     private static final int TAG_VALUE = 0xff0000ff;
-    protected Context mContext;
     protected List<T> mList;
 
     private int mLayoutId;
 
     private View mCurrentView;
 
-    public IBaseAdapter(Context context, List<T> list) {
-        this(context, list, 0);
+    public IBaseAdapter(List<T> list) {
+        this(list, 0);
     }
 
-    public IBaseAdapter(Context context, List<T> list, int layoutId) {
-        mContext = context;
+    public IBaseAdapter(List<T> list, int layoutId) {
         mLayoutId = layoutId;
         mList = list;
         if (mList == null) {
@@ -34,7 +32,7 @@ public abstract class IBaseAdapter<T> extends BaseAdapter implements IView {
         }
     }
 
-    public List<T> getList() {
+    public final List<T> getList() {
         if (mList == null) {
             mList = new ArrayList<>();
         }
@@ -46,7 +44,7 @@ public abstract class IBaseAdapter<T> extends BaseAdapter implements IView {
      *
      * @param list 更新的list
      */
-    public void updateList(List<T> list) {
+    public final void updateList(List<T> list) {
         mList = list;
         if (mList == null) {
             mList = new ArrayList<>();
@@ -77,7 +75,7 @@ public abstract class IBaseAdapter<T> extends BaseAdapter implements IView {
             if (layoutId <= 0) {
                 convertView = generateView(position, parent, type);
             } else {
-                convertView = View.inflate(mContext, layoutId, null);
+                convertView = View.inflate(parent.getContext(), layoutId, null);
             }
             if (convertView != null) {
                 convertView.setTag(TAG_VALUE, new SparseArray<>(4));
@@ -105,7 +103,7 @@ public abstract class IBaseAdapter<T> extends BaseAdapter implements IView {
 
     @Override
     public Context context() {
-        return mContext;
+        return mCurrentView == null ? null : mCurrentView.getContext();
     }
 
     @SuppressWarnings("unchecked")
