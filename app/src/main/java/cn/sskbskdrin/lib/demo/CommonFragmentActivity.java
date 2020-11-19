@@ -1,16 +1,28 @@
 package cn.sskbskdrin.lib.demo;
 
+import android.content.Context;
 import android.os.Bundle;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
+import cn.sskbskdrin.base.IA;
 import cn.sskbskdrin.base.IFragment;
-import cn.sskbskdrin.base.IFragmentActivity;
 
-public class CommonFragmentActivity extends IFragmentActivity {
+public class CommonFragmentActivity extends FragmentActivity implements IA {
     private List<IFragment> mFragments;
+
+    @Override
+    public Context context() {
+        return this;
+    }
+
+    @Override
+    public boolean isFinish() {
+        return isFinishing();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,16 +48,14 @@ public class CommonFragmentActivity extends IFragmentActivity {
     public void replaceFragment(IFragment fragment) {
         mFragments.add(fragment);
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-//        transaction.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left);
+        //        transaction.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left);
         transaction.replace(R.id.activity_fragment_content, fragment).commit();
-        // 根据当前fragment页面改变菜单按钮功能
     }
 
     private void forwardFragment() {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_out_right);
         transaction.replace(R.id.activity_fragment_content, getCurrentFragment()).commit();
-        // 根据当前fragment页面改变菜单按钮功能
     }
 
     private IFragment getCurrentFragment() {

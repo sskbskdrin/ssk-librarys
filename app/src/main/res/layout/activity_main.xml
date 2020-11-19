@@ -4,8 +4,21 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <ListView
-        android:id="@+id/main_list"
+    <cn.sskbskdrin.pull.PullLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="300dp"
+        android:background="#0d0">
+
+        <ListView
+            android:id="@+id/main_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </cn.sskbskdrin.pull.PullLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="#f00"
+        android:text="4354354" />
 </LinearLayout>

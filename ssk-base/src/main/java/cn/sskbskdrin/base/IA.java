@@ -5,19 +5,15 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 
 /**
  * @author keayuan
- *  2020/3/27
+ * 2020/3/27
  */
-public interface IA extends IWindow, IContext, IView, IPermission, IResource {
+public interface IA extends IWindow, IContext, IView, IPermission, IResource, IPost {
 
     @Override
     Context context();
-
-    @Override
-    <T extends View> T getView(int id);
 
     /**
      * 判断页面是否已经销毁

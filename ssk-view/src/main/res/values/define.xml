@@ -52,10 +52,12 @@
     <!-- ============================IDS============================ -->
     <item name="dialog_ok" type="id" />
     <item name="dialog_cancel" type="id" />
-
+    <item name="dialog_title" type="id" />
 
     <!-- ============================STYLES============================ -->
-    <style name="main_theme" parent="android:Theme.Holo.Light.NoActionBar">
+    <style name="main_base" parent="android:Theme.Holo.Light.NoActionBar" />
+
+    <style name="main_theme" parent="main_base">
         <item name="android:screenOrientation">portrait</item>
         <item name="android:textColorHint">@color/font_minor</item>
         <item name="android:windowSoftInputMode">adjustResize|stateAlwaysHidden</item>
@@ -111,7 +113,9 @@
         <item name="android:windowExitAnimation">@anim/slide_out_bottom</item>
     </style>
 
-    <style name="dialog_theme" parent="android:Theme.Holo.Light.Dialog.NoActionBar.MinWidth">
+    <style name="dialog_base" parent="android:Theme.Holo.Light.Dialog.NoActionBar.MinWidth" />
+
+    <style name="dialog_theme" parent="dialog_base">
         <item name="android:windowIsFloating">true</item>
         <!-- 设置未浮动窗口 -->
         <item name="android:windowFrame">@null</item>

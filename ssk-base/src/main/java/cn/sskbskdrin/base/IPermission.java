@@ -21,12 +21,11 @@ public interface IPermission extends IContext {
     class IPermissionC {
         private PermissionCallback callback;
 
-        private IPermissionC(PermissionCallback callback) {
-            this.callback = callback;
+        private IPermissionC() {
         }
     }
 
-    IPermissionC mPC = new IPermissionC(null);
+    IPermissionC mPC = new IPermissionC();
 
     /**
      * 只检查，不申请
@@ -87,7 +86,9 @@ public interface IPermission extends IContext {
                 PermissionFragment.request((Activity) context, this, requestCode, permissions);
                 return false;
             } else {
-                callback.onRequestPermissions(requestCode, Collections.emptyList(), Arrays.asList(permissions));
+                if (callback != null) {
+                    callback.onRequestPermissions(requestCode, Collections.emptyList(), Arrays.asList(permissions));
+                }
                 return true;
             }
         }

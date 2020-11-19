@@ -1,5 +1,7 @@
 package cn.sskbskdrin.lib.demo.widget;
 
+import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -19,7 +21,7 @@ public class TabHostFragment extends IFragment {
     }
 
     @Override
-    protected void initView() {
+    protected void onViewCreated(View view, Bundle arguments, Bundle savedInstanceState) {
         TabHostWidget tabHostWidget = getView(R.id.tab_host_tab_host);
         List<Class<? extends Fragment>> list = new ArrayList<>();
         list.add(TestFragment.class);
@@ -52,11 +54,6 @@ public class TabHostFragment extends IFragment {
         tabWidget.setLineColor(0xffeeeeee);
     }
 
-    @Override
-    protected void initData() {
-
-    }
-
     public static class TestFragment extends IFragment {
         static int count = 0;
 
@@ -66,15 +63,10 @@ public class TabHostFragment extends IFragment {
         }
 
         @Override
-        protected void initView() {
+        protected void onViewCreated(View view, Bundle arguments, Bundle savedInstanceState) {
             TextView text = getView(R.id.simple_text);
             text.setTextSize(20 * getResources().getDisplayMetrics().density);
             text.setText("Test " + ++count);
-        }
-
-        @Override
-        protected void initData() {
-
         }
     }
 }

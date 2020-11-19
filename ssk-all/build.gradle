@@ -27,5 +27,5 @@ dependencies {
     api project(':ssk-view')
     api project(':ssk-http')
     api project(':ssk-flow')
-    api project(path: ':ssk-base-fragment')
+    api project(':ssk-base-fragment')
 }

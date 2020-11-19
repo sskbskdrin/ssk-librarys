@@ -16,9 +16,6 @@ import androidx.fragment.app.Fragment;
  */
 public abstract class IFragment extends Fragment implements IA {
     protected final String TAG;
-    /**
-     * 在initData中可直接使用
-     */
     protected View mRootView;
     protected boolean isRunning;
 
@@ -35,12 +32,17 @@ public abstract class IFragment extends Fragment implements IA {
     protected abstract int getLayoutId();
 
     /**
-     * 在{@link IFragment#onActivityCreated(Bundle)}被调用时调用
+     * 在{@link IFragment#onViewCreated(View, Bundle, Bundle)}前被调用
+     *
+     * @param arguments 创建时传入的参数
      */
     protected void onInitData(Bundle arguments) {}
 
     /**
      * 在view被创建时调用{@link IFragment#onViewCreated(View, Bundle)}
+     *
+     * @param arguments          创建时传入的参数
+     * @param savedInstanceState 保存的状态
      */
     protected abstract void onViewCreated(View rootView, Bundle arguments, Bundle savedInstanceState);
 
@@ -91,7 +93,9 @@ public abstract class IFragment extends Fragment implements IA {
     /**
      * 当{@link IFragment#getLayoutId()} 返回值小于等于0时调用，可动态创建view
      *
-     * @param inflater 构建view用的inflater
+     * @param inflater           构建view用的inflater
+     * @param container          父view
+     * @param savedInstanceState 保存的状态
      * @return 返回要显示的view
      */
     protected View generateRootView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

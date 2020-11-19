@@ -1,6 +1,5 @@
 package cn.sskbskdrin.lib.demo.simple;
 
-import android.content.Context;
 import android.graphics.Color;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,25 +10,26 @@ import java.util.Collections;
 import java.util.List;
 
 import cn.sskbskdrin.base.IBaseAdapter;
+import cn.sskbskdrin.lib.demo.R;
 
 public class SimpleAdapter<T> extends IBaseAdapter<T> {
     private int itemHeight;
     private boolean singleColor;
 
-    public SimpleAdapter(Context context, List<T> list) {
-        super(context, list, android.R.layout.simple_list_item_1);
+    public SimpleAdapter(List<T> list) {
+        super(list, android.R.layout.simple_list_item_1);
     }
 
-    public SimpleAdapter(Context context, T[] array) {
-        this(context, array, 0);
+    public SimpleAdapter(T[] array) {
+        this(array, 0);
     }
 
-    public SimpleAdapter(Context context, T[] array, int height) {
-        this(context, array, height, false);
+    public SimpleAdapter(T[] array, int height) {
+        this(array, height, false);
     }
 
-    public SimpleAdapter(Context context, T[] array, int height, boolean singleColor) {
-        super(context, null, android.R.layout.simple_list_item_1);
+    public SimpleAdapter(T[] array, int height, boolean singleColor) {
+        super(null, android.R.layout.simple_list_item_1);
         itemHeight = height;
         this.singleColor = singleColor;
         List<T> list = new ArrayList<>();
@@ -48,6 +48,7 @@ public class SimpleAdapter<T> extends IBaseAdapter<T> {
             view.getLayoutParams().height = itemHeight;
         }
         setText((TextView) view, t.toString());
-//        if (!singleColor) setBackgroundColor(view, position % 2 == 0 ? Color.LTGRAY : Color.WHITE);
+        if (!singleColor) setBackgroundColor(view, position % 2 == 0 ? Color.LTGRAY : Color.WHITE);
+        view.setBackgroundResource(R.drawable.rect_white_bg);
     }
 }

@@ -1,6 +1,8 @@
 package cn.sskbskdrin.lib.demo.widget;
 
 import android.graphics.Color;
+import android.os.Bundle;
+import android.view.View;
 
 import cn.sskbskdrin.base.IFragment;
 import cn.sskbskdrin.lib.demo.R;
@@ -21,7 +23,7 @@ public class PickerFragment extends IFragment {
     }
 
     @Override
-    protected void initView() {
+    protected void onViewCreated(View view, Bundle arguments, Bundle savedInstanceState) {
         DateTimePicker mDateTimePicker = getView(R.id.picker_date_time);
         mDateTimePicker.setEnable(true, true);
 
@@ -31,10 +33,5 @@ public class PickerFragment extends IFragment {
         pickerView.setSelectTextColor(Color.RED);
         pickerView.setTextColor(Color.YELLOW);
         pickerView.setShowCount(13);
-    }
-
-    @Override
-    protected void initData() {
-
     }
 }

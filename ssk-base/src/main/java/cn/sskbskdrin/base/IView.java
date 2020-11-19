@@ -1,5 +1,6 @@
 package cn.sskbskdrin.base;
 
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -8,7 +9,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public interface IView extends IContext, IResource {
+public interface IView extends IContext, IResource, IPost {
     /**
      * 通过id查找view
      *
@@ -17,6 +18,9 @@ public interface IView extends IContext, IResource {
      * @return 返回找到的view，找不到则返回空
      */
     default <T extends View> T getView(int id) {
+        if (this instanceof Activity) {
+            return getView(((Activity) this).getWindow().getDecorView(), id);
+        }
         return getView((View) this, id);
     }
 

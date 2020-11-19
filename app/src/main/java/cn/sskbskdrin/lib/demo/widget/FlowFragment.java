@@ -1,5 +1,6 @@
 package cn.sskbskdrin.lib.demo.widget;
 
+import android.os.Bundle;
 import android.view.View;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -22,7 +23,7 @@ public class FlowFragment extends IFragment {
     }
 
     @Override
-    protected void initView() {
+    protected void onViewCreated(View view, Bundle arguments, Bundle savedInstanceState) {
         SeekBar seed_h = getView(R.id.flow_seek_h);
         SeekBar seed_v = getView(R.id.flow_seek_v);
         SeekBar.OnSeekBarChangeListener listener = new SeekBar.OnSeekBarChangeListener() {
@@ -48,10 +49,6 @@ public class FlowFragment extends IFragment {
         seed_h.setOnSeekBarChangeListener(listener);
         seed_v.setOnSeekBarChangeListener(listener);
         flowLayout = getView(R.id.flow_layout);
-    }
-
-    @Override
-    protected void initData() {
         List<String> list = new ArrayList<>();
         for (int i = 0; i < 25; i++) {
             int count = CommonUtils.random(3, 11);
@@ -61,7 +58,7 @@ public class FlowFragment extends IFragment {
             }
             list.add(builder.toString());
         }
-        flowLayout.setAdapter(new IBaseAdapter<String>(getActivity(), list, R.layout.simple_text_layout) {
+        flowLayout.setAdapter(new IBaseAdapter<String>(list, R.layout.simple_text_layout) {
             @Override
             protected void convert(View view, int position, String s) {
                 ((TextView) view).setText(s);

@@ -35,4 +35,12 @@ public interface IResource extends IContext {
         }
         return drawable;
     }
+
+    default String string(int resId, Object... args) {
+        Context context = context();
+        if (context != null) {
+            return context.getString(resId, args);
+        }
+        return null;
+    }
 }

@@ -11,15 +11,15 @@ import java.lang.ref.WeakReference;
  * @author keayuan
  * 2020/3/27
  */
-public interface IWindow extends IContext {
+public interface IWindow extends IContext, IResource {
 
     IWindowC iWindowC = new IWindowC();
 
     class IWindowC {
         private IWindowC() {}
 
-        WeakReference<Dialog> dialog;
-        WeakReference<Toast> toast;
+        private WeakReference<Dialog> dialog;
+        private WeakReference<Toast> toast;
     }
 
     /**
@@ -78,6 +78,14 @@ public interface IWindow extends IContext {
         showToast(text, false);
     }
 
+    default void showToast(String text, Object... args) {
+        showToast(String.format(text, args), false);
+    }
+
+    default void showToast(int resId, boolean isLong, Object... args) {
+        showToast(string(resId, args), isLong);
+    }
+
     default void showToast(String text, boolean isLong) {
         Toast toast = iWindowC.toast == null ? null : iWindowC.toast.get();
         if (toast != null) {
@@ -90,5 +98,4 @@ public interface IWindow extends IContext {
             iWindowC.toast = new WeakReference<>(toast);
         }
     }
-
 }

@@ -3,6 +3,7 @@ package cn.sskbskdrin.widget;
 import android.content.Context;
 import android.database.DataSetObserver;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -98,9 +99,9 @@ public class FlowLayout extends ViewGroup {
                 height += lineHeight;
             }
         }
-        setMeasuredDimension(modeWidth == MeasureSpec.EXACTLY ? sizeWidth : width + getPaddingLeft() +
-            getPaddingRight(), modeHeight == MeasureSpec.EXACTLY ? sizeHeight : height + getPaddingTop() +
-            getPaddingBottom());
+        setMeasuredDimension(modeWidth == MeasureSpec.EXACTLY ? sizeWidth :
+            width + getPaddingLeft() + getPaddingRight(), modeHeight == MeasureSpec.EXACTLY ? sizeHeight :
+            height + getPaddingTop() + getPaddingBottom());
     }
 
     @Override
@@ -217,8 +218,8 @@ public class FlowLayout extends ViewGroup {
         return new MarginLayoutParams(p);
     }
 
-    public int dip2px(float dpValue) {
-        final float scale = getResources().getDisplayMetrics().density;
-        return (int) (dpValue * scale + 0.5f);
+    private int dip2px(float dpValue) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dpValue,
+            getResources().getDisplayMetrics());
     }
 }

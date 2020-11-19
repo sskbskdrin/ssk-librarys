@@ -1,7 +1,6 @@
 package cn.sskbskdrin.frame.base.ui;
 
 import android.os.Bundle;
-import android.os.Message;
 import android.view.View;
 
 import cn.sskbskdrin.base.IFragment;
@@ -22,16 +21,5 @@ public abstract class BaseFragment extends IFragment implements LifeOwner {
      * 在view被创建时调用{@link BaseFragment#onViewCreated(View, Bundle)}
      */
     protected abstract void initView();
-
-    /**
-     * 在{@link BaseFragment#onActivityCreated(Bundle)}被调用时调用
-     */
-    protected void initData() {
-    }
-
-    @Override
-    public boolean handleMessage(Message msg) {
-        return false;
-    }
 
 }

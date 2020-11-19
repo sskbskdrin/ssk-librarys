@@ -1,5 +1,7 @@
 package cn.sskbskdrin.lib.demo;
 
+import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.widget.ListView;
 
@@ -7,24 +9,30 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import cn.sskbskdrin.base.IFragmentActivity;
+import androidx.fragment.app.FragmentActivity;
+import cn.sskbskdrin.base.IA;
+import cn.sskbskdrin.lib.demo.simple.SampleListFragment;
 import cn.sskbskdrin.lib.demo.simple.SimpleAdapter;
 import cn.sskbskdrin.lib.demo.tool.HttpFragment;
 import cn.sskbskdrin.lib.demo.widget.BannerFragment;
 import cn.sskbskdrin.lib.demo.widget.FlowFragment;
 import cn.sskbskdrin.lib.demo.widget.PickerFragment;
+import cn.sskbskdrin.lib.demo.widget.SwitchButtonFragment;
 import cn.sskbskdrin.lib.demo.widget.TabHostFragment;
 
-public class MainActivity extends IFragmentActivity {
+public class MainActivity extends FragmentActivity implements IA {
+    private static final String TAG = "MainActivity";
 
     private static List<ClassItem> mList = new ArrayList<>();
 
     static {
-        mList.add(new ClassItem(FlowFragment.class, "FlowLayout", false));
-        mList.add(new ClassItem(TabHostFragment.class, "TabHost", false));
-        mList.add(new ClassItem(PickerFragment.class, "PickerView", false));
-        mList.add(new ClassItem(BannerFragment.class, "BannerView", false));
-        mList.add(new ClassItem(HttpFragment.class, "HTTP", false));
+        mList.add(new ClassItem(SampleListFragment.class, "SampleList"));
+        mList.add(new ClassItem(FlowFragment.class, "FlowLayout"));
+        mList.add(new ClassItem(TabHostFragment.class, "TabHost"));
+        mList.add(new ClassItem(PickerFragment.class, "PickerView"));
+        mList.add(new ClassItem(BannerFragment.class, "BannerView"));
+        mList.add(new ClassItem(HttpFragment.class, "HTTP"));
+        mList.add(new ClassItem(SwitchButtonFragment.class, "SwitchButton"));
     }
 
     @Override
@@ -32,10 +40,10 @@ public class MainActivity extends IFragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ListView listView = findViewById(R.id.main_list);
-        listView.setAdapter(new SimpleAdapter<>(this, mList));
+        listView.setAdapter(new SimpleAdapter<>(mList));
         listView.setOnItemClickListener((parent, view, position, id) -> {
             ClassItem item = (ClassItem) parent.getAdapter().getItem(position);
-            if (item.isActivity) {
+            if (Activity.class.isAssignableFrom(item.clazz)) {
                 openActivity(item.clazz);
             } else {
                 Bundle bundle = new Bundle();
@@ -46,20 +54,23 @@ public class MainActivity extends IFragmentActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    public Context context() {
+        return this;
+    }
+
+    @Override
+    public boolean isFinish() {
+        return isFinishing();
     }
 
     public static class ClassItem implements Serializable {
 
         public Class clazz;
         public String text;
-        public boolean isActivity;
 
-        public ClassItem(Class clazz, String text, boolean activity) {
+        public ClassItem(Class clazz, String text) {
             this.clazz = clazz;
             this.text = text;
-            isActivity = activity;
         }
 
         @Override
@@ -67,5 +78,4 @@ public class MainActivity extends IFragmentActivity {
             return text;
         }
     }
-
 }

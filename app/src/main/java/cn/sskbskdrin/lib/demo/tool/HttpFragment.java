@@ -1,6 +1,8 @@
 package cn.sskbskdrin.lib.demo.tool;
 
+import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
+import android.view.View;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -27,17 +29,16 @@ public class HttpFragment extends IFragment {
     }
 
     @Override
-    protected void initView() {
+    protected void onViewCreated(View rootView, Bundle arguments, Bundle savedInstanceState) {
         resultView = getView(R.id.http_result);
         resultView.setMovementMethod(ScrollingMovementMethod.getInstance());
         urlView = getView(R.id.http_url);
         getView(R.id.http_request).setOnClickListener(v -> request());
         protocolView = getView(R.id.http_url_protocol);
-        protocolView.setAdapter(new SimpleAdapter<>(getContext(), new String[]{"https://", "http://"}, dp2px(36),
-            true));
+        protocolView.setAdapter(new SimpleAdapter<>(new String[]{"https://", "http://"}, dp2px(36), true));
         methodView = getView(R.id.http_method_sp);
-        methodView.setAdapter(new SimpleAdapter<>(getContext(), new String[]{"GET", "POST", "JSON", "POSTFILE",
-            "DOWNLOAD"}, dp2px(36), true));
+        methodView.setAdapter(new SimpleAdapter<>(new String[]{"GET", "POST", "JSON", "POSTFILE", "DOWNLOAD"},
+            dp2px(36), true));
     }
 
     private void request() {

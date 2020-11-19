@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<cn.sskbskdrin.pull.PullLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/simple_pull"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <cn.sskbskdrin.pull.refresh.ClassicHeader
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:pull_inParentPosition="top" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/simple_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:pull_isContentView="true" />
+
+    <TextView
+        android:id="@+id/simple_no_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="没有查到数据哟" />
+</cn.sskbskdrin.pull.PullLayout>
