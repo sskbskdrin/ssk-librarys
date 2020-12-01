@@ -1,5 +1,9 @@
 package cn.sskbskdrin.http;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -15,8 +19,11 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -28,11 +35,11 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 /**
- * Created by keayuan on 2019-11-29.
+ * Created by keayuan on 2020/10/23.
  *
  * @author keayuan
  */
-public class DefaultRealRequest implements IRealRequest {
+public final class HttpUtils {
     private static final String TAG = "UrlRequest";
     private static final int GET = 1001;
     private static final int POST = 1002;
@@ -42,19 +49,27 @@ public class DefaultRealRequest implements IRealRequest {
     //boundary就是request头和上传文件内容的分隔符
     private static final String BOUNDARY = "-----------UrlRequest-----------123821742118716";
 
-    private final boolean openLog;
+    private static boolean openLog;
     private SSLSocketFactory mSSL;
+    private final String url;
+    private final Map<String, Object> params;
+    private final Map<String, String> header;
 
-    public DefaultRealRequest(boolean openLog) {
-        this.openLog = openLog;
+    private static Executor executor = new ThreadPoolExecutor(0, 10, 10, TimeUnit.SECONDS,
+        new LinkedBlockingQueue<Runnable>());
+    private static Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    private HttpUtils(String url, Map<String, Object> params, Map<String, String> header) {
+        this.url = url;
+        this.params = params;
+        this.header = header;
     }
 
     public final void setSSLSocketFactory(SSLSocketFactory ssl) {
         mSSL = ssl;
     }
 
-    private HttpURLConnection generate(String url, long connectedTimeout, long readTimeout, String method, Map<String
-        , String> header) throws Exception {
+    private HttpURLConnection generate(String url, long connectedTimeout, long readTimeout, String method) throws Exception {
         SSLSocketFactory ssl;
         if (mSSL == null) {
             HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
@@ -93,68 +108,158 @@ public class DefaultRealRequest implements IRealRequest {
         }
         conn.setRequestProperty("accept", "*/*");
         conn.setRequestProperty("Connection", "Keep-Alive");
-        conn.setRequestProperty("User-Agent", "Mozilla/4.0 (Linux; X11;Windows; U; Windows NT 6.1; zh-CN)");
+        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 6.1; zh-CN; rv:1.9.2.6)");
         conn.setRequestProperty("Content-Type", "text/html");
         conn.setRequestProperty("Charset", "utf-8");
         conn.setRequestMethod(method);
 
         // header
-        for (Map.Entry<String, String> entry : header.entrySet()) {
-            conn.setRequestProperty(entry.getKey(), entry.getValue());
+        if (header != null) {
+            for (Map.Entry<String, String> entry : header.entrySet()) {
+                conn.setRequestProperty(entry.getKey(), entry.getValue());
+            }
         }
 
         return conn;
     }
 
-    @Override
-    public Response get(IRequestBody request) {
-        return exec(request, GET, null);
+    public static void openLog(boolean open) {
+        openLog = open;
     }
 
-    @Override
-    public Response post(IRequestBody request) {
-        return exec(request, POST, null);
+    public static HttpUtils create(String url, Map<String, Object> params) {
+        return new HttpUtils(url, params, null);
     }
 
-    @Override
-    public Response postJson(IRequestBody request) {
-        return exec(request, POST_JSON, null);
+    public static HttpUtils create(String url, Map<String, Object> params, Map<String, String> header) {
+        return new HttpUtils(url, params, header);
     }
 
-    @Override
-    public Response postFile(IRequestBody request, IProgress progress) {
-        return exec(request, POST_FILE, progress);
+    public void get(final Callback success, final Callback error) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                String res = get();
+                callback(res == null ? error : success, res);
+            }
+        });
     }
 
-    @Override
-    public Response download(IRequestBody request, String filePath, IProgress progress) {
-        return exec(request, filePath, progress);
+    public void post(final Callback success, final Callback error) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                String res = post();
+                callback(res == null ? error : success, res);
+            }
+        });
     }
 
-    private Response exec(IRequestBody request, int method, IProgress progress) {
+    public void postJson(final Callback success, final Callback error) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                String res = postJson();
+                callback(res == null ? error : success, res);
+            }
+        });
+    }
+
+    public void postFile(final IProgress progress, final Callback success, final Callback error) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                String res = postFile(progress);
+                callback(res == null ? error : success, res);
+            }
+        });
+    }
+
+    private static void callback(final Callback call, final String res) {
+        if (call == null) return;
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                call.call(res);
+            }
+        });
+    }
+
+    private static void progress(final IProgress iProgress, final double progress) {
+        if (iProgress != null) {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    iProgress.progress(((int) (progress * 100)) / 100f);
+                }
+            });
+        }
+    }
+
+    public String get() {
+        return exec(GET, null);
+    }
+
+    public String post() {
+        return exec(POST, null);
+    }
+
+    public String postJson() {
+        return exec(POST_JSON, null);
+    }
+
+    public String postFile(IProgress progress) {
+        return exec(POST_FILE, progress);
+    }
+
+    public void downLoad(final String filePath, final Callback success, final Callback error,
+                         final IProgress progress) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                File file = download(filePath, progress);
+                callback(file == null ? error : success, file == null ? null : file.getAbsolutePath());
+            }
+        });
+    }
+
+    public File download(String filePath, IProgress progress) {
         HttpURLConnection conn = null;
         try {
-            conn = generate(request.getUrl(), request.getConnectedTimeout(), request.getReadTimeout(), method == GET
-                ? "GET" : "POST", request
-                .getHeader());
-
-            HashMap<String, Object> params = method == GET ? null : request.getParams();
-            if (openLog) {
-                Platform platform = Platform.get();
-                platform.log(TAG, "url: " + request.getUrl());
-                platform.log(TAG, "connectedTimeout: " + request.getConnectedTimeout() + "ms");
-                platform.log(TAG, "readTimeout: " + request.getReadTimeout() + "ms");
-                platform.log(TAG, "method: " + (method == GET ? "GET" : "POST"));
-                Map<String, List<String>> requestProperties = conn.getRequestProperties();
-                for (Map.Entry<String, List<String>> entry : requestProperties.entrySet()) {
-                    platform.log(TAG, "header: " + entry.getKey() + "=" + entry.getValue());
-                }
-                if (params != null) {
-                    for (Map.Entry<String, Object> entry : params.entrySet()) {
-                        platform.log(TAG, "params: " + entry.getKey() + "=" + entry.getValue());
-                    }
+            // header
+            StringBuilder sb = new StringBuilder();
+            if (params != null) {
+                for (Map.Entry<String, Object> entry : params.entrySet()) {
+                    if (sb.length() > 0) sb.append('&');
+                    sb.append(entry.getKey()).append('=').append(entry.getValue());
                 }
             }
+            conn = generate(url + "?" + sb.toString(), 15000, 0, "GET");
+
+            // response
+            if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                InputStream in = conn.getInputStream();
+                File file = doDown(in, conn.getContentLength(), filePath, progress);
+                in.close();
+                return file;
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+        return null;
+    }
+
+    private String exec(int method, IProgress progress) {
+        HttpURLConnection conn = null;
+        try {
+            conn = generate(url, 15000, 20000, method == GET ? "GET" : "POST");
+
             long startTime = System.currentTimeMillis();
             // params
             if (!doDeal(conn, params)) {
@@ -188,23 +293,21 @@ public class DefaultRealRequest implements IRealRequest {
                 buf = os.toByteArray();
                 in.close();
                 if (openLog) {
-                    Platform.get().log(TAG, "response: time=" + (System.currentTimeMillis() - startTime));
-                    Platform.get().log(TAG, "response:" + new String(buf));
+                    Log.d(TAG, "response: time=" + (System.currentTimeMillis() - startTime));
+                    Log.d(TAG, "response:" + new String(buf));
                 }
-                return Response.get(buf);
+                return new String(buf);
             } else {
                 if (openLog) {
-                    Platform.get()
-                        .log(TAG,
-                            "response error: code=" + conn.getResponseCode() + " msg=" + conn.getResponseMessage());
+                    Log.w(TAG, "response error: code=" + conn.getResponseCode() + " msg=" + conn.getResponseMessage());
                 }
-                return Response.get(String.valueOf(conn.getResponseCode()), conn.getResponseMessage(), null);
+                return null;
             }
         } catch (Exception e) {
             if (openLog) {
-                Platform.get().log(TAG, "response error: " + e.getLocalizedMessage(), e);
+                Log.w(TAG, "response error: " + e.getLocalizedMessage(), e);
             }
-            return Response.get("-1", "", e);
+            return null;
         } finally {
             if (conn != null) {
                 conn.disconnect();
@@ -212,37 +315,7 @@ public class DefaultRealRequest implements IRealRequest {
         }
     }
 
-    private Response exec(IRequestBody request, String filePath, IProgress callback) {
-        HttpURLConnection conn = null;
-        try {
-            conn = generate(request.getUrl(), request.getConnectedTimeout(), request.getReadTimeout(), "GET",
-                request.getHeader());
-
-            // header
-            HashMap<String, String> header = request.getHeader();
-            for (Map.Entry<String, String> entry : header.entrySet()) {
-                conn.setRequestProperty(entry.getKey(), entry.getValue());
-            }
-
-            // response
-            if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                InputStream in = conn.getInputStream();
-                File file = doDown(in, conn.getContentLength(), filePath, callback);
-                in.close();
-                return Response.get(filePath);
-            } else {
-                return Response.get(String.valueOf(conn.getResponseCode()), conn.getResponseMessage(), null);
-            }
-        } catch (Exception e) {
-            return Response.get("-1", "", e);
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
-    }
-
-    protected boolean doDeal(HttpURLConnection conn, HashMap<String, Object> params) {
+    protected boolean doDeal(HttpURLConnection conn, Map<String, Object> params) {
         return false;
     }
 
@@ -264,22 +337,17 @@ public class DefaultRealRequest implements IRealRequest {
 
         byte[] buf = new byte[1024 * 10];
         int ret, len = 0;
-        if (callback != null) {
-            callback.progress(0);
-        }
+        progress(callback, 0);
         while ((ret = in.read(buf)) >= 0) {
             os.write(buf, 0, ret);
             len += ret;
             if (System.currentTimeMillis() - start > 500) {
                 start = System.currentTimeMillis();
-                if (callback != null) {
-                    callback.progress(len * 1f / totalLen);
-                }
+
+                progress(callback, len * 1f / totalLen);
             }
         }
-        if (callback != null) {
-            callback.progress(1);
-        }
+        progress(callback, 1);
         in.close();
         return file;
     }
@@ -317,9 +385,7 @@ public class DefaultRealRequest implements IRealRequest {
         Map<String, File[]> fileArrayMap = new HashMap<>();
 
         long totalLength = 0;
-        if (progress != null) {
-            progress.progress(0);
-        }
+        progress(progress, 0);
         StringBuilder strBuf = new StringBuilder();
         if (params != null) {
             for (Map.Entry<String, Object> entry : params.entrySet()) {
@@ -355,9 +421,7 @@ public class DefaultRealRequest implements IRealRequest {
         strBuf.setLength(0);
         strBuf.append(end).append(twoHyphens).append(BOUNDARY).append(twoHyphens).append(end);
         out.write(strBuf.toString().getBytes());
-        if (progress != null) {
-            progress.progress(1);
-        }
+        progress(progress, 1);
         out.flush();
         out.close();
     }
@@ -385,9 +449,7 @@ public class DefaultRealRequest implements IRealRequest {
             sendLen += ret;
             if (System.currentTimeMillis() - lastTime > 500) {
                 lastTime = System.currentTimeMillis();
-                if (progress != null) {
-                    progress.progress(Double.valueOf(sendLen * 1d / totalLength).floatValue());
-                }
+                progress(progress, sendLen * 1d / totalLength);
             }
         }
         in.close();
@@ -397,10 +459,18 @@ public class DefaultRealRequest implements IRealRequest {
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStream out = new DataOutputStream(conn.getOutputStream());
-        JSONObject object = new JSONObject(params == null ? new HashMap() : params);
+        JSONObject object = new JSONObject(params == null ? new HashMap<String, Object>() : params);
         out.write(object.toString().getBytes());
 
         out.flush();
         out.close();
+    }
+
+    public interface IProgress {
+        void progress(float progress);
+    }
+
+    public interface Callback {
+        void call(String res);
     }
 }

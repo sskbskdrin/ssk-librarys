@@ -17,6 +17,7 @@ import cn.sskbskdrin.lib.demo.tool.HttpFragment;
 import cn.sskbskdrin.lib.demo.widget.BannerFragment;
 import cn.sskbskdrin.lib.demo.widget.FlowFragment;
 import cn.sskbskdrin.lib.demo.widget.PickerFragment;
+import cn.sskbskdrin.lib.demo.widget.PullFragment;
 import cn.sskbskdrin.lib.demo.widget.SwitchButtonFragment;
 import cn.sskbskdrin.lib.demo.widget.TabHostFragment;
 
@@ -33,6 +34,7 @@ public class MainActivity extends FragmentActivity implements IA {
         mList.add(new ClassItem(BannerFragment.class, "BannerView"));
         mList.add(new ClassItem(HttpFragment.class, "HTTP"));
         mList.add(new ClassItem(SwitchButtonFragment.class, "SwitchButton"));
+        mList.add(new ClassItem(PullFragment.class, "PullLayout"));
     }
 
     @Override

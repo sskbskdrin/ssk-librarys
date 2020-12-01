@@ -23,4 +23,4 @@ dependencies {
     api 'androidx.fragment:fragment:1.2.5'
     api project(path: ':ssk-base')
 }
-apply from: "bintray.gradle"
+apply from: "../bintray.gradle"

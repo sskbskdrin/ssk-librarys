@@ -3,7 +3,6 @@ package cn.sskbskdrin.frame.base.ui;
 import android.os.Bundle;
 import android.view.View;
 
-import cn.sskbskdrin.base.IFragment;
 import cn.sskbskdrin.frame.base.vm.LifeOwner;
 
 /**

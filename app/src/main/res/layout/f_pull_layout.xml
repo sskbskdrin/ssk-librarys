@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/pull_title"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="#803F51B5"
+        android:elevation="1px"
+        android:gravity="center"
+        android:text="title" />
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="2px">
+
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:id="@+id/collapsingToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#0000"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:background="#80FF4081"
+                android:gravity="center"
+                android:text="header" />
+
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <cn.sskbskdrin.pull.PullLayout
+        android:id="@+id/pull_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <cn.sskbskdrin.pull.refresh.ClassicHeader
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:pull_inParentPosition="top" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/pull_recycle"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:pull_isContentView="true" />
+    </cn.sskbskdrin.pull.PullLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

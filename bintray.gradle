@@ -7,9 +7,15 @@ File localPropertiesFile = project.rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     properties.load(localPropertiesFile.newDataInputStream())
 }
+
 File projectPropertiesFile = project.file("project.properties")
 if (projectPropertiesFile.exists()) {
     properties.load(projectPropertiesFile.newDataInputStream())
+}
+
+File modulePropertiesFile = project.file("module.properties")
+if (modulePropertiesFile.exists()) {
+    properties.load(modulePropertiesFile.newDataInputStream())
 }
 
 // read properties
@@ -24,6 +30,7 @@ String proScmDeveloperUrl = properties.getProperty("project.scm.developer")
 String proDescription = properties.getProperty("project.description")
 String proPkgExt = properties.getProperty("project.pkg.ext")
 String proPkg = properties.getProperty("project.pkg")
+String depend = properties.getProperty("dependencies")
 if (proPkgExt == null || proPkgExt.length() == 0) {
     proPkgExt = "aar"
 }
@@ -48,6 +55,20 @@ install {
     repositories.mavenInstaller {
         pom {
             project {
+                String count = properties.getProperty("dependencyCount")
+                if (count != null) {
+                    dependencies {
+                        for (int i = Integer.parseInt(count); i > 0; --i) {
+                            String dep = properties.getProperty("dependency-" + i)
+                            String[] f = dep.split(":")
+                            dependency {
+                                groupId f[0]
+                                artifactId f[1]
+                                if (f.length > 2) version f[2]
+                            }
+                        }
+                    }
+                }
                 packaging proPkgExt
                 groupId proGroupId
                 artifactId proArtifactId

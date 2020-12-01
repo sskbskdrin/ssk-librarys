@@ -1,0 +1,5 @@
+<resources>
+
+    <style name="main_base" parent="Theme.AppCompat.Light.NoActionBar" />
+
+</resources>

@@ -29,7 +29,7 @@ public interface IPost {
         inPost.executor = executor;
     }
 
-    default void post(Runnable runnable) {
+    default boolean post(Runnable runnable) {
         if (inPost.mH == null) {
             inPost.mH = new Handler(Looper.getMainLooper());
         }
@@ -38,13 +38,22 @@ public interface IPost {
         } else {
             inPost.mH.post(runnable);
         }
+        return true;
     }
 
-    default void postDelayed(Runnable runnable, long delay) {
+    default boolean postDelayed(Runnable runnable, long delay) {
         if (inPost.mH == null) {
             inPost.mH = new Handler(Looper.getMainLooper());
         }
         inPost.mH.postDelayed(runnable, delay);
+        return true;
+    }
+
+    default boolean removeCallbacks(Runnable runnable) {
+        if (inPost.mH != null) {
+            inPost.mH.removeCallbacks(runnable);
+        }
+        return true;
     }
 
     default void postIO(Runnable runnable) {

@@ -6,12 +6,12 @@ import android.os.Bundle;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.fragment.app.FragmentActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentTransaction;
 import cn.sskbskdrin.base.IA;
 import cn.sskbskdrin.base.IFragment;
 
-public class CommonFragmentActivity extends FragmentActivity implements IA {
+public class CommonFragmentActivity extends AppCompatActivity implements IA {
     private List<IFragment> mFragments;
 
     @Override

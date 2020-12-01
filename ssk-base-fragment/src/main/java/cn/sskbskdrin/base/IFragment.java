@@ -8,13 +8,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.fragment.app.Fragment;
-
 /**
  * Created by sskbskdrin on 2015/5/25.
  * Fragment 基类
  */
-public abstract class IFragment extends Fragment implements IA {
+public abstract class IFragment extends androidx.fragment.app.Fragment implements IA {
     protected final String TAG;
     /**
      * 在initData中可直接使用
@@ -35,12 +33,12 @@ public abstract class IFragment extends Fragment implements IA {
     protected abstract int getLayoutId();
 
     /**
-     * 在{@link IFragment#onActivityCreated(Bundle)}被调用时调用
+     * 在{@link IFragment#onViewCreated(View, Bundle)}被调用时调用
      */
     protected void onInitData(Bundle arguments) {}
 
     /**
-     * 在view被创建时调用{@link IFragment#onViewCreated(View, Bundle)}
+     * 在view被创建时调用,在{@link IFragment#onInitData(Bundle)}之后调用
      */
     protected abstract void onViewCreated(View rootView, Bundle arguments, Bundle savedInstanceState);
 

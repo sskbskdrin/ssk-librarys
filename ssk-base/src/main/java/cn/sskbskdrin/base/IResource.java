@@ -3,6 +3,7 @@ package cn.sskbskdrin.base;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.util.TypedValue;
 
 /**
  * @author keayuan
@@ -42,5 +43,10 @@ public interface IResource extends IContext {
             return context.getString(resId, args);
         }
         return null;
+    }
+
+    default int dp2px(float dp) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context().getResources()
+            .getDisplayMetrics());
     }
 }

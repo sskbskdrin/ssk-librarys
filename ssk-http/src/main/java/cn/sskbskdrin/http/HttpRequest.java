@@ -52,7 +52,7 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody {
                     @Override
                     public void run() {
                         if (mProgress != null) {
-                            mProgress.progress(progress);
+                            mProgress.progress(((int) (progress * 100)) / 100f);
                         }
                     }
                 });

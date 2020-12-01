@@ -1,13 +1,19 @@
 package cn.sskbskdrin.lib.demo.tool;
 
+import android.Manifest;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.View;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import java.util.HashMap;
+
 import cn.sskbskdrin.base.IFragment;
 import cn.sskbskdrin.http.HTTP;
+import cn.sskbskdrin.http.HttpUtils;
 import cn.sskbskdrin.http.IRequest;
 import cn.sskbskdrin.lib.demo.R;
 import cn.sskbskdrin.lib.demo.simple.SimpleAdapter;
@@ -39,6 +45,39 @@ public class HttpFragment extends IFragment {
         methodView = getView(R.id.http_method_sp);
         methodView.setAdapter(new SimpleAdapter<>(new String[]{"GET", "POST", "JSON", "POSTFILE", "DOWNLOAD"},
             dp2px(36), true));
+
+        getView(R.id.http_upload).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //                HTTP.url("https://static.iyuan.site/public.zip").progress(new IProgress() {
+                //                    @Override
+                //                    public void progress(float progress) {
+                //                        Log.i(TAG, "progress: " + progress);
+                //                    }
+                //                }).download(Environment.getExternalStorageDirectory().getAbsolutePath() + "/public
+                //                .zip");
+
+                HttpUtils.create("https://static.iyuan.site/public.zip", new HashMap<>())
+                    .downLoad(Environment.getExternalStorageDirectory()
+                        .getAbsolutePath() + "/public.zip", new HttpUtils.Callback() {
+                        @Override
+                        public void call(String res) {
+                            Log.i(TAG, "success: " + res);
+                        }
+                    }, new HttpUtils.Callback() {
+                        @Override
+                        public void call(String res) {
+                            Log.i(TAG, "error: " + res);
+                        }
+                    }, new HttpUtils.IProgress() {
+                        @Override
+                        public void progress(float progress) {
+                            Log.i(TAG, "progress: " + progress);
+                        }
+                    });
+            }
+        });
+        checkPermission(1001, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE);
     }
 
     private void request() {

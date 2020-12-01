@@ -114,7 +114,6 @@ public abstract class LoadMoreAdapter extends RecyclerView.Adapter<RecyclerView.
                 }
             }
         });
-        notifyDataSetChanged();
     }
 
     public void loadFailed() {

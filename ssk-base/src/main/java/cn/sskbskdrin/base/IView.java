@@ -32,11 +32,6 @@ public interface IView extends IContext, IResource, IPost {
         return null;
     }
 
-    default int dp2px(float dp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context().getResources()
-            .getDisplayMetrics());
-    }
-
     default void showView(boolean show, int... ids) {
         if (ids != null) {
             int visible = show ? View.VISIBLE : View.GONE;
