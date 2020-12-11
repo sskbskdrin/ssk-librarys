@@ -7,6 +7,7 @@ import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -221,5 +222,74 @@ public class FlowLayout extends ViewGroup {
     private int dip2px(float dpValue) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dpValue,
             getResources().getDisplayMetrics());
+    }
+
+    public static LabelAdapter generateLabelAdapter(List<?> list, LabelAdapter.OnItemClickListener listener) {
+        return new LabelAdapter(list, listener);
+    }
+
+    public static class LabelAdapter extends BaseAdapter {
+
+        public static class Option {
+            int padding = 10;
+            int textSize = 48;
+        }
+
+        Option option = new Option();
+
+        public interface NameString {
+            String name();
+        }
+
+        public interface OnItemClickListener {
+            void onClickItem(int position, Object item, View view);
+        }
+
+        List<?> list;
+        OnItemClickListener listener;
+        private OnClickListener clickListener = new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (listener != null) {
+                    Integer pos = (Integer) v.getTag();
+                    listener.onClickItem(pos, list.get(pos), v);
+                }
+            }
+        };
+
+        LabelAdapter(List<?> list, LabelAdapter.OnItemClickListener listener) {
+            this.list = list;
+            this.listener = listener;
+        }
+
+        @Override
+        public int getCount() {
+            return list == null ? 0 : list.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return list == null ? null : list.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            Object obj = getItem(position);
+            TextView view = (TextView) convertView;
+            if (view == null) {
+                view = new TextView(parent.getContext());
+                view.setPadding(option.padding, option.padding, option.padding, option.padding);
+                view.setTextSize(option.textSize);
+            }
+            view.setText(obj instanceof NameString ? ((NameString) obj).name() : obj.toString());
+            view.setOnClickListener(clickListener);
+            view.setTag(position);
+            return view;
+        }
     }
 }

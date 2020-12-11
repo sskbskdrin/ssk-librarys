@@ -9,8 +9,6 @@ import android.view.View;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import java.util.HashMap;
-
 import cn.sskbskdrin.base.IFragment;
 import cn.sskbskdrin.http.HTTP;
 import cn.sskbskdrin.http.HttpUtils;
@@ -57,24 +55,12 @@ public class HttpFragment extends IFragment {
                 //                }).download(Environment.getExternalStorageDirectory().getAbsolutePath() + "/public
                 //                .zip");
 
-                HttpUtils.create("https://static.iyuan.site/public.zip", new HashMap<>())
+                HttpUtils.create("https://static.iyuan.site/public.zip")
+                    .onProgress((res, e) -> Log.i(TAG, "progress: " + res))
+                    .onError((res, e) -> Log.w(TAG, "error: " + res, e))
                     .downLoad(Environment.getExternalStorageDirectory()
-                        .getAbsolutePath() + "/public.zip", new HttpUtils.Callback() {
-                        @Override
-                        public void call(String res) {
-                            Log.i(TAG, "success: " + res);
-                        }
-                    }, new HttpUtils.Callback() {
-                        @Override
-                        public void call(String res) {
-                            Log.i(TAG, "error: " + res);
-                        }
-                    }, new HttpUtils.IProgress() {
-                        @Override
-                        public void progress(float progress) {
-                            Log.i(TAG, "progress: " + progress);
-                        }
-                    });
+                        .getAbsolutePath() + "/public.zip", (res, e) -> Log.d(TAG,
+                        "success: " + res.getAbsolutePath()));
             }
         });
         checkPermission(1001, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE);

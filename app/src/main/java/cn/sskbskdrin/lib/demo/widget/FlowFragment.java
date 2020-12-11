@@ -3,15 +3,14 @@ package cn.sskbskdrin.lib.demo.widget;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.SeekBar;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import cn.sskbskdrin.base.IBaseAdapter;
 import cn.sskbskdrin.base.IFragment;
 import cn.sskbskdrin.lib.demo.R;
 import cn.sskbskdrin.util.CommonUtils;
+import cn.sskbskdrin.widget.FlowLabelAdapter;
 import cn.sskbskdrin.widget.FlowLayout;
 
 public class FlowFragment extends IFragment {
@@ -58,12 +57,7 @@ public class FlowFragment extends IFragment {
             }
             list.add(builder.toString());
         }
-        flowLayout.setAdapter(new IBaseAdapter<String>(list, R.layout.simple_text_layout) {
-            @Override
-            protected void convert(View view, int position, String s) {
-                ((TextView) view).setText(s);
-            }
-        });
+        flowLayout.setAdapter(new FlowLabelAdapter(list, (position, item, view1) -> showToast(item.toString())));
     }
 
 }
