@@ -7,7 +7,6 @@ import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +16,6 @@ public class FlowLayout extends ViewGroup {
 
     protected List<List<View>> mAllViews = new ArrayList<>();
     protected List<Integer> mLineHeight = new ArrayList<>();
-    protected List<Integer> mLineWidth = new ArrayList<>();
     private int mHorizontalSpace;
     private int mVerticalSpace;
     private List<View> lineViews = new ArrayList<>();
@@ -61,44 +59,47 @@ public class FlowLayout extends ViewGroup {
         int modeWidth = MeasureSpec.getMode(widthMeasureSpec);
         int sizeHeight = MeasureSpec.getSize(heightMeasureSpec);
         int modeHeight = MeasureSpec.getMode(heightMeasureSpec);
+        if (modeWidth == MeasureSpec.UNSPECIFIED) {
+            sizeWidth = Integer.MAX_VALUE;
+        }
 
         // wrap_content
         int width = 0;
         int height = 0;
 
-        int lineWidth = 0;
+        int lineWidth = -mHorizontalSpace;
         int lineHeight = 0;
 
         int cCount = getChildCount();
 
+        int contentWidth = sizeWidth - getPaddingLeft() - getPaddingRight();
+
         for (int i = 0; i < cCount; i++) {
             View child = getChildAt(i);
             if (child.getVisibility() == View.GONE) {
-                if (i == cCount - 1) {
-                    width = Math.max(lineWidth, width);
-                    height += lineHeight;
-                }
                 continue;
             }
             measureChild(child, widthMeasureSpec, heightMeasureSpec);
-            MarginLayoutParams lp = (MarginLayoutParams) child.getLayoutParams();
 
-            int childWidth = child.getMeasuredWidth() + lp.leftMargin + lp.rightMargin + mHorizontalSpace;
-            int childHeight = child.getMeasuredHeight() + lp.topMargin + lp.bottomMargin + mVerticalSpace;
+            int childWidth = child.getMeasuredWidth();
+            int childHeight = child.getMeasuredHeight();
 
-            if (lineWidth + childWidth > sizeWidth - getPaddingLeft() - getPaddingRight()) {
+            if (lineWidth + childWidth + mHorizontalSpace <= contentWidth) {
+                lineWidth += childWidth + mHorizontalSpace;
+                lineHeight = Math.max(lineHeight, childHeight);
+            } else {
                 width = Math.max(width, lineWidth);
                 lineWidth = childWidth;
-                height += lineHeight;
+                height += lineHeight + mVerticalSpace;
                 lineHeight = childHeight;
-            } else {
-                lineWidth += childWidth;
-                lineHeight = Math.max(lineHeight, childHeight);
             }
             if (i == cCount - 1) {
                 width = Math.max(lineWidth, width);
-                height += lineHeight;
+                height += lineHeight + mVerticalSpace;
             }
+        }
+        if (height > 0) {
+            height -= mVerticalSpace;
         }
         setMeasuredDimension(modeWidth == MeasureSpec.EXACTLY ? sizeWidth :
             width + getPaddingLeft() + getPaddingRight(), modeHeight == MeasureSpec.EXACTLY ? sizeHeight :
@@ -109,12 +110,12 @@ public class FlowLayout extends ViewGroup {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         mAllViews.clear();
         mLineHeight.clear();
-        mLineWidth.clear();
         lineViews.clear();
 
         int width = getWidth();
 
-        int lineWidth = getPaddingLeft() + getPaddingRight();
+        int paddingH = getPaddingLeft() + getPaddingRight();
+        int lineWidth = 0;
         int lineHeight = 0;
 
         int cCount = getChildCount();
@@ -124,26 +125,23 @@ public class FlowLayout extends ViewGroup {
             if (child.getVisibility() == View.GONE) {
                 continue;
             }
-            MarginLayoutParams lp = (MarginLayoutParams) child.getLayoutParams();
 
             int childWidth = child.getMeasuredWidth();
             int childHeight = child.getMeasuredHeight();
 
-            if (childWidth + lineWidth + lp.leftMargin + lp.rightMargin + mHorizontalSpace > width) {
+            if (childWidth + paddingH + lineWidth > width) {
                 mLineHeight.add(lineHeight);
                 mAllViews.add(lineViews);
-                mLineWidth.add(lineWidth);
 
-                lineWidth = getPaddingLeft() + getPaddingRight();
-                lineHeight = childHeight + lp.topMargin + lp.bottomMargin + mVerticalSpace;
+                lineWidth = 0;
+                lineHeight = childHeight + mVerticalSpace;
                 lineViews = new ArrayList<>();
             }
-            lineWidth += childWidth + lp.leftMargin + lp.rightMargin + mHorizontalSpace;
-            lineHeight = Math.max(lineHeight, childHeight + lp.topMargin + lp.bottomMargin + mVerticalSpace);
+            lineWidth += childWidth + mHorizontalSpace;
+            lineHeight = Math.max(lineHeight, childHeight + mVerticalSpace);
             lineViews.add(child);
         }
         mLineHeight.add(lineHeight);
-        mLineWidth.add(lineWidth);
         mAllViews.add(lineViews);
 
         int left;
@@ -162,16 +160,9 @@ public class FlowLayout extends ViewGroup {
                     continue;
                 }
 
-                MarginLayoutParams lp = (MarginLayoutParams) child.getLayoutParams();
+                child.layout(left, top, left + child.getMeasuredWidth(), top + child.getMeasuredHeight());
 
-                int lc = left + lp.leftMargin;
-                int tc = top + lp.topMargin;
-                int rc = lc + child.getMeasuredWidth();
-                int bc = tc + child.getMeasuredHeight();
-
-                child.layout(lc, tc, rc, bc);
-
-                left += child.getMeasuredWidth() + lp.leftMargin + lp.rightMargin + mHorizontalSpace;
+                left += child.getMeasuredWidth() + mHorizontalSpace;
             }
             top += lineHeight;
         }
@@ -193,12 +184,22 @@ public class FlowLayout extends ViewGroup {
     }
 
     private void changeAdapter() {
-        removeAllViews();
         BaseAdapter adapter = mAdapter;
-        if (adapter != null) {
-            for (int i = 0; i < adapter.getCount(); i++) {
-                View view = adapter.getView(i, null, this);
-                addView(view);
+        if (adapter == null) {
+            removeAllViews();
+        } else {
+            if (adapter.getViewTypeCount() > 1) {
+                removeAllViews();
+            }
+            int count = adapter.getCount();
+            for (int i = 0; i < count; i++) {
+                View view = adapter.getView(i, getChildAt(i), this);
+                if (view.getParent() == null) {
+                    addView(view);
+                }
+            }
+            if (getChildCount() > count) {
+                removeViews(count, getChildCount());
             }
         }
         requestLayout();
@@ -206,90 +207,21 @@ public class FlowLayout extends ViewGroup {
 
     @Override
     public LayoutParams generateLayoutParams(AttributeSet attrs) {
-        return new MarginLayoutParams(getContext(), attrs);
+        return new LayoutParams(getContext(), attrs);
     }
 
     @Override
     protected LayoutParams generateDefaultLayoutParams() {
-        return new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        return new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
     }
 
     @Override
     protected LayoutParams generateLayoutParams(LayoutParams p) {
-        return new MarginLayoutParams(p);
+        return new LayoutParams(p);
     }
 
     private int dip2px(float dpValue) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dpValue,
             getResources().getDisplayMetrics());
-    }
-
-    public static LabelAdapter generateLabelAdapter(List<?> list, LabelAdapter.OnItemClickListener listener) {
-        return new LabelAdapter(list, listener);
-    }
-
-    public static class LabelAdapter extends BaseAdapter {
-
-        public static class Option {
-            int padding = 10;
-            int textSize = 48;
-        }
-
-        Option option = new Option();
-
-        public interface NameString {
-            String name();
-        }
-
-        public interface OnItemClickListener {
-            void onClickItem(int position, Object item, View view);
-        }
-
-        List<?> list;
-        OnItemClickListener listener;
-        private OnClickListener clickListener = new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (listener != null) {
-                    Integer pos = (Integer) v.getTag();
-                    listener.onClickItem(pos, list.get(pos), v);
-                }
-            }
-        };
-
-        LabelAdapter(List<?> list, LabelAdapter.OnItemClickListener listener) {
-            this.list = list;
-            this.listener = listener;
-        }
-
-        @Override
-        public int getCount() {
-            return list == null ? 0 : list.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return list == null ? null : list.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            Object obj = getItem(position);
-            TextView view = (TextView) convertView;
-            if (view == null) {
-                view = new TextView(parent.getContext());
-                view.setPadding(option.padding, option.padding, option.padding, option.padding);
-                view.setTextSize(option.textSize);
-            }
-            view.setText(obj instanceof NameString ? ((NameString) obj).name() : obj.toString());
-            view.setOnClickListener(clickListener);
-            view.setTag(position);
-            return view;
-        }
     }
 }

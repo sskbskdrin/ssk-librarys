@@ -1,37 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:divider="@drawable/space_divider"
-              android:orientation="vertical"
-              android:padding="20dp"
-              android:showDividers="middle">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:divider="@drawable/space_divider"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:showDividers="middle">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="水平间距"/>
+        android:text="水平间距" />
 
     <SeekBar
         android:id="@+id/flow_seek_h"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:max="100"/>
+        android:max="100" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="垂直间距"/>
+        android:text="垂直间距" />
 
     <SeekBar
         android:id="@+id/flow_seek_v"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:max="100"/>
+        android:max="100" />
 
     <cn.sskbskdrin.widget.FlowLayout
         android:id="@+id/flow_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:visibility="visible" />
+
+    <cn.sskbskdrin.widget.FlowLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="30dp"
+            android:layout_height="60dp"
+            android:background="@color/colorPrimary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
+            android:text=";faije;fioj;sfh;a;fjsieiuwoiquyreiurywih72895647823h4iurhui3ri23h4ro98" />
+
+        <TextView
+            android:layout_width="30dp"
+            android:layout_height="20dp"
+            android:background="@color/colorPrimary" />
+
+        <TextView
+            android:layout_width="50dp"
+            android:layout_height="20dp"
+            android:background="@color/colorPrimary" />
+
+        <TextView
+            android:layout_width="30dp"
+            android:layout_height="60dp"
+            android:background="@color/colorPrimary" />
+
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="20dp"
+            android:background="@color/colorPrimary" />
+
+        <TextView
+            android:layout_width="30dp"
+            android:layout_height="20dp"
+            android:background="@color/colorPrimary" />
+
+        <TextView
+            android:layout_width="50dp"
+            android:layout_height="20dp"
+            android:background="@color/colorPrimary" />
+
+        <TextView
+            android:layout_width="30dp"
+            android:layout_height="60dp"
+            android:background="@color/colorPrimary" />
+
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="20dp"
+            android:background="@color/colorPrimary" />
+
+        <TextView
+            android:layout_width="30dp"
+            android:layout_height="20dp"
+            android:background="@color/colorPrimary" />
+
+        <TextView
+            android:layout_width="50dp"
+            android:layout_height="20dp"
+            android:background="@color/colorPrimary" />
+    </cn.sskbskdrin.widget.FlowLayout>
+
 </LinearLayout>

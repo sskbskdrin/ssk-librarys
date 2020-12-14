@@ -28,7 +28,11 @@ public class FlowFragment extends IFragment {
         SeekBar.OnSeekBarChangeListener listener = new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
+                if (seekBar.getId() == R.id.flow_seek_v) {
+                    flowLayout.setVerticalSpace(seekBar.getProgress());
+                } else {
+                    flowLayout.setHorizontalSpace(seekBar.getProgress());
+                }
             }
 
             @Override
