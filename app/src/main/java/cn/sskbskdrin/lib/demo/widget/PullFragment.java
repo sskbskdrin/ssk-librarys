@@ -16,8 +16,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import cn.sskbskdrin.base.IFragment;
 import cn.sskbskdrin.lib.demo.LoadMoreAdapter;
 import cn.sskbskdrin.lib.demo.R;
-import cn.sskbskdrin.pull.PullLayout;
-import cn.sskbskdrin.pull.PullRefreshHolder;
 
 /**
  * Created by keayuan on 2020/11/25.
@@ -25,9 +23,8 @@ import cn.sskbskdrin.pull.PullRefreshHolder;
  * @author keayuan
  */
 public class PullFragment extends IFragment {
-    RecyclerView mListView;
-    PullRefreshHolder refreshHolder;
     final List list = new ArrayList();
+    public static final int PAGE_SIZE = 30;
 
     @Override
     protected int getLayoutId() {
@@ -38,16 +35,10 @@ public class PullFragment extends IFragment {
     protected void onViewCreated(View rootView, Bundle arguments, Bundle savedInstanceState) {
         RecyclerView recyclerView = getView(R.id.pull_recycle);
         recyclerView.setLayoutManager(new LinearLayoutManager(rootView.getContext()));
-        mListView = getView(R.id.pull_recycle);
-        PullLayout pullLayout = getView(R.id.pull_layout);
-        refreshHolder = pullLayout.getPullRefreshHolder();
-        list.add("init 1");
-        list.add("init 1");
-        list.add("init 1");
-        list.add("init 1");
-        list.add("init 1");
-        list.add("init 1");
-        final LoadMoreAdapter adapter = new LoadMoreAdapter(list, 20) {
+        for (int i = 0; i < 20; i++) {
+            list.add("init " + i);
+        }
+        final LoadMoreAdapter adapter = new LoadMoreAdapter(list, PAGE_SIZE) {
 
             @Override
             protected RecyclerView.ViewHolder onCreateHolder(@NonNull ViewGroup parent, int viewType) {
@@ -67,33 +58,34 @@ public class PullFragment extends IFragment {
             @Override
             public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
                 holder.itemView.setBackgroundResource(R.drawable.rect_white_bg);
+                ((TextView) (holder.itemView)).setMaxWidth(300);
                 ((TextView) (holder.itemView)).setText(list.get(position).toString());
             }
         };
         adapter.setOnLoadMoreListener((adapter1, page) -> {
             Log.d(TAG, "onLoadMore: " + page);
             postDelayed(() -> {
-                if (Math.random() < 0.5 && page > 0) {
+                if (Math.random() < 0.2 && page > 0) {
                     adapter.loadFailed();
                     return;
                 }
-                for (int i = 0; i < (page < 2 ? 20 : 5); i++) {
+                for (int i = 0; i < (page < 1 ? PAGE_SIZE : 5); i++) {
                     list.add("more " + list.size());
                 }
                 adapter.notifyDataSetChanged();
             }, 10);
         });
         adapter.setNoDataView(getView(R.id.simple_no_data));
-        mListView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter.bindRecyclerView(mListView);
-        refreshHolder.addPullRefreshCallback(PullLayout.Direction.TOP, direction -> {
+        adapter.bindRecyclerView(recyclerView);
+        SwipeLayout refreshLayout = getView(R.id.swipe);
+        refreshLayout.setOnRefreshListener(() -> {
             list.clear();
-            for (int i = 0; i < 20; i++) {
+            for (int i = 0; i < PAGE_SIZE; i++) {
                 list.add("more " + list.size());
             }
             adapter.notifyDataSetChanged();
-            refreshHolder.refreshComplete(PullLayout.Direction.TOP);
+            //            refreshLayout.setRefreshing(false);
         });
-        mListView.addItemDecoration(new DividerItemDecoration(getContext(), 1));
+        recyclerView.addItemDecoration(new DividerItemDecoration(getContext(), 1));
     }
 }

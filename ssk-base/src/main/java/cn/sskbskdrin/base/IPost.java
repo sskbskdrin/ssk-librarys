@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 public interface IPost {
     class InPost {
         private Handler mH = null;
-        private Executor executor = new ThreadPoolExecutor(0, 10, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        private Executor executor = new ThreadPoolExecutor(5, 10, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
         private InPost() {
         }
@@ -42,8 +42,15 @@ public interface IPost {
     }
 
     default boolean postDelayed(Runnable runnable, long delay) {
+        return postDelayed(runnable, false, delay);
+    }
+
+    default boolean postDelayed(Runnable runnable, boolean hasRemove, long delay) {
         if (inPost.mH == null) {
             inPost.mH = new Handler(Looper.getMainLooper());
+        }
+        if (hasRemove) {
+            removeCallbacks(runnable);
         }
         inPost.mH.postDelayed(runnable, delay);
         return true;
@@ -61,6 +68,6 @@ public interface IPost {
     }
 
     default boolean isMainThread() {
-        return Thread.currentThread() == Looper.getMainLooper().getThread();
+        return Looper.myLooper() == Looper.getMainLooper();
     }
 }
