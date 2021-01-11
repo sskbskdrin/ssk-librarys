@@ -5,6 +5,7 @@ import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -13,6 +14,10 @@ import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.AbsListView;
 import android.widget.ListView;
+import android.widget.TextView;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,13 +29,16 @@ import androidx.core.view.NestedScrollingParent;
 import androidx.core.view.NestedScrollingParentHelper;
 import androidx.core.view.ViewCompat;
 import androidx.core.widget.ListViewCompat;
+import cn.sskbskdrin.lib.demo.R;
+import cn.sskbskdrin.pull.PullPositionChangeListener;
 
 /**
  * Created by keayuan on 2021/1/7.
  *
  * @author keayuan
  */
-public class SwipeLayout extends ViewGroup implements NestedScrollingParent, NestedScrollingChild {
+public class SwipeLayout extends ViewGroup implements NestedScrollingParent, NestedScrollingChild,
+    SwipeHelper.SwipeAble {
     private static final String TAG = "SwipeLayout";
     // Maps to ProgressBar.Large style
     public static final int LARGE = 0;
@@ -73,7 +81,6 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
     private static final int DEFAULT_CIRCLE_TARGET = 64;
 
     private View mTarget; // the target of the gesture
-    SwipeLayout.OnRefreshListener mListener;
     boolean mRefreshing = false;
     private int mTouchSlop;
     private float mTotalDragDistance = -1;
@@ -119,14 +126,8 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
     boolean mNotify;
 
     private SwipeLayout.OnChildScrollUpCallback mChildScrollUpCallback;
-    private SwipeHelper swipeHelper = new SwipeHelper();
+    private SwipeHelper swipeHelper = new SwipeHelper(this);
     private int mOrientation = VERTICAL;
-
-    public enum Postition {
-        LEFT, TOP, RIGHT, BOTTOM, NONE
-    }
-
-    private Postition mPosition = Postition.NONE;
 
     void reset() {
         setTargetOffsetTopAndBottom(-mCurrentOffsetY);
@@ -190,139 +191,220 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
         mNestedScrollingChildHelper = new NestedScrollingChildHelper(this);
         setNestedScrollingEnabled(true);
 
-        moveToStart(1.0f);
-
         final TypedArray a = context.obtainStyledAttributes(attrs, LAYOUT_ATTRS);
         setEnabled(a.getBoolean(0, true));
         a.recycle();
-        ensureTarget();
     }
 
     /**
      * Set the listener to be notified when a refresh is triggered via the swipe
      * gesture.
      */
-    public void setOnRefreshListener(@Nullable SwipeLayout.OnRefreshListener listener) {
-        mListener = listener;
+    public void addSwipeRefreshListener(@Nullable SwipeRefreshListener listener) {
+        swipeHelper.addSwipeRefreshListener(SwipePosition.TOP, listener);
     }
 
-    /**
-     * Notify the widget that refresh state has changed. Do not call this when
-     * refresh is triggered by a swipe gesture.
-     *
-     * @param refreshing Whether or not the view should show refresh progress.
-     */
-    public void setRefreshing(boolean refreshing) {
-        if (refreshing && mRefreshing != refreshing) {
-            // scale and show
-            mRefreshing = refreshing;
-            setTargetOffsetTopAndBottom(mSpinnerOffsetEnd - mCurrentOffsetX);
-            mNotify = false;
-        } else {
-            setRefreshing(refreshing, false /* notify */);
-        }
+    public void setRefreshing() {
+        swipeToTarget(swipeHelper.getSwipeLoad());
     }
 
-    /**
-     * Pre API 11, this does an alpha animation.
-     *
-     * @param progress
-     */
-    void setAnimationProgress(float progress) {
-        //        mCircleView.setScaleX(progress);
-        //        mCircleView.setScaleY(progress);
-        //        moveToStart(1 - progress);
-    }
-
-    private void setRefreshing(boolean refreshing, final boolean notify) {
-        if (mRefreshing != refreshing) {
-            mNotify = notify;
-            ensureTarget();
-            mRefreshing = refreshing;
-        }
-    }
-
-    /**
-     * @return Whether the SwipeRefreshWidget is actively showing refresh
-     * progress.
-     */
-    public boolean isRefreshing() {
-        return mRefreshing;
-    }
-
-    private void ensureTarget() {
-        // Don't bother getting the parent height if the parent hasn't been laid out yet.
-        if (mTarget == null) {
-            mTarget = getChildAt(0);
-        }
-    }
-
-    /**
-     * Set the distance to trigger a sync in dips
-     *
-     * @param distance
-     */
-    public void setDistanceToTriggerSync(int distance) {
-        mTotalDragDistance = distance;
+    public void refreshComplete(SwipePosition position, boolean success) {
+        swipeHelper.complete(position, success);
     }
 
     private boolean isPinTarget;
 
-    @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        final int width = getMeasuredWidth();
-        final int height = getMeasuredHeight();
-        if (getChildCount() == 0) {
-            return;
-        }
-        if (mTarget == null) {
-            ensureTarget();
-        }
-        if (mTarget == null) {
-            return;
-        }
-        int offsetY = (isPinTarget ? 0 : 0);
-        int offsetX = (isPinTarget ? 0 : mCurrentOffsetX);
-        final View child = mTarget;
-        final int childLeft = getPaddingLeft() + offsetX;
-        final int childTop = getPaddingTop() + offsetY;
-        final int childRight = width - getPaddingLeft() - getPaddingRight() + offsetX;
-        final int childBottom = height - getPaddingTop() - getPaddingBottom() + offsetY;
+    public void setPinTarget(boolean pin) {
+        isPinTarget = pin;
+    }
 
-        child.layout(childLeft, childTop, childRight, childBottom);
+    @Override
+    protected void onFinishInflate() {
+        int childCount = getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            View view = getChildAt(i);
+            LayoutParams lp = (LayoutParams) view.getLayoutParams();
+            if (lp.isContent) {
+                mTarget = view;
+            } else if (lp.direction != SwipePosition.NONE) {
+                if (view instanceof SwipeHandler) {
+                    swipeHelper.addSwipeHandler(lp.direction, (SwipeHandler) view);
+                }
+            }
+        }
+        if (mTarget == null) {
+            if (childCount > 0) mTarget = getChildAt(0);
+        }
+        if (mTarget == null) {
+            TextView errorView = new TextView(getContext());
+            errorView.setClickable(true);
+            errorView.setTextColor(0xffff6600);
+            errorView.setGravity(Gravity.CENTER);
+            errorView.setTextSize(20);
+            errorView.setText("content view is empty!!!");
+            mTarget = errorView;
+            addView(mTarget);
+            ((LayoutParams) mTarget.getLayoutParams()).gravity = Gravity.CENTER;
+        }
+        ((LayoutParams) mTarget.getLayoutParams()).isContent = true;
+        super.onFinishInflate();
     }
 
     @Override
     public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        ensureTarget();
-        if (mTarget != null) {
-            mTarget.measure(MeasureSpec.makeMeasureSpec(getMeasuredWidth() - getPaddingLeft() - getPaddingRight(),
-                MeasureSpec.EXACTLY), MeasureSpec
-                .makeMeasureSpec(getMeasuredHeight() - getPaddingTop() - getPaddingBottom(), MeasureSpec.EXACTLY));
-        }
+        final int count = getChildCount();
 
-        //        mCircleView.measure(MeasureSpec.makeMeasureSpec(getMeasuredWidth(), MeasureSpec.AT_MOST),
-        //            MeasureSpec.makeMeasureSpec(0x0fffffff, MeasureSpec.UNSPECIFIED));
-    }
+        int maxHeight = 0;
+        int maxWidth = 0;
 
-    private View getTarget() {
-        if (mTarget != null) {
-            ViewGroup parent = (ViewGroup) mTarget.getParent();
-            if (parent == null) {
-                addView(mTarget);
-            } else if (parent != this) {
-                parent.removeView(mTarget);
+        // Find rightmost and bottommost child
+        for (int i = 0; i < count; i++) {
+            final View child = getChildAt(i);
+            if (child.getVisibility() != GONE) {
+                measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0);
+                maxWidth = Math.max(maxWidth, child.getMeasuredWidth());
+                maxHeight = Math.max(maxHeight, child.getMeasuredHeight());
             }
         }
-        return mTarget;
+
+        // Account for padding too
+        maxWidth += getPaddingLeft() + getPaddingRight();
+        maxHeight += getPaddingTop() + getPaddingBottom();
+
+        // Check against our minimum height and width
+        maxHeight = Math.max(maxHeight, getSuggestedMinimumHeight());
+        maxWidth = Math.max(maxWidth, getSuggestedMinimumWidth());
+
+        setMeasuredDimension(resolveSize(maxWidth, widthMeasureSpec), resolveSize(maxHeight, heightMeasureSpec));
+    }
+
+    private final Map<View, Integer> mTempViews = new HashMap<>();
+    private final Map<SwipePosition, View> mPositionView = new HashMap<>();
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        final int parentLeft = getPaddingLeft();
+        final int parentRight = right - left - getPaddingRight();
+        final int parentTop = getPaddingTop();
+        final int parentBottom = bottom - top - getPaddingBottom();
+
+        int offsetX = mCurrentOffsetX;
+        int offsetY = mCurrentOffsetY;
+        final int count = getChildCount();
+        mTempViews.clear();
+        int targetId = -1;
+        for (int i = 0; i < count; i++) {
+            View view = getChildAt(i);
+            SwipeLayout.LayoutParams lp = (SwipeLayout.LayoutParams) view.getLayoutParams();
+            if (view instanceof SwipeHandler) {
+                swipeHelper.addSwipeHandler(lp.direction, (SwipeHandler) view);
+            } else if (view instanceof PullPositionChangeListener) {
+                swipeHelper.addSwipeChangeListener((SwipeChangeListener) view);
+            }
+            if (lp.isContent) {
+                int tempX = offsetX;
+                int tempY = offsetY;
+                if (isPinTarget) {
+                    tempX = 0;
+                    tempY = 0;
+                }
+                int l = parentLeft + lp.leftMargin + tempX;
+                int t = parentTop + lp.topMargin + tempY;
+                int r = parentRight - lp.rightMargin + tempX;
+                int b = parentBottom - lp.bottomMargin + tempY;
+                view.layout(l, t, r, b);
+                mTarget = view;
+                targetId = i;
+            } else if (lp.direction != SwipePosition.NONE) {
+                int width = view.getMeasuredWidth();
+                int height = view.getMeasuredHeight();
+                int l = parentLeft + lp.leftMargin;
+                int t = parentTop + lp.topMargin;
+                int r = parentRight - lp.rightMargin;
+                int b = parentBottom - lp.bottomMargin;
+                if (lp.direction == SwipePosition.LEFT) {
+                    l = l - width + offsetX - lp.rightMargin - lp.leftMargin;
+                    if (swipeHelper.getCurrentDirection() != SwipePosition.LEFT) l -= offsetX;
+                    view.layout(l, t, l + width, t + height);
+                }
+                if (lp.direction == SwipePosition.TOP) {
+                    t = t - height + offsetY - lp.topMargin - lp.bottomMargin;
+                    if (swipeHelper.getCurrentDirection() != SwipePosition.TOP) t -= offsetY;
+                    view.layout(l, t, l + width, t + height);
+                }
+                if (lp.direction == SwipePosition.RIGHT) {
+                    r = r + offsetX + width + lp.rightMargin + lp.leftMargin;
+                    if (swipeHelper.getCurrentDirection() != SwipePosition.RIGHT) r -= offsetX;
+                    view.layout(r - width, t, r, t + height);
+                }
+                if (lp.direction == SwipePosition.BOTTOM) {
+                    b = b + offsetY + height + lp.topMargin + lp.bottomMargin;
+                    if (swipeHelper.getCurrentDirection() != SwipePosition.BOTTOM) b -= offsetY;
+                    view.layout(l, b - height, l + width, b);
+                }
+                mTempViews.put(view, i);
+                mPositionView.put(lp.direction, view);
+            } else {
+                layoutChildren(view, parentLeft, parentTop, parentRight, parentBottom);
+            }
+        }
+        for (Map.Entry<View, Integer> entry : mTempViews.entrySet()) {
+            if (entry.getValue() < targetId) {
+                entry.getKey().bringToFront();
+            }
+        }
+    }
+
+    private void layoutChildren(View child, int parentLeft, int parentTop, int parentRight, int parentBottom) {
+        final LayoutParams lp = (LayoutParams) child.getLayoutParams();
+        final int width = child.getMeasuredWidth();
+        final int height = child.getMeasuredHeight();
+
+        int childLeft = parentLeft;
+        int childTop = parentTop;
+
+        final int gravity = lp.gravity;
+
+        if (gravity != -1) {
+            final int horizontalGravity = gravity & Gravity.HORIZONTAL_GRAVITY_MASK;
+            final int verticalGravity = gravity & Gravity.VERTICAL_GRAVITY_MASK;
+
+            switch (horizontalGravity) {
+                case Gravity.LEFT:
+                    childLeft = parentLeft + lp.leftMargin;
+                    break;
+                case Gravity.CENTER_HORIZONTAL:
+                    childLeft = parentLeft + (parentRight - parentLeft - width) / 2 + lp.leftMargin - lp.rightMargin;
+                    break;
+                case Gravity.RIGHT:
+                    childLeft = parentRight - width - lp.rightMargin;
+                    break;
+                default:
+                    childLeft = parentLeft + lp.leftMargin;
+            }
+
+            switch (verticalGravity) {
+                case Gravity.TOP:
+                    childTop = parentTop + lp.topMargin;
+                    break;
+                case Gravity.CENTER_VERTICAL:
+                    childTop = parentTop + (parentBottom - parentTop - height) / 2 + lp.topMargin - lp.bottomMargin;
+                    break;
+                case Gravity.BOTTOM:
+                    childTop = parentBottom - height - lp.bottomMargin;
+                    break;
+                default:
+                    childTop = parentTop + lp.topMargin;
+            }
+        }
+        child.layout(childLeft, childTop, childLeft + width, childTop + height);
     }
 
     /**
      * @return Whether it is possible for the child view of this layout to
      * scroll up. Override this if the child view is a custom view.
      */
-    public boolean canChildScrollUp() {
+    private boolean canChildScrollUp() {
         if (mChildScrollUpCallback != null) {
             return mChildScrollUpCallback.canChildScrollUp(this, mTarget);
         }
@@ -332,7 +414,7 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
         return mTarget.canScrollVertically(-1);
     }
 
-    public boolean canChildScrollDown() {
+    private boolean canChildScrollDown() {
         return mTarget.canScrollVertically(1);
     }
 
@@ -348,8 +430,6 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        ensureTarget();
-
         final int action = ev.getActionMasked();
         int pointerIndex;
 
@@ -478,7 +558,7 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
         // Finish the spinner for nested scrolling if we ever consumed any
         // unconsumed nested scroll
         if (mCurrentOffsetY != 0) {
-            finishSpinner(mCurrentOffsetY);
+            finishSpinner();
             //            mTotalUnconsumed = 0;
         }
         // Dispatch up our nested parent
@@ -577,31 +657,16 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
     }
 
     private void moveSpinner(int dy, boolean animation) {
-        Log.i(TAG, "moveSpinner: " + dy);
+        Log.i(TAG, "moveSpinner: " + dy + " curr=" + mCurrentOffsetY);
         if (isAnimation == animation) {
             setTargetOffsetTopAndBottom(dy);
-            swipeHelper.onSwitchChange(0, dy, 0, mCurrentOffsetY, true);
+            swipeHelper.moveSpinner(0, dy, 0, mCurrentOffsetY, true);
         }
     }
 
-    private void finishSpinner(float overscrollTop) {
-        Log.i(TAG, "finishSpinner: " + overscrollTop);
-        if (swipeHelper.isLoading()) {
-            if (mCurrentOffsetY > swipeHelper.getSwipeLoad()) {
-                swipeToLoad();
-            }
-            return;
-        }
-        if (swipeHelper.isComplete()) {
-            swipeToReset();
-        } else {
-            if (mCurrentOffsetY > swipeHelper.getSwipeLoad()) {
-                swipeToLoad();
-                swipeHelper.startLoad();
-            } else {
-                swipeToReset();
-            }
-        }
+    private void finishSpinner() {
+        Log.i(TAG, "finishSpinner: currX=" + mCurrentOffsetX + " currY=" + mCurrentOffsetY);
+        swipeHelper.finishSpinner(mCurrentOffsetX, mCurrentOffsetY);
     }
 
     @Override
@@ -662,7 +727,7 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
                     final float y = ev.getY(pointerIndex);
                     final float overscrollTop = (y - mInitialMotionY) * DRAG_RATE;
                     mIsBeingDragged = false;
-                    finishSpinner(overscrollTop);
+                    finishSpinner();
                 }
                 mActivePointerId = INVALID_POINTER;
                 return false;
@@ -682,57 +747,36 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
         }
     }
 
-    void moveToStart(float interpolatedTime) {
-        setTargetOffsetTopAndBottom(0);
-    }
+    private boolean isAnimation;
+    private Animation scrollAnimation;
 
-    boolean isAnimation;
-
-    void swipeToLoad() {
-        final int dest = swipeHelper.getSwipeLoad() - mCurrentOffsetY;
-        mScaleDownAnimation = new Animation() {
+    @Override
+    public void swipeToTarget(final int targetPos) {
+        if (scrollAnimation != null) {
+            scrollAnimation.cancel();
+        }
+        final int total = targetPos - mCurrentOffsetY;
+        scrollAnimation = new Animation() {
             float last = 0;
 
             @Override
-            public void applyTransformation(float interpolatedTime, Transformation t) {
+            protected void applyTransformation(float interpolatedTime, Transformation t) {
                 if (interpolatedTime == 1) {
-                    moveSpinner(swipeHelper.getSwipeLoad() - mCurrentOffsetY, true);
+                    moveSpinner(targetPos - mCurrentOffsetY, true);
                     isAnimation = false;
                 } else {
-                    moveSpinner((int) (dest * (interpolatedTime - last)), true);
+                    moveSpinner((int) (total * (interpolatedTime - last)), true);
                 }
                 last = interpolatedTime;
             }
         };
-        isAnimation = true;
-        mScaleDownAnimation.setDuration(SCALE_DOWN_DURATION);
-        mTarget.clearAnimation();
-        mTarget.startAnimation(mScaleDownAnimation);
-    }
-
-    void swipeToReset() {
-        final int dest = -mCurrentOffsetY;
-        mScaleDownAnimation = new Animation() {
-            float last = 0;
-
-            @Override
-            public void applyTransformation(float interpolatedTime, Transformation t) {
-                if (interpolatedTime == 1) {
-                    moveSpinner(-mCurrentOffsetY, true);
-                    isAnimation = false;
-                } else {
-                    moveSpinner((int) (dest * (interpolatedTime - last)), true);
-                }
-                last = interpolatedTime;
-            }
-        };
-        mScaleDownAnimation.setDuration(SCALE_DOWN_DURATION);
+        scrollAnimation.setDuration(SCALE_DOWN_DURATION);
         mTarget.clearAnimation();
         isAnimation = true;
-        mTarget.startAnimation(mScaleDownAnimation);
+        mTarget.startAnimation(scrollAnimation);
     }
 
-    void setTargetOffsetTopAndBottom(int offset) {
+    private void setTargetOffsetTopAndBottom(int offset) {
         if (mCurrentOffsetY > 0) {
             if (offset + mCurrentOffsetY > swipeHelper.getSwipeMax()) {
                 offset = swipeHelper.getSwipeMax() - mCurrentOffsetY;
@@ -740,13 +784,29 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
         } else if (offset + mCurrentOffsetY < -swipeHelper.getSwipeMax()) {
             offset = -swipeHelper.getSwipeMax() - mCurrentOffsetY;
         }
+        if (offset == 0) return;
+        View view = null;
+        if (mCurrentOffsetY != 0) {
+            if (mCurrentOffsetY > 0) {
+                view = mPositionView.get(SwipePosition.TOP);
+            } else {
+                view = mPositionView.get(SwipePosition.BOTTOM);
+            }
+        } else if (offset > 0) {
+            view = mPositionView.get(SwipePosition.TOP);
+        } else {
+            view = mPositionView.get(SwipePosition.BOTTOM);
+        }
+        if (view != null) {
+            ViewCompat.offsetTopAndBottom(view, offset);
+        }
         mCurrentOffsetY += offset;
         if (mTarget != null) {
             ViewCompat.offsetTopAndBottom(mTarget, offset);
         }
     }
 
-    void setTargetOffsetLeftAndRight(int offset) {
+    private void setTargetOffsetLeftAndRight(int offset) {
         mCurrentOffsetX += offset;
         if (mTarget != null) {
             ViewCompat.offsetTopAndBottom(mTarget, offset);
@@ -765,17 +825,6 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
     }
 
     /**
-     * Classes that wish to be notified when the swipe gesture correctly
-     * triggers a refresh should implement this interface.
-     */
-    public interface OnRefreshListener {
-        /**
-         * Called when a swipe gesture triggers a refresh.
-         */
-        void onRefresh();
-    }
-
-    /**
      * Classes that wish to override {@link SwipeLayout#canChildScrollUp()} method
      * behavior should implement this interface.
      */
@@ -789,5 +838,71 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
          * @return Whether it is possible for the child view of parent layout to scroll up.
          */
         boolean canChildScrollUp(@NonNull SwipeLayout parent, @Nullable View child);
+    }
+
+    @Override
+    protected boolean checkLayoutParams(ViewGroup.LayoutParams p) {
+        return p instanceof LayoutParams;
+    }
+
+    @Override
+    protected LayoutParams generateDefaultLayoutParams() {
+        return new LayoutParams(-2, -2);
+    }
+
+    @Override
+    protected LayoutParams generateLayoutParams(ViewGroup.LayoutParams p) {
+        return new LayoutParams(p);
+    }
+
+    @Override
+    public LayoutParams generateLayoutParams(AttributeSet attrs) {
+        return new LayoutParams(getContext(), attrs);
+    }
+
+    public static class LayoutParams extends MarginLayoutParams {
+
+        /**
+         * 相对父view的位置，为NONE则根据gravity确定位置；否则会在父view的上下左右的位置，且会在父view拖动的时候跟随移动
+         */
+        public SwipePosition direction = SwipePosition.NONE;
+        /**
+         * 是否是PullLayout中控制的view。
+         */
+        public boolean isContent;
+
+        public int gravity = -1;
+
+        public LayoutParams(Context c, AttributeSet attrs) {
+            super(c, attrs);
+            TypedArray arr = c.obtainStyledAttributes(attrs, R.styleable.SwipeLayout_Layout, 0, 0);
+            isContent = arr.getBoolean(R.styleable.PullLayout_Layout_pull_isContentView, false);
+            int position = arr.getInt(R.styleable.PullLayout_Layout_pull_inParentPosition, 0);
+            if (position == 1) {
+                direction = SwipePosition.LEFT;
+            } else if (position == 2) {
+                direction = SwipePosition.TOP;
+            } else if (position == 3) {
+                direction = SwipePosition.RIGHT;
+            } else if (position == 4) {
+                direction = SwipePosition.BOTTOM;
+            } else {
+                direction = SwipePosition.NONE;
+            }
+            gravity = arr.getInt(R.styleable.PullLayout_Layout_android_layout_gravity, -1);
+            arr.recycle();
+        }
+
+        public LayoutParams(int width, int height) {
+            super(width, height);
+        }
+
+        public LayoutParams(MarginLayoutParams source) {
+            super(source);
+        }
+
+        public LayoutParams(ViewGroup.LayoutParams source) {
+            super(source);
+        }
     }
 }

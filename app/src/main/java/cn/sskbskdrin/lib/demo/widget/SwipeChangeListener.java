@@ -7,6 +7,4 @@ package cn.sskbskdrin.lib.demo.widget;
  */
 public interface SwipeChangeListener {
     void onSwitchChange(int dx, int dy, int offsetX, int offsetY, boolean isTouch);
-
-    void onTouchUp();
 }

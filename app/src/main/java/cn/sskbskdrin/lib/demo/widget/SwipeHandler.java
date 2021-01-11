@@ -5,7 +5,7 @@ package cn.sskbskdrin.lib.demo.widget;
  *
  * @author keayuan
  */
-public interface SwipeHandler {
+public interface SwipeHandler extends SwipeChangeListener {
     /**
      * 复位
      */
@@ -44,7 +44,7 @@ public interface SwipeHandler {
     int getSwipeLoad();
 
     /**
-     * 阻力系数[1，100]
+     * 阻力系数[0,1]
      */
-    int getResistance();
+    float getResistance();
 }

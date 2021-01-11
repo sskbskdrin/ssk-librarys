@@ -78,13 +78,13 @@ public class PullFragment extends IFragment {
         adapter.setNoDataView(getView(R.id.simple_no_data));
         adapter.bindRecyclerView(recyclerView);
         SwipeLayout refreshLayout = getView(R.id.swipe);
-        refreshLayout.setOnRefreshListener(() -> {
+        refreshLayout.addSwipeRefreshListener((position) -> {
             list.clear();
             for (int i = 0; i < PAGE_SIZE; i++) {
                 list.add("more " + list.size());
             }
             adapter.notifyDataSetChanged();
-            //            refreshLayout.setRefreshing(false);
+            postDelayed(() -> refreshLayout.refreshComplete(SwipePosition.TOP, false), 2000);
         });
         recyclerView.addItemDecoration(new DividerItemDecoration(getContext(), 1));
     }

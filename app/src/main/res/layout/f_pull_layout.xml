@@ -43,11 +43,34 @@
         android:background="@color/colorAccent"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
+        <cn.sskbskdrin.lib.demo.widget.TopView
+            android:id="@+id/pull_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#ff0"
+            android:gravity="center"
+            android:padding="20dp"
+            android:text="123"
+            android:textColor="#a00"
+            app:swipe_inParentPosition="top" />
+
+        <cn.sskbskdrin.lib.demo.widget.TopView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#0f0"
+            android:gravity="center"
+            android:padding="20dp"
+            android:text="123"
+            android:textColor="#a00"
+            app:swipe_inParentPosition="bottom" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/pull_recycle"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/colorPrimary" />
+            android:background="@color/colorPrimary"
+            app:swipe_isContentView="true" />
+
     </cn.sskbskdrin.lib.demo.widget.SwipeLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
