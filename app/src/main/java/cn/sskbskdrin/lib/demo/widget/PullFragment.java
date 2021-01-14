@@ -76,16 +76,48 @@ public class PullFragment extends IFragment {
             }, 10);
         });
         adapter.setNoDataView(getView(R.id.simple_no_data));
-        adapter.bindRecyclerView(recyclerView);
+        //        adapter.bindRecyclerView(recyclerView);
+        recyclerView.setAdapter(new RecyclerView.Adapter() {
+            @NonNull
+            @Override
+            public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                return new RecyclerView.ViewHolder(View.inflate(parent.getContext(),
+                    android.R.layout.simple_list_item_1, null)) {};
+            }
+
+            @Override
+            public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+                holder.itemView.setBackgroundResource(R.drawable.rect_white_bg);
+                //                ((TextView) (holder.itemView)).setMaxWidth(300);
+                ((TextView) (holder.itemView)).setText(list.get(position).toString());
+            }
+
+            @Override
+            public int getItemCount() {
+                return list.size();
+            }
+        });
+
         SwipeLayout refreshLayout = getView(R.id.swipe);
-        refreshLayout.addSwipeRefreshListener((position) -> {
+        refreshLayout.addSwipeRefreshListener((position) -> postDelayed(() -> {
             list.clear();
+            for (int i = 0; i < PAGE_SIZE; i++) {
+                list.add("refresh " + list.size());
+            }
+            recyclerView.getAdapter().notifyDataSetChanged();
+            refreshLayout.refreshComplete(SwipePosition.TOP, true);
+            refreshLayout.setEnabled(SwipePosition.BOTTOM, true);
+        }, 2000));
+
+        refreshLayout.addSwipeRefreshListener(SwipePosition.BOTTOM, position -> postDelayed(() -> {
             for (int i = 0; i < PAGE_SIZE; i++) {
                 list.add("more " + list.size());
             }
-            adapter.notifyDataSetChanged();
-            postDelayed(() -> refreshLayout.refreshComplete(SwipePosition.TOP, false), 2000);
-        });
+            recyclerView.getAdapter().notifyDataSetChanged();
+            refreshLayout.refreshComplete(SwipePosition.BOTTOM, false);
+            refreshLayout.setEnabled(SwipePosition.BOTTOM, false);
+        }, 2000));
+
         recyclerView.addItemDecoration(new DividerItemDecoration(getContext(), 1));
     }
 }

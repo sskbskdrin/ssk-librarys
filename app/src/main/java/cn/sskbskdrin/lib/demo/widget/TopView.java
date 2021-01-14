@@ -41,8 +41,8 @@ public class TopView extends TextView implements SwipeHandler {
     }
 
     @Override
-    public void onLoad() {
-        Log.i(TAG, "onLoad: ");
+    public void onLoading(SwipePosition position) {
+        Log.i(TAG, "onLoad: " + position);
         setText("刷新中。。。");
     }
 

@@ -5,6 +5,6 @@ package cn.sskbskdrin.lib.demo.widget;
  *
  * @author keayuan
  */
-public interface SwipeChangeListener {
+public interface SwipePositionChangeListener {
     void onSwitchChange(int dx, int dy, int offsetX, int offsetY, boolean isTouch);
 }

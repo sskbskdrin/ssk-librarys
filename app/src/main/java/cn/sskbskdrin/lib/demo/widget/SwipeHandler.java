@@ -5,33 +5,7 @@ package cn.sskbskdrin.lib.demo.widget;
  *
  * @author keayuan
  */
-public interface SwipeHandler extends SwipeChangeListener {
-    /**
-     * 复位
-     */
-    void onReset();
-
-    /**
-     * 刚刚拉动
-     */
-    void onSwipe();
-
-    /**
-     * 已达到刷新范围
-     */
-    void onPrepare();
-
-    /**
-     * 开始加载
-     */
-    void onLoad();
-
-    /**
-     * 加载完成
-     *
-     * @param success 加载成功或失败
-     */
-    void onComplete(boolean success);
+public interface SwipeHandler extends SwipeStatusChangeListener, SwipePositionChangeListener {
 
     /**
      * 拉动的最大值
@@ -47,4 +21,7 @@ public interface SwipeHandler extends SwipeChangeListener {
      * 阻力系数[0,1]
      */
     float getResistance();
+
+    @Override
+    void onSwitchChange(int dx, int dy, int offsetX, int offsetY, boolean isTouch);
 }

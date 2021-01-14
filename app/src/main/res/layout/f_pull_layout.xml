@@ -7,13 +7,14 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appbar"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <com.google.android.material.appbar.CollapsingToolbarLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed">
+<!--        <com.google.android.material.appbar.CollapsingToolbarLayout-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            app:layout_scrollFlags="scroll|exitUntilCollapsed">-->
 
             <TextView
                 android:layout_width="match_parent"
@@ -22,9 +23,10 @@
                 android:scaleType="centerCrop"
                 android:text="1\n2\n3\n4\n5\n6\n7\n8\n9"
                 android:textSize="20sp"
+                app:layout_scrollFlags="scroll|exitUntilCollapsed"
                 app:layout_collapseMode="parallax" />
 
-        </com.google.android.material.appbar.CollapsingToolbarLayout>
+<!--        </com.google.android.material.appbar.CollapsingToolbarLayout>-->
 
         <TextView
             android:id="@+id/pull_title"
@@ -40,8 +42,7 @@
         android:id="@+id/swipe"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/colorAccent"
-        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+        android:background="@color/colorAccent">
 
         <cn.sskbskdrin.lib.demo.widget.TopView
             android:id="@+id/pull_header"

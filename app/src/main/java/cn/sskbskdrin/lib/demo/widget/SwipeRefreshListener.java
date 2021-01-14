@@ -6,5 +6,5 @@ package cn.sskbskdrin.lib.demo.widget;
  * @author keayuan
  */
 public interface SwipeRefreshListener {
-    void onLoad(SwipePosition position);
+    void onLoading(SwipePosition position);
 }

@@ -25,9 +25,9 @@ public class TabHostFragment extends IFragment {
         TabHostWidget tabHostWidget = getView(R.id.tab_host_tab_host);
         List<Class<? extends Fragment>> list = new ArrayList<>();
         list.add(TestFragment.class);
+        list.add(PullFragment.class);
         list.add(TestFragment.class);
-        list.add(TestFragment.class);
-        list.add(TestFragment.class);
+        list.add(PullFragment.class);
         tabHostWidget.setPager(getChildFragmentManager(), list);
         TabWidget tabWidget = tabHostWidget.getTabWidget();
 

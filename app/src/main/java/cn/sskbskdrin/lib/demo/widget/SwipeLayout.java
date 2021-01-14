@@ -2,18 +2,16 @@ package cn.sskbskdrin.lib.demo.widget;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.os.Build;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.AbsListView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.HashMap;
@@ -21,14 +19,12 @@ import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.Px;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.view.NestedScrollingChild;
 import androidx.core.view.NestedScrollingChildHelper;
 import androidx.core.view.NestedScrollingParent;
 import androidx.core.view.NestedScrollingParentHelper;
 import androidx.core.view.ViewCompat;
-import androidx.core.widget.ListViewCompat;
 import cn.sskbskdrin.lib.demo.R;
 import cn.sskbskdrin.pull.PullPositionChangeListener;
 
@@ -40,12 +36,7 @@ import cn.sskbskdrin.pull.PullPositionChangeListener;
 public class SwipeLayout extends ViewGroup implements NestedScrollingParent, NestedScrollingChild,
     SwipeHelper.SwipeAble {
     private static final String TAG = "SwipeLayout";
-    // Maps to ProgressBar.Large style
-    public static final int LARGE = 0;
-    // Maps to ProgressBar default style
-    public static final int DEFAULT = 1;
 
-    public static final int DEFAULT_SLINGSHOT_DISTANCE = -1;
     public static final int HORIZONTAL = 0;
     public static final int VERTICAL = 1;
 
@@ -56,39 +47,13 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
 
     private static final String LOG_TAG = SwipeLayout.class.getSimpleName();
 
-    private static final int MAX_ALPHA = 255;
-    private static final int STARTING_PROGRESS_ALPHA = (int) (.3f * MAX_ALPHA);
-
-    private static final float DECELERATE_INTERPOLATION_FACTOR = 2f;
     private static final int INVALID_POINTER = -1;
     private static final float DRAG_RATE = .5f;
 
-    // Max amount of circle that can be filled by progress during swipe gesture,
-    // where 1.0 is a full circle
-    private static final float MAX_PROGRESS_ANGLE = .8f;
-
     private static final int SCALE_DOWN_DURATION = 150;
-
-    private static final int ALPHA_ANIMATION_DURATION = 300;
-
-    private static final int ANIMATE_TO_TRIGGER_DURATION = 200;
-
-    private static final int ANIMATE_TO_START_DURATION = 200;
-
-    // Default background for the progress spinner
-    private static final int CIRCLE_BG_LIGHT = 0xFFFAFAFA;
-    // Default offset in dips from the top of the view to where the progress spinner should stop
-    private static final int DEFAULT_CIRCLE_TARGET = 64;
 
     private View mTarget; // the target of the gesture
     boolean mRefreshing = false;
-    private int mTouchSlop;
-    private float mTotalDragDistance = -1;
-
-    // If nested scrolling is enabled, the total amount that needed to be
-    // consumed by this as the nested scrolling parent is used in place of the
-    // overscroll determined by MOVE events in the onTouch handler
-    private int mTotalUnconsumed;
     private final NestedScrollingParentHelper mNestedScrollingParentHelper;
     private final NestedScrollingChildHelper mNestedScrollingChildHelper;
     private final int[] mParentScrollConsumed = new int[2];
@@ -103,29 +68,11 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
     private boolean mIsBeingDragged;
     private int mActivePointerId = INVALID_POINTER;
     // Whether this item is scaled up rather than clipped
-    boolean mScale;
 
     private static final int[] LAYOUT_ATTRS = new int[]{android.R.attr.enabled};
 
-    float mStartingScale;
-
-    int mSpinnerOffsetEnd;
-
     int mCustomSlingshotDistance;
 
-    private Animation mScaleAnimation;
-
-    private Animation mScaleDownAnimation;
-
-    private Animation mAlphaStartAnimation;
-
-    private Animation mAlphaMaxAnimation;
-
-    private Animation mScaleDownToStartAnimation;
-
-    boolean mNotify;
-
-    private SwipeLayout.OnChildScrollUpCallback mChildScrollUpCallback;
     private SwipeHelper swipeHelper = new SwipeHelper(this);
     private int mOrientation = VERTICAL;
 
@@ -149,17 +96,6 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
     }
 
     /**
-     * Sets a custom slingshot distance.
-     *
-     * @param slingshotDistance The distance in pixels that the refresh indicator can be pulled
-     *                          beyond its resting position. Use
-     *                          {@link #DEFAULT_SLINGSHOT_DISTANCE} to reset to the default value.
-     */
-    public void setSlingshotDistance(@Px int slingshotDistance) {
-        mCustomSlingshotDistance = slingshotDistance;
-    }
-
-    /**
      * Simple constructor to use when creating a SwipeLayout from code.
      *
      * @param context
@@ -177,15 +113,9 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
     public SwipeLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
 
-        mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
-
         setWillNotDraw(false);
 
-        final DisplayMetrics metrics = getResources().getDisplayMetrics();
-
         // the absolute offset has to take into account that the circle starts at an offset
-        mSpinnerOffsetEnd = (int) (DEFAULT_CIRCLE_TARGET * metrics.density);
-        mTotalDragDistance = mSpinnerOffsetEnd;
         mNestedScrollingParentHelper = new NestedScrollingParentHelper(this);
 
         mNestedScrollingChildHelper = new NestedScrollingChildHelper(this);
@@ -201,7 +131,11 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
      * gesture.
      */
     public void addSwipeRefreshListener(@Nullable SwipeRefreshListener listener) {
-        swipeHelper.addSwipeRefreshListener(SwipePosition.TOP, listener);
+        addSwipeRefreshListener(SwipePosition.TOP, listener);
+    }
+
+    public void addSwipeRefreshListener(SwipePosition position, @Nullable SwipeRefreshListener listener) {
+        swipeHelper.addSwipeRefreshListener(position, listener);
     }
 
     public void setRefreshing() {
@@ -212,7 +146,11 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
         swipeHelper.complete(position, success);
     }
 
-    private boolean isPinTarget;
+    public void setEnabled(SwipePosition position, boolean enable) {
+        swipeHelper.getController(position).setEnable(enable);
+    }
+
+    private boolean isPinTarget = false;
 
     public void setPinTarget(boolean pin) {
         isPinTarget = pin;
@@ -299,7 +237,7 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
             if (view instanceof SwipeHandler) {
                 swipeHelper.addSwipeHandler(lp.direction, (SwipeHandler) view);
             } else if (view instanceof PullPositionChangeListener) {
-                swipeHelper.addSwipeChangeListener((SwipeChangeListener) view);
+                swipeHelper.addSwipeChangeListener((SwipePositionChangeListener) view);
             }
             if (lp.isContent) {
                 int tempX = offsetX;
@@ -322,24 +260,25 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
                 int t = parentTop + lp.topMargin;
                 int r = parentRight - lp.rightMargin;
                 int b = parentBottom - lp.bottomMargin;
+                SwipePosition currentPosition = swipeHelper.getCurrentPosition();
                 if (lp.direction == SwipePosition.LEFT) {
                     l = l - width + offsetX - lp.rightMargin - lp.leftMargin;
-                    if (swipeHelper.getCurrentDirection() != SwipePosition.LEFT) l -= offsetX;
+                    if (currentPosition != SwipePosition.LEFT) l -= offsetX;
                     view.layout(l, t, l + width, t + height);
                 }
                 if (lp.direction == SwipePosition.TOP) {
                     t = t - height + offsetY - lp.topMargin - lp.bottomMargin;
-                    if (swipeHelper.getCurrentDirection() != SwipePosition.TOP) t -= offsetY;
+                    if (currentPosition != SwipePosition.TOP) t -= offsetY;
                     view.layout(l, t, l + width, t + height);
                 }
                 if (lp.direction == SwipePosition.RIGHT) {
                     r = r + offsetX + width + lp.rightMargin + lp.leftMargin;
-                    if (swipeHelper.getCurrentDirection() != SwipePosition.RIGHT) r -= offsetX;
+                    if (currentPosition != SwipePosition.RIGHT) r -= offsetX;
                     view.layout(r - width, t, r, t + height);
                 }
                 if (lp.direction == SwipePosition.BOTTOM) {
                     b = b + offsetY + height + lp.topMargin + lp.bottomMargin;
-                    if (swipeHelper.getCurrentDirection() != SwipePosition.BOTTOM) b -= offsetY;
+                    if (currentPosition != SwipePosition.BOTTOM) b -= offsetY;
                     view.layout(l, b - height, l + width, b);
                 }
                 mTempViews.put(view, i);
@@ -405,27 +344,40 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
      * scroll up. Override this if the child view is a custom view.
      */
     private boolean canChildScrollUp() {
-        if (mChildScrollUpCallback != null) {
-            return mChildScrollUpCallback.canChildScrollUp(this, mTarget);
-        }
-        if (mTarget instanceof ListView) {
-            return ListViewCompat.canScrollList((ListView) mTarget, -1);
+        if (mTarget instanceof AbsListView) {
+            return canScrollList((AbsListView) mTarget, -1);
         }
         return mTarget.canScrollVertically(-1);
     }
 
-    private boolean canChildScrollDown() {
-        return mTarget.canScrollVertically(1);
+    private static boolean canScrollList(@NonNull AbsListView listView, int direction) {
+        if (Build.VERSION.SDK_INT >= 19) {
+            // Call the framework version directly
+            return listView.canScrollList(direction);
+        } else {
+            // provide backport on earlier versions
+            final int childCount = listView.getChildCount();
+            if (childCount == 0) {
+                return false;
+            }
+
+            final int firstPosition = listView.getFirstVisiblePosition();
+            if (direction > 0) {
+                final int lastBottom = listView.getChildAt(childCount - 1).getBottom();
+                final int lastPosition = firstPosition + childCount;
+                return lastPosition < listView.getCount() || (lastBottom > listView.getHeight() - listView.getListPaddingBottom());
+            } else {
+                final int firstTop = listView.getChildAt(0).getTop();
+                return firstPosition > 0 || firstTop < listView.getListPaddingTop();
+            }
+        }
     }
 
-    /**
-     * Set a callback to override {@link SwipeLayout#canChildScrollUp()} method. Non-null
-     * callback will return the value provided by the callback and ignore all internal logic.
-     *
-     * @param callback Callback that should be called when canChildScrollUp() is called.
-     */
-    public void setOnChildScrollUpCallback(@Nullable SwipeLayout.OnChildScrollUpCallback callback) {
-        mChildScrollUpCallback = callback;
+    private boolean canChildScrollDown() {
+        if (mTarget instanceof AbsListView) {
+            return canScrollList((AbsListView) mTarget, 1);
+        }
+        return mTarget.canScrollVertically(1);
     }
 
     @Override
@@ -740,11 +692,11 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
 
     private void startDragging(float y) {
         final float yDiff = y - mInitialDownY;
-        if (yDiff > mTouchSlop && !mIsBeingDragged) {
-            mInitialMotionY = mInitialDownY + mTouchSlop;
-            mIsBeingDragged = true;
-            //            mProgress.setAlpha(STARTING_PROGRESS_ALPHA);
-        }
+        //        if (yDiff > mTouchSlop && !mIsBeingDragged) {
+        //            mInitialMotionY = mInitialDownY + mTouchSlop;
+        //            mIsBeingDragged = true;
+        //        mProgress.setAlpha(STARTING_PROGRESS_ALPHA);
+        //        }
     }
 
     private boolean isAnimation;
@@ -761,6 +713,7 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
 
             @Override
             protected void applyTransformation(float interpolatedTime, Transformation t) {
+                Log.i(TAG, "applyTransformation: " + interpolatedTime);
                 if (interpolatedTime == 1) {
                     moveSpinner(targetPos - mCurrentOffsetY, true);
                     isAnimation = false;
@@ -776,6 +729,22 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
         mTarget.startAnimation(scrollAnimation);
     }
 
+    private SwipePosition getPosition(int offset) {
+        SwipePosition position;
+        if (mCurrentOffsetY != 0) {
+            if (mCurrentOffsetY > 0) {
+                position = SwipePosition.TOP;
+            } else {
+                position = SwipePosition.BOTTOM;
+            }
+        } else if (offset > 0) {
+            position = SwipePosition.TOP;
+        } else {
+            position = SwipePosition.BOTTOM;
+        }
+        return position;
+    }
+
     private void setTargetOffsetTopAndBottom(int offset) {
         if (mCurrentOffsetY > 0) {
             if (offset + mCurrentOffsetY > swipeHelper.getSwipeMax()) {
@@ -785,25 +754,27 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
             offset = -swipeHelper.getSwipeMax() - mCurrentOffsetY;
         }
         if (offset == 0) return;
-        View view = null;
-        if (mCurrentOffsetY != 0) {
-            if (mCurrentOffsetY > 0) {
-                view = mPositionView.get(SwipePosition.TOP);
-            } else {
-                view = mPositionView.get(SwipePosition.BOTTOM);
-            }
-        } else if (offset > 0) {
-            view = mPositionView.get(SwipePosition.TOP);
-        } else {
-            view = mPositionView.get(SwipePosition.BOTTOM);
-        }
+        SwipePosition position = getPosition(offset);
+        View view = mPositionView.get(position);
         if (view != null) {
-            ViewCompat.offsetTopAndBottom(view, offset);
+            if (swipeHelper.getController(position).isEnable()) {
+                ViewCompat.offsetTopAndBottom(view, offset);
+            } else {
+                if (position == SwipePosition.TOP) {
+                    if (view.getBottom() != 0) {
+                        ViewCompat.offsetTopAndBottom(view, -view.getBottom());
+                    }
+                } else {
+                    if (view.getTop() != mTarget.getMeasuredHeight()) {
+                        ViewCompat.offsetTopAndBottom(view, mTarget.getMeasuredHeight() - view.getTop());
+                    }
+                }
+            }
         }
-        mCurrentOffsetY += offset;
-        if (mTarget != null) {
+        if (mTarget != null && !isPinTarget) {
             ViewCompat.offsetTopAndBottom(mTarget, offset);
         }
+        mCurrentOffsetY += offset;
     }
 
     private void setTargetOffsetLeftAndRight(int offset) {
@@ -822,22 +793,6 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
             final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
             mActivePointerId = ev.getPointerId(newPointerIndex);
         }
-    }
-
-    /**
-     * Classes that wish to override {@link SwipeLayout#canChildScrollUp()} method
-     * behavior should implement this interface.
-     */
-    public interface OnChildScrollUpCallback {
-        /**
-         * Callback that will be called when {@link SwipeLayout#canChildScrollUp()} method
-         * is called to allow the implementer to override its behavior.
-         *
-         * @param parent SwipeLayout that this callback is overriding.
-         * @param child  The child view of SwipeLayout.
-         * @return Whether it is possible for the child view of parent layout to scroll up.
-         */
-        boolean canChildScrollUp(@NonNull SwipeLayout parent, @Nullable View child);
     }
 
     @Override
