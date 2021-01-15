@@ -20,6 +20,8 @@ import cn.sskbskdrin.lib.demo.widget.PickerFragment;
 import cn.sskbskdrin.lib.demo.widget.PullFragment;
 import cn.sskbskdrin.lib.demo.widget.SwitchButtonFragment;
 import cn.sskbskdrin.lib.demo.widget.TabHostFragment;
+import cn.sskbskdrin.lib.demo.widget.swipe.ScrollFragment;
+import cn.sskbskdrin.lib.demo.widget.swipe.WebFragment;
 
 public class MainActivity extends FragmentActivity implements IA {
     private static final String TAG = "MainActivity";
@@ -35,6 +37,8 @@ public class MainActivity extends FragmentActivity implements IA {
         mList.add(new ClassItem(HttpFragment.class, "HTTP"));
         mList.add(new ClassItem(SwitchButtonFragment.class, "SwitchButton"));
         mList.add(new ClassItem(PullFragment.class, "PullLayout"));
+        mList.add(new ClassItem(WebFragment.class, "SwipeWebLayout"));
+        mList.add(new ClassItem(ScrollFragment.class, "SwipeScrollLayout"));
     }
 
     @Override

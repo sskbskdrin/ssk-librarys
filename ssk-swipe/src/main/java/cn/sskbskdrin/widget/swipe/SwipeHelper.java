@@ -1,4 +1,4 @@
-package cn.sskbskdrin.lib.demo.widget;
+package cn.sskbskdrin.widget.swipe;
 
 import android.util.Log;
 
@@ -11,7 +11,7 @@ import java.util.Set;
  *
  * @author keayuan
  */
-public class SwipeHelper {
+final class SwipeHelper {
 
     private static final int STATUS_RESET = 0;
     private static final int STATUS_SWIPE = 1;
@@ -32,7 +32,7 @@ public class SwipeHelper {
         viewHelperHashMap.put(SwipePosition.NONE, new SwipeController(SwipePosition.NONE, null));
     }
 
-    public void moveSpinner(int dx, int dy, int offsetX, int offsetY, boolean isTouch) {
+    void moveSpinner(int dx, int dy, int offsetX, int offsetY, boolean isTouch) {
         if (offsetX == 0 && offsetY == 0) {
             if (getHandler() != null) {
                 getHandler().updatePosition(dx, dy, offsetX, offsetY, isTouch);
@@ -46,7 +46,7 @@ public class SwipeHelper {
         }
     }
 
-    public void finishSpinner(int offsetX, int offsetY) {
+    void finishSpinner(int offsetX, int offsetY) {
         SwipeController handler = getHandler();
         handler.onTouchUp();
         if (handler.isLoading()) {
@@ -126,11 +126,11 @@ public class SwipeHelper {
         return handler;
     }
 
-    public void addSwipeHandler(SwipePosition position, SwipeHandler handler) {
+    void addSwipeHandler(SwipePosition position, SwipeHandler handler) {
         getHandler(position).setHandler(handler);
     }
 
-    public void addSwipeRefreshListener(SwipePosition position, SwipeRefreshListener listener) {
+    void addSwipeRefreshListener(SwipePosition position, SwipeRefreshListener listener) {
         getHandler(position).addRefreshListener(listener);
     }
 
@@ -151,7 +151,6 @@ public class SwipeHelper {
         private final Set<SwipeStatusChangeListener> mStatusChangeListeners = new HashSet<>();
         private final Set<SwipeRefreshListener> mRefreshListeners = new HashSet<>();
         private final Set<SwipePositionChangeListener> mPositionChangeListeners = new HashSet<>();
-        private boolean isReleaseRefresh = true;
         private boolean mEnable = true;
 
         private final SwipePosition mPosition;
@@ -185,10 +184,6 @@ public class SwipeHelper {
             }
         }
 
-        void setReleaseRefresh(boolean releaseRefresh) {
-            isReleaseRefresh = releaseRefresh;
-        }
-
         void addRefreshListener(SwipeRefreshListener listener) {
             if (listener != null) {
                 mRefreshListeners.add(listener);
@@ -218,6 +213,9 @@ public class SwipeHelper {
         }
 
         void setEnable(boolean enable) {
+            if (mEnable && !enable) {
+                updatePosition(0, 0, 0, 0, false);
+            }
             this.mEnable = enable;
         }
 
@@ -236,7 +234,7 @@ public class SwipeHelper {
             if (handler != null) {
                 return handler.getSwipeMax();
             }
-            return 300;
+            return 0;
         }
 
         float getResistance() {
@@ -261,7 +259,7 @@ public class SwipeHelper {
                 } else if (mStatus == STATUS_COMPLETE) {
                     status = STATUS_COMPLETE;
                 } else if (Math.abs(offsetX) >= getSwipeLoad() || Math.abs(offsetY) >= getSwipeLoad()) {
-                    if (isReleaseRefresh) status = STATUS_PREPARE;
+                    if (handler.isReleaseRefresh()) status = STATUS_PREPARE;
                     else status = STATUS_LOADING;
                 } else {
                     status = STATUS_SWIPE;

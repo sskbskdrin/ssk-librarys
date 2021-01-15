@@ -7,14 +7,13 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appbar"
-        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-<!--        <com.google.android.material.appbar.CollapsingToolbarLayout-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="match_parent"-->
-<!--            app:layout_scrollFlags="scroll|exitUntilCollapsed">-->
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed">
 
             <TextView
                 android:layout_width="match_parent"
@@ -23,10 +22,10 @@
                 android:scaleType="centerCrop"
                 android:text="1\n2\n3\n4\n5\n6\n7\n8\n9"
                 android:textSize="20sp"
-                app:layout_scrollFlags="scroll|exitUntilCollapsed"
-                app:layout_collapseMode="parallax" />
+                app:layout_collapseMode="parallax"
+                app:layout_scrollFlags="scroll|exitUntilCollapsed" />
 
-<!--        </com.google.android.material.appbar.CollapsingToolbarLayout>-->
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
 
         <TextView
             android:id="@+id/pull_title"
@@ -38,31 +37,30 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <cn.sskbskdrin.lib.demo.widget.SwipeLayout
+    <cn.sskbskdrin.widget.swipe.SwipeLayout
         android:id="@+id/swipe"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/colorAccent">
+        android:background="@color/colorAccent"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
-        <cn.sskbskdrin.lib.demo.widget.TopView
+        <cn.sskbskdrin.widget.swipe.refresh.RefreshView
             android:id="@+id/pull_header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#ff0"
             android:gravity="center"
             android:padding="20dp"
-            android:text="123"
             android:textColor="#a00"
+            android:textSize="16sp"
             app:swipe_inParentPosition="top" />
 
-        <cn.sskbskdrin.lib.demo.widget.TopView
+        <cn.sskbskdrin.widget.swipe.refresh.MoreView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#0f0"
-            android:gravity="center"
-            android:padding="20dp"
-            android:text="123"
             android:textColor="#a00"
+            android:textSize="16sp"
             app:swipe_inParentPosition="bottom" />
 
         <androidx.recyclerview.widget.RecyclerView
@@ -72,6 +70,6 @@
             android:background="@color/colorPrimary"
             app:swipe_isContentView="true" />
 
-    </cn.sskbskdrin.lib.demo.widget.SwipeLayout>
+    </cn.sskbskdrin.widget.swipe.SwipeLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

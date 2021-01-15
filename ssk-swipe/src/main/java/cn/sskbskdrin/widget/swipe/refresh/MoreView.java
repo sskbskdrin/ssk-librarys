@@ -1,26 +1,29 @@
-package cn.sskbskdrin.lib.demo.widget;
+package cn.sskbskdrin.widget.swipe.refresh;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
+import android.view.Gravity;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
+import cn.sskbskdrin.widget.swipe.SwipeHandler;
+import cn.sskbskdrin.widget.swipe.SwipePosition;
 
 /**
  * Created by keayuan on 2021/1/8.
  *
  * @author keayuan
  */
-public class TopView extends TextView implements SwipeHandler {
-    private static final String TAG = "TopView";
+public class MoreView extends TextView implements SwipeHandler {
 
-    public TopView(Context context) {
-        super(context);
+    public MoreView(Context context) {
+        this(context, null);
     }
 
-    public TopView(Context context, @Nullable AttributeSet attrs) {
+    public MoreView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        setGravity(Gravity.CENTER);
+        setMinHeight((int) (getTextSize() * 2));
     }
 
     @Override
@@ -30,41 +33,40 @@ public class TopView extends TextView implements SwipeHandler {
 
     @Override
     public void onSwipe() {
-        Log.d(TAG, "onSwipe: ");
-        setText("下拉刷新");
     }
 
     @Override
     public void onPrepare() {
-        Log.d(TAG, "onPrepare: ");
-        setText("释放开始刷新");
     }
 
     @Override
     public void onLoading(SwipePosition position) {
-        Log.i(TAG, "onLoad: " + position);
-        setText("刷新中。。。");
+        setText("加载中。。。");
     }
 
     @Override
     public void onComplete(boolean success) {
-        Log.i(TAG, "onComplete: ");
-        setText("刷新" + (success ? "成功" : "失败"));
+        setText("加载" + (success ? "成功" : "失败"));
     }
 
     @Override
     public int getSwipeMax() {
-        return getMeasuredHeight() * 2;
-    }
-
-    @Override
-    public int getSwipeLoad() {
         return getMeasuredHeight();
     }
 
     @Override
+    public int getSwipeLoad() {
+        return 0;
+    }
+
+    @Override
     public float getResistance() {
-        return 0.5f;
+        return 0f;
+    }
+
+    @Override
+    public boolean isReleaseRefresh() {
+        return false;
     }
 
     @Override

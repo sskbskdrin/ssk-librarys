@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import cn.sskbskdrin.base.IFragment;
 import cn.sskbskdrin.lib.demo.LoadMoreAdapter;
 import cn.sskbskdrin.lib.demo.R;
+import cn.sskbskdrin.widget.swipe.SwipeLayout;
+import cn.sskbskdrin.widget.swipe.SwipePosition;
 
 /**
  * Created by keayuan on 2020/11/25.
@@ -114,9 +116,9 @@ public class PullFragment extends IFragment {
                 list.add("more " + list.size());
             }
             recyclerView.getAdapter().notifyDataSetChanged();
-            refreshLayout.refreshComplete(SwipePosition.BOTTOM, false);
+            refreshLayout.refreshComplete(SwipePosition.BOTTOM, true);
             refreshLayout.setEnabled(SwipePosition.BOTTOM, false);
-        }, 2000));
+        }, 1000));
 
         recyclerView.addItemDecoration(new DividerItemDecoration(getContext(), 1));
     }

@@ -1,4 +1,4 @@
-package cn.sskbskdrin.lib.demo.widget;
+package cn.sskbskdrin.widget.swipe;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -25,8 +25,6 @@ import androidx.core.view.NestedScrollingChildHelper;
 import androidx.core.view.NestedScrollingParent;
 import androidx.core.view.NestedScrollingParentHelper;
 import androidx.core.view.ViewCompat;
-import cn.sskbskdrin.lib.demo.R;
-import cn.sskbskdrin.pull.PullPositionChangeListener;
 
 /**
  * Created by keayuan on 2021/1/7.
@@ -50,7 +48,7 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
     private static final int INVALID_POINTER = -1;
     private static final float DRAG_RATE = .5f;
 
-    private static final int SCALE_DOWN_DURATION = 150;
+    private static final int SCROLL_DURATION = 200;
 
     private View mTarget; // the target of the gesture
     boolean mRefreshing = false;
@@ -184,6 +182,13 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
             addView(mTarget);
             ((LayoutParams) mTarget.getLayoutParams()).gravity = Gravity.CENTER;
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mTarget.setNestedScrollingEnabled(true);
+        } else if (mTarget instanceof NestedScrollingChild) {
+            ((NestedScrollingChild) mTarget).setNestedScrollingEnabled(true);
+        }
+
         ((LayoutParams) mTarget.getLayoutParams()).isContent = true;
         super.onFinishInflate();
     }
@@ -236,8 +241,6 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
             SwipeLayout.LayoutParams lp = (SwipeLayout.LayoutParams) view.getLayoutParams();
             if (view instanceof SwipeHandler) {
                 swipeHelper.addSwipeHandler(lp.direction, (SwipeHandler) view);
-            } else if (view instanceof PullPositionChangeListener) {
-                swipeHelper.addSwipeChangeListener((SwipePositionChangeListener) view);
             }
             if (lp.isContent) {
                 int tempX = offsetX;
@@ -431,8 +434,7 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
         // if this is a List < L or another view that doesn't support nested
         // scrolling, ignore this request so that the vertical scroll event
         // isn't stolen
-        if ((android.os.Build.VERSION.SDK_INT < 21 && mTarget instanceof AbsListView) || (mTarget != null && !ViewCompat
-            .isNestedScrollingEnabled(mTarget))) {
+        if ((Build.VERSION.SDK_INT < 21 && mTarget instanceof AbsListView) || (mTarget != null && !ViewCompat.isNestedScrollingEnabled(mTarget))) {
             // Nope.
         } else {
             super.requestDisallowInterceptTouchEvent(b);
@@ -723,7 +725,11 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
                 last = interpolatedTime;
             }
         };
-        scrollAnimation.setDuration(SCALE_DOWN_DURATION);
+        long time = SCROLL_DURATION;
+        if (Math.abs(total) < 300) {
+            time = (long) (SCROLL_DURATION * Math.abs(total) / 300f);
+        }
+        scrollAnimation.setDuration(time);
         mTarget.clearAnimation();
         isAnimation = true;
         mTarget.startAnimation(scrollAnimation);
@@ -831,8 +837,8 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
             TypedArray arr = c.obtainStyledAttributes(attrs, R.styleable.SwipeLayout_Layout, 0, 0);
-            isContent = arr.getBoolean(R.styleable.PullLayout_Layout_pull_isContentView, false);
-            int position = arr.getInt(R.styleable.PullLayout_Layout_pull_inParentPosition, 0);
+            isContent = arr.getBoolean(R.styleable.SwipeLayout_Layout_swipe_isContentView, false);
+            int position = arr.getInt(R.styleable.SwipeLayout_Layout_swipe_inParentPosition, 0);
             if (position == 1) {
                 direction = SwipePosition.LEFT;
             } else if (position == 2) {
@@ -844,7 +850,7 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
             } else {
                 direction = SwipePosition.NONE;
             }
-            gravity = arr.getInt(R.styleable.PullLayout_Layout_android_layout_gravity, -1);
+            gravity = arr.getInt(R.styleable.SwipeLayout_Layout_android_layout_gravity, -1);
             arr.recycle();
         }
 

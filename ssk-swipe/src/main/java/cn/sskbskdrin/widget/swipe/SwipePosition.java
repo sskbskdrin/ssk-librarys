@@ -1,10 +1,10 @@
-package cn.sskbskdrin.lib.demo.widget;
+package cn.sskbskdrin.widget.swipe;
 
 /**
  * Created by keayuan on 2021/1/11.
  *
  * @author keayuan
  */
-enum SwipePosition {
+public enum SwipePosition {
     LEFT, TOP, RIGHT, BOTTOM, NONE
 }
