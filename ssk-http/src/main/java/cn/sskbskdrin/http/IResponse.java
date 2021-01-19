@@ -1,5 +1,9 @@
 package cn.sskbskdrin.http;
 
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Created by keayuan on 2020/4/7.
  *
@@ -20,12 +24,17 @@ public interface IResponse {
      */
     String string();
 
-    String code();
+    int code();
 
-    String desc();
+    String message();
 
     Exception exception();
 
     boolean isSuccess();
 
+    InputStream byteStream();
+
+    Map<String, List<String>> getHeaders();
+
+    long getContentLength();
 }

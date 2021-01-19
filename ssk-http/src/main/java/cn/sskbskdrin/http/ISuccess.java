@@ -13,5 +13,5 @@ public interface ISuccess<V> {
      * @param result   解析成功结果
      * @param response 响应结果
      */
-    void success(String tag, V result, IResponse response);
+    void success(String tag, V result, IParseResult<V> response);
 }

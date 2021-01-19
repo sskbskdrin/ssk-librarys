@@ -73,7 +73,7 @@ public class HttpFragment extends IFragment {
             url = protocolView.getSelectedItem() + url;
         }
         IRequest request = HTTP.url(url)
-            .success((tag, result, response) -> resultView.setText(String.valueOf(response.string())))
+            .success((tag, result, response) -> resultView.setText(response.getT().toString()))
             .error((tag, code, desc, e) -> resultView.setText(code + "\n" + desc + "\n" + (e != null ?
                 e.getMessage() : "")));
         switch (String.valueOf(methodView.getSelectedItem())) {

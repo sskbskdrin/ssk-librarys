@@ -36,20 +36,28 @@ public interface IRequest<V> {
      */
     void get();
 
+    V getSync();
+
     /**
      * 发起post请求，content_type为表单{@link #CONTENT_TYPE_FORM}
      */
     void post();
+
+    V postSync();
 
     /**
      * 发起post请求，content_type为json数据类型{@link #CONTENT_TYPE_JSON}
      */
     void postJson();
 
+    V postJsonSync();
+
     /**
      * 发起post请求，content_type为表单{@link #CONTENT_TYPE_MULTIPART}
      */
     void postFile();
+
+    V postFileSync();
 
     /**
      * 下载文件
@@ -57,6 +65,8 @@ public interface IRequest<V> {
      * @param filePath 保存到本地的文件路径
      */
     void download(String filePath);
+
+    V downLoad(String filePath);
 
     /**
      * 添加请求头信息

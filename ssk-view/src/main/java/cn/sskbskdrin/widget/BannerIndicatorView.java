@@ -7,8 +7,6 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
 
-import androidx.annotation.Nullable;
-
 public class BannerIndicatorView extends View implements BannerView.OnScrollListener {
 
     private int focusColor = Color.YELLOW;
@@ -24,11 +22,11 @@ public class BannerIndicatorView extends View implements BannerView.OnScrollList
         this(context, null);
     }
 
-    public BannerIndicatorView(Context context, @Nullable AttributeSet attrs) {
+    public BannerIndicatorView(Context context, AttributeSet attrs) {
         this(context, attrs, -1);
     }
 
-    public BannerIndicatorView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public BannerIndicatorView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mPaint.setStyle(Paint.Style.FILL);
     }

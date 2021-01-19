@@ -12,35 +12,40 @@ public interface IRealRequest {
      * 发起get请求
      *
      * @param request 请求体，默认为HttpRequest
+     * @return
      */
-    Response get(IRequestBody request);
+    IResponse get(IRequestBody request);
 
     /**
      * 发起post请求
      *
      * @param request 请求体，默认为HttpRequest
+     * @return
      */
-    Response post(IRequestBody request);
+    IResponse post(IRequestBody request);
 
     /**
      * 发起post json请求
      *
      * @param request 请求体，默认为HttpRequest
+     * @return
      */
-    Response postJson(IRequestBody request);
+    IResponse postJson(IRequestBody request);
 
     /**
      * 发起post file请求
      *
      * @param request 请求体，默认为HttpRequest
+     * @return
      */
-    Response postFile(IRequestBody request, IProgress progress);
+    IResponse postFile(IRequestBody request, IProgress progress);
 
     /**
      * 发起下载请求，post方式
      *
      * @param request  请求体，默认为HttpRequest
      * @param filePath 要保存的文件路径，包含文件名
+     * @return
      */
-    Response download(IRequestBody request, String filePath, IProgress progress);
+    IResponse download(IRequestBody request, String filePath, IProgress progress);
 }

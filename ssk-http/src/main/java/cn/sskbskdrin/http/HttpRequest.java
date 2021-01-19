@@ -1,6 +1,5 @@
 package cn.sskbskdrin.http;
 
-import java.io.File;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -74,9 +73,19 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody {
     }
 
     @Override
+    public V getSync() {
+        return null;
+    }
+
+    @Override
     public void post() {
         mContentType = CONTENT_TYPE_FORM;
         request();
+    }
+
+    @Override
+    public V postSync() {
+        return null;
     }
 
     @Override
@@ -86,9 +95,19 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody {
     }
 
     @Override
+    public V postJsonSync() {
+        return null;
+    }
+
+    @Override
     public void postFile() {
         mContentType = CONTENT_TYPE_MULTIPART;
         request();
+    }
+
+    @Override
+    public V postFileSync() {
+        return null;
     }
 
     @Override
@@ -99,6 +118,11 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody {
             throw new IllegalArgumentException("filepath is null");
         }
         request();
+    }
+
+    @Override
+    public V downLoad(String filePath) {
+        return null;
     }
 
     @Override
@@ -206,86 +230,73 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody {
                 mPreRequest.onPreRequest(mTag);
                 return last;
             }
-        }).io(new IProcess<Response, IRealRequest>() {
+        }).io(new IProcess<Object, IRealRequest>() {
             @Override
-            public Response process(IFlow flow, IRealRequest last, Object... params) {
+            public Object process(IFlow flow, IRealRequest last, Object... params) {
                 Platform.get().log(TAG, "request");
                 if (isCancel(flow)) return null;
-                Response res = request(last);
+                IResponse res = request(last);
                 if (res == null || !res.isSuccess()) {
                     flow.remove("parse");
                     flow.remove("successIO");
                     flow.remove("success");
-                } else {
-                    if (res.isFile()) {
-                        flow.remove("parse");
-                        flow.remove("error");
-                    }
+                    return new Error("" + res.code(), res.message(), res.exception());
                 }
                 return res;
             }
-        }).io("parse", new IProcess<Response, Response>() {
+        }).io("parse", new IProcess<Object, IResponse>() {
             @Override
-            public Response process(IFlow flow, Response last, Object... params) {
+            public Object process(IFlow flow, IResponse last, Object... params) {
                 Platform.get().log(TAG, "parse");
                 if (isCancel(flow)) return null;
+                IParseResult result;
                 try {
                     IParseResponse response = mParseResponse == null ? getConfig().iParseResponse : mParseResponse;
                     if (response != null) {
-                        last.result = response.parse(mTag, last, mType);
+                        result = response.parse(mTag, last, mType);
                     } else {
-                        last.result = new Result(true);
+                        result = IParseResult.DEFAULT;
                     }
                 } catch (Exception e) {
-                    last.error(ERROR_PARSE, last.string(), e);
+                    return new Error(ERROR_PARSE, last.message(), e);
                 }
-                if (last.result != null && last.result.isCancel()) {
+                if (result != null && result.isCancel()) {
                     flow.remove("success");
                     flow.remove("error");
                 }
-                if (last.isSuccess() && (last.result == null || last.result.isSuccess())) flow.remove("error");
+                if (last.isSuccess() && (result == null || result.isSuccess())) flow.remove("error");
                 else flow.remove("success");
-                return last;
+                return result;
             }
-        }).io("success", mSuccessIO == null ? null : new IProcess<Response, Response>() {
+        }).io("success", mSuccessIO == null ? null : new IProcess<IParseResult<V>, IParseResult<V>>() {
             @Override
-            public Response process(IFlow flow, Response last, Object... params) {
+            public IParseResult<V> process(IFlow flow, IParseResult<V> last, Object... params) {
                 Platform.get().log(TAG, "successIO");
                 if (isCancel(flow)) return null;
                 if (mSuccessIO != null && last.isSuccess()) {
-                    if (last.isFile()) {
-                        mSuccessIO.success(mTag, (V) new File(last.string()), last);
-                    } else {
-                        IParseResult<V> ret = last.result;
-                        mSuccessIO.success(mTag, ret != null ? ret.getT() : null, last);
-                    }
+                    mSuccessIO.success(mTag, last.getT(), last);
                 }
                 return last;
             }
-        }).main("success", mSuccess == null ? null : new IProcess<Response, Response>() {
+        }).main("success", mSuccess == null ? null : new IProcess<IParseResult<V>, IParseResult<V>>() {
             @Override
-            public Response process(IFlow flow, Response last, Object... params) {
+            public IParseResult<V> process(IFlow flow, IParseResult<V> last, Object... params) {
                 Platform.get().log(TAG, "success");
                 if (isCancel(flow)) return null;
                 if (mSuccess != null && last.isSuccess()) {
-                    if (last.isFile()) {
-                        mSuccess.success(mTag, (V) new File(last.string()), last);
-                    } else {
-                        IParseResult<V> ret = last.result;
-                        mSuccess.success(mTag, ret != null ? ret.getT() : null, last);
-                    }
+                    mSuccessIO.success(mTag, last.getT(), last);
                 }
                 return last;
             }
-        }).main("error", mError == null ? null : new IProcess<Object, Response>() {
+        }).main("error", mError == null ? null : new IProcess<Object, Error>() {
             @Override
-            public Object process(IFlow flow, Response last, Object... params) {
-                Platform.get().log(TAG, "error", last.exception());
+            public Object process(IFlow flow, Error error, Object... params) {
+                Platform.get().log(TAG, "error", error.throwable);
                 if (isCancel(flow)) return null;
                 if (mError != null) {
-                    mError.error(mTag, last.code(), last.desc(), last.exception());
+                    mError.error(mTag, error.code, error.msg, error.throwable);
                 }
-                return last;
+                return error;
             }
         }).main(mComplete == null ? null : new IProcess<Object, Object>() {
             @Override
@@ -301,7 +312,7 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody {
         return Config.INSTANCE;
     }
 
-    private Response request(IRealRequest request) {
+    private IResponse request(IRealRequest request) {
         if (!getHeader().containsKey("Content-Type")) {
             addHeader("Content-Type", mContentType);
         }

@@ -14,7 +14,7 @@ public interface IParseResult<T> {
     boolean isSuccess();
 
     /**
-     * 是否取消回调,取消则不会进入{@link ISuccess#success(String, Object, IResponse)}，
+     * 是否取消回调,取消则不会进入{@link ISuccess#success(String, Object, IParseResult)}，
      * {@link IError#error(String, String, String, Exception)},会直接进入{@link IComplete#complete(String)}
      *
      * @return 取消为true，，否则false
@@ -27,4 +27,26 @@ public interface IParseResult<T> {
      * @return 结果
      */
     T getT();
+
+    class Inner implements IParseResult<String> {
+
+        String result;
+
+        @Override
+        public boolean isSuccess() {
+            return true;
+        }
+
+        @Override
+        public boolean isCancel() {
+            return false;
+        }
+
+        @Override
+        public String getT() {
+            return result;
+        }
+    }
+
+    IParseResult<String> DEFAULT = new Inner();
 }

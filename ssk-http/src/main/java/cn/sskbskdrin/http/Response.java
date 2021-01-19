@@ -1,5 +1,9 @@
 package cn.sskbskdrin.http;
 
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Created by keayuan on 2020/4/17.
  *
@@ -61,12 +65,12 @@ public final class Response implements IResponse {
     }
 
     @Override
-    public String code() {
-        return code;
+    public int code() {
+        return Integer.parseInt(code);
     }
 
     @Override
-    public String desc() {
+    public String message() {
         return desc;
     }
 
@@ -78,6 +82,21 @@ public final class Response implements IResponse {
     @Override
     public boolean isSuccess() {
         return "200".equals(code);
+    }
+
+    @Override
+    public InputStream byteStream() {
+        return null;
+    }
+
+    @Override
+    public Map<String, List<String>> getHeaders() {
+        return null;
+    }
+
+    @Override
+    public long getContentLength() {
+        return 0;
     }
 
     boolean isFile() {

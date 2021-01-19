@@ -23,7 +23,7 @@ public final class Config {
 
     private IRealRequestFactory iRealRequestFactory;
 
-    IParseResponse<?> iParseResponse;
+    IParseResponse<Object> iParseResponse;
 
     long readTimeout = 15000;
     long connectedTimeout = 15000;
@@ -73,7 +73,7 @@ public final class Config {
      * @return Config
      */
     public Config setParseResponse(IParseResponse<?> parseResponse) {
-        this.iParseResponse = parseResponse;
+        this.iParseResponse = (IParseResponse<Object>) parseResponse;
         return this;
     }
 

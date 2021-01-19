@@ -107,27 +107,27 @@ public class DefaultRealRequest implements IRealRequest {
     }
 
     @Override
-    public Response get(IRequestBody request) {
+    public IResponse get(IRequestBody request) {
         return exec(request, GET, null);
     }
 
     @Override
-    public Response post(IRequestBody request) {
+    public IResponse post(IRequestBody request) {
         return exec(request, POST, null);
     }
 
     @Override
-    public Response postJson(IRequestBody request) {
+    public IResponse postJson(IRequestBody request) {
         return exec(request, POST_JSON, null);
     }
 
     @Override
-    public Response postFile(IRequestBody request, IProgress progress) {
+    public IResponse postFile(IRequestBody request, IProgress progress) {
         return exec(request, POST_FILE, progress);
     }
 
     @Override
-    public Response download(IRequestBody request, String filePath, IProgress progress) {
+    public IResponse download(IRequestBody request, String filePath, IProgress progress) {
         return exec(request, filePath, progress);
     }
 
