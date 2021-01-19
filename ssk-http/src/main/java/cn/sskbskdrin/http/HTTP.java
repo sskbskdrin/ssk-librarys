@@ -12,8 +12,8 @@ public final class HTTP {
         return Config.INSTANCE;
     }
 
-    public static <V> IRequest<V> url(String url) {
-        return new HttpRequest<>(url, null);
+    public static IRequest<String> url(String url) {
+        return new HttpRequest<>(url, String.class);
     }
 
     public static <V> IRequest<V> url(String url, Class<V> tClass) {
@@ -22,5 +22,9 @@ public final class HTTP {
 
     public static <V, T> IRequest<V> url(String url, TypeToken<T> token) {
         return new HttpRequest<>(url, token.getType());
+    }
+
+    public static <V> IRequest<V> url(String url, IParseResponse<V> iParseResponse) {
+        return new HttpRequest<>(url, iParseResponse);
     }
 }

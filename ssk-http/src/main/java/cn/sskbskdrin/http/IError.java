@@ -14,5 +14,5 @@ public interface IError {
      * @param desc 失败的说明
      * @param e    失败抛出的异常
      */
-    void error(String tag, String code, String desc, Exception e);
+    void error(String tag, String code, String desc, Throwable e);
 }

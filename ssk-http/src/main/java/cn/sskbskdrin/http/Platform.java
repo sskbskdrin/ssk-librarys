@@ -41,7 +41,7 @@ class Platform {
         log(tag, msg, null);
     }
 
-    void log(String tag, String msg, Exception e) {
+    void log(String tag, String msg, Throwable e) {
         System.out.println(tag + ":" + msg);
         if (e != null) {
             e.printStackTrace();
@@ -57,16 +57,20 @@ class Platform {
 
         @Override
         void callback(Runnable runnable) {
-            mainHandler.post(runnable);
+            if (isCallbackThread()) {
+                runnable.run();
+            } else {
+                mainHandler.post(runnable);
+            }
         }
 
         @Override
         boolean isCallbackThread() {
-            return Thread.currentThread() == Looper.getMainLooper().getThread();
+            return Looper.myLooper() == Looper.getMainLooper();
         }
 
         @Override
-        void log(String tag, String msg, Exception e) {
+        void log(String tag, String msg, Throwable e) {
             if (e != null) {
                 Log.w(tag, msg, e);
             } else {

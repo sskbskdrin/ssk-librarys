@@ -11,8 +11,12 @@ import android.widget.TextView;
 
 import cn.sskbskdrin.base.IFragment;
 import cn.sskbskdrin.http.HTTP;
+import cn.sskbskdrin.http.HTTPNew;
 import cn.sskbskdrin.http.HttpUtils;
-import cn.sskbskdrin.http.IRequest;
+import cn.sskbskdrin.http.ICallback2;
+import cn.sskbskdrin.http.INewRequest;
+import cn.sskbskdrin.http.IParseResult;
+import cn.sskbskdrin.http.Result;
 import cn.sskbskdrin.lib.demo.R;
 import cn.sskbskdrin.lib.demo.simple.SimpleAdapter;
 
@@ -72,10 +76,14 @@ public class HttpFragment extends IFragment {
         if (!url.startsWith("http")) {
             url = protocolView.getSelectedItem() + url;
         }
-        IRequest request = HTTP.url(url)
-            .success((tag, result, response) -> resultView.setText(response.getT().toString()))
-            .error((tag, code, desc, e) -> resultView.setText(code + "\n" + desc + "\n" + (e != null ?
-                e.getMessage() : "")));
+        INewRequest<String> request = HTTPNew.url(url)
+            .pre((tag, s) -> Log.d(TAG, s))
+            .parseResponse((tag, response, type) -> new Result<>(true, response.string()))
+            .successIO((tag, s, stringIParseResult) -> Log.d(TAG, "successIO"))
+            .success((tag, result, response) -> resultView.setText(response.getT()))
+            .error((tag, error) -> resultView.setText(error.code + "\n" + error.msg + "\n" + (error.throwable != null ? error.throwable
+                .getMessage() : "")))
+            .complete((tag, s) -> Log.d(TAG, s));
         switch (String.valueOf(methodView.getSelectedItem())) {
             case "GET":
                 request.get();

@@ -273,6 +273,9 @@ public class DefaultRealRequest implements IRealRequest {
             if (System.currentTimeMillis() - start > 500) {
                 start = System.currentTimeMillis();
                 if (callback != null) {
+                    if (totalLen == 0) {
+                        totalLen = -1;
+                    }
                     callback.progress(len * 1f / totalLen);
                 }
             }

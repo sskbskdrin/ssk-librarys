@@ -1,8 +1,8 @@
-package com.lemondm.handmap.base.ui
+package cn.sskbskdrin.frame.base.ui
 
 import android.os.Bundle
 import androidx.lifecycle.ViewModelProvider
-import com.lemondm.handmap.base.vm.BaseVM
+import cn.sskbskdrin.frame.base.vm.BaseVM
 import java.lang.reflect.ParameterizedType
 
 /**
