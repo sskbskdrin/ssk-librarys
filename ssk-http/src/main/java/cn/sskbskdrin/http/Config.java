@@ -1,5 +1,7 @@
 package cn.sskbskdrin.http;
 
+import android.util.Log;
+
 import java.util.HashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -8,22 +10,22 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import cn.sskbskdrin.http.url.DefaultRealRequest;
+
 /**
  * Created by keayuan on 2020/4/17.
  *
  * @author keayuan
  */
 public final class Config {
+    private final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
 
     private static String BASE_URL;
 
-    private static Executor executor = new ThreadPoolExecutor(0, 10, 10, TimeUnit.SECONDS,
-        new LinkedBlockingQueue<Runnable>(), new DefaultThreadFactory());
+    private static Executor executor;
     private IMap<String, String> iHeader;
 
     private IRealRequestFactory iRealRequestFactory;
-
-    IParseResponse<Object> iParseResponse;
 
     long readTimeout = 15000;
     long connectedTimeout = 15000;
@@ -63,17 +65,6 @@ public final class Config {
      */
     public Config setOpenLog(boolean log) {
         openLog = log;
-        return this;
-    }
-
-    /**
-     * 设置全局解析器
-     *
-     * @param parseResponse 解析器
-     * @return Config
-     */
-    public Config setParseResponse(IParseResponse<?> parseResponse) {
-        this.iParseResponse = (IParseResponse<Object>) parseResponse;
         return this;
     }
 
@@ -131,11 +122,24 @@ public final class Config {
         if (iRealRequestFactory != null) {
             return iRealRequestFactory.generateRealRequest();
         }
-        return new DefaultRealRequest(openLog);
+        return new DefaultRealRequest();
     }
 
     void execute(Runnable runnable) {
+        if (executor == null) {
+            synchronized (Config.class) {
+                if (executor == null) {
+                    executor = new ThreadPoolExecutor(CPU_COUNT + 1, CPU_COUNT * 2, 20, TimeUnit.SECONDS,
+                        new LinkedBlockingQueue<Runnable>(128), new DefaultThreadFactory(),
+                        new ThreadPoolExecutor.DiscardOldestPolicy());
+                }
+            }
+        }
         executor.execute(runnable);
+    }
+
+    public boolean isOpenLog() {
+        return openLog;
     }
 
     /**
@@ -164,7 +168,8 @@ public final class Config {
         }
 
         public Thread newThread(Runnable r) {
-            Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement(), 0);
+            Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement());
+            Log.d("HTTP-Config", "newThread: " + t.getName());
             if (t.isDaemon()) {
                 t.setDaemon(false);
             }

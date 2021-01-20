@@ -38,4 +38,6 @@ public interface IRequestBody {
      * @return 超时时间毫秒
      */
     long getReadTimeout();
+
+    void publishProgress(float progress);
 }

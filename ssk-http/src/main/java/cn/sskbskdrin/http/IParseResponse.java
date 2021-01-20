@@ -17,5 +17,5 @@ public interface IParseResponse<V> {
      * @param type     泛型类型
      * @return 返回 {@link IParseResult}对像
      */
-    IParseResult<V> parse(String tag, IResponse response, Type type);
+    IParseResult<V> parse(String tag, IResponse response, Type type, IRequestBody request) throws Throwable;
 }

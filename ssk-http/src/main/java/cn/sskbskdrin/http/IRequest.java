@@ -1,5 +1,7 @@
 package cn.sskbskdrin.http;
 
+import java.io.Closeable;
+
 /**
  * Created by keayuan on 2019-11-29.
  *
@@ -11,6 +13,7 @@ public interface IRequest<V> {
     String ERROR_REAL_REQUEST = "-1001";
     String ERROR_PARSE = "-1002";
     String ERROR_NO_PARSE = "-1003";
+    String ERROR_CONNECT = "-1004";
 
     /**
      * 请求参数类型为json
@@ -27,46 +30,35 @@ public interface IRequest<V> {
     /**
      * get请求时，忽略CONTENT_TYPE
      */
-    String CONTENT_TYPE_GET = "text/html";
-
-    String CONTENT_TYPE_DOWN = "*/*";
+    String CONTENT_TYPE_GET = "*/*";
 
     /**
      * 发起get请求，忽略CONTENT_TYPE
      */
-    void get();
+    Closeable get();
 
-    V getSync();
+    IResponse getSync() throws Exception;
 
     /**
      * 发起post请求，content_type为表单{@link #CONTENT_TYPE_FORM}
      */
-    void post();
+    Closeable post();
 
-    V postSync();
+    IResponse postSync() throws Exception;
 
     /**
      * 发起post请求，content_type为json数据类型{@link #CONTENT_TYPE_JSON}
      */
-    void postJson();
+    Closeable postJson();
 
-    V postJsonSync();
+    IResponse postJsonSync() throws Exception;
 
     /**
      * 发起post请求，content_type为表单{@link #CONTENT_TYPE_MULTIPART}
      */
-    void postFile();
+    Closeable postFile();
 
-    V postFileSync();
-
-    /**
-     * 下载文件
-     *
-     * @param filePath 保存到本地的文件路径
-     */
-    void download(String filePath);
-
-    V downLoad(String filePath);
+    IResponse postFileSync() throws Exception;
 
     /**
      * 添加请求头信息
@@ -132,7 +124,7 @@ public interface IRequest<V> {
      * @param request 回调
      * @return IRequest
      */
-    IRequest<V> pre(IPreRequest request);
+    IRequest<V> pre(ICallback<Closeable> request);
 
     /**
      * 设置请求结果解析方法，在子线程处理，设置此解析时，全局解析器不会再调用
@@ -148,7 +140,7 @@ public interface IRequest<V> {
      * @param progress 文件下载进度监听器
      * @return IRequest
      */
-    IRequest<V> progress(IProgress progress);
+    IRequest<V> progress(ICallback<Float> progress);
 
     /**
      * 设置请求解析成功回调
@@ -156,15 +148,15 @@ public interface IRequest<V> {
      * @param success 回调监听器
      * @return IRequest
      */
-    IRequest<V> success(ISuccess<V> success);
+    IRequest<V> success(ICallback2<V, IParseResult<V>> success);
 
     /**
-     * 设置请求解析成功回调，在IO线程回调，调用在{@link #success(ISuccess)}之前
+     * 设置请求解析成功回调，在IO线程回调，调用在{@link #success(ICallback2)}之前
      *
      * @param success 回调监听器
      * @return IRequest
      */
-    IRequest<V> successIO(ISuccess<V> success);
+    IRequest<V> successIO(ICallback2<V, IParseResult<V>> success);
 
     /**
      * 设置请求解析失败回调
@@ -172,7 +164,7 @@ public interface IRequest<V> {
      * @param error 回调监听器
      * @return IRequest
      */
-    IRequest<V> error(IError error);
+    IRequest<V> error(ICallback3<String, String, Throwable> error);
 
     /**
      * 请求结束回调，成功与失败均会回调
@@ -180,7 +172,7 @@ public interface IRequest<V> {
      * @param complete 回调监听器
      * @return IRequest
      */
-    IRequest<V> complete(IComplete complete);
+    IRequest<V> complete(ICallback<String> complete);
 
     /**
      * 取消请求

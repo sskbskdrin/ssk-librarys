@@ -1,12 +1,15 @@
 package cn.sskbskdrin.http;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 /**
  * 实际发起请求接口，可实现不同方式，例OkHttp、Volley等等
  * Created by keayuan on 2019-11-29.
  *
  * @author keayuan
  */
-public interface IRealRequest {
+public interface IRealRequest extends Closeable {
 
     /**
      * 发起get请求
@@ -14,7 +17,7 @@ public interface IRealRequest {
      * @param request 请求体，默认为HttpRequest
      * @return
      */
-    IResponse get(IRequestBody request);
+    IResponse get(IRequestBody request) throws Exception;
 
     /**
      * 发起post请求
@@ -22,7 +25,7 @@ public interface IRealRequest {
      * @param request 请求体，默认为HttpRequest
      * @return
      */
-    IResponse post(IRequestBody request);
+    IResponse post(IRequestBody request) throws Exception;
 
     /**
      * 发起post json请求
@@ -30,7 +33,7 @@ public interface IRealRequest {
      * @param request 请求体，默认为HttpRequest
      * @return
      */
-    IResponse postJson(IRequestBody request);
+    IResponse postJson(IRequestBody request) throws Exception;
 
     /**
      * 发起post file请求
@@ -38,14 +41,8 @@ public interface IRealRequest {
      * @param request 请求体，默认为HttpRequest
      * @return
      */
-    IResponse postFile(IRequestBody request, IProgress progress);
+    IResponse postFile(IRequestBody request) throws Exception;
 
-    /**
-     * 发起下载请求，post方式
-     *
-     * @param request  请求体，默认为HttpRequest
-     * @param filePath 要保存的文件路径，包含文件名
-     * @return
-     */
-    IResponse download(IRequestBody request, String filePath, IProgress progress);
+    @Override
+    void close() throws IOException;
 }

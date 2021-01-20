@@ -5,6 +5,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 /**
  * Created by keayuan on 2019-12-02.
  *
@@ -75,6 +78,15 @@ class Platform {
                 Log.w(tag, msg, e);
             } else {
                 Log.d(tag, msg);
+            }
+        }
+    }
+
+    public static void safeClose(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException ignored) {
             }
         }
     }

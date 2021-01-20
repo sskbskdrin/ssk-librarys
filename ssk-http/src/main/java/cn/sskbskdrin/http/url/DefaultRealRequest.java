@@ -1,14 +1,13 @@
-package cn.sskbskdrin.http;
+package cn.sskbskdrin.http.url;
+
+import android.util.Log;
 
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -27,6 +26,11 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import cn.sskbskdrin.http.HTTP;
+import cn.sskbskdrin.http.IRealRequest;
+import cn.sskbskdrin.http.IRequestBody;
+import cn.sskbskdrin.http.IResponse;
+
 /**
  * Created by keayuan on 2019-11-29.
  *
@@ -42,12 +46,8 @@ public class DefaultRealRequest implements IRealRequest {
     //boundary就是request头和上传文件内容的分隔符
     private static final String BOUNDARY = "-----------UrlRequest-----------123821742118716";
 
-    private final boolean openLog;
     private SSLSocketFactory mSSL;
-
-    public DefaultRealRequest(boolean openLog) {
-        this.openLog = openLog;
-    }
+    private HttpURLConnection conn;
 
     public final void setSSLSocketFactory(SSLSocketFactory ssl) {
         mSSL = ssl;
@@ -107,55 +107,47 @@ public class DefaultRealRequest implements IRealRequest {
     }
 
     @Override
-    public IResponse get(IRequestBody request) {
-        return exec(request, GET, null);
+    public IResponse get(IRequestBody request) throws Exception {
+        return exec(request, GET);
     }
 
     @Override
-    public IResponse post(IRequestBody request) {
-        return exec(request, POST, null);
+    public IResponse post(IRequestBody request) throws Exception {
+        return exec(request, POST);
     }
 
     @Override
-    public IResponse postJson(IRequestBody request) {
-        return exec(request, POST_JSON, null);
+    public IResponse postJson(IRequestBody request) throws Exception {
+        return exec(request, POST_JSON);
     }
 
     @Override
-    public IResponse postFile(IRequestBody request, IProgress progress) {
-        return exec(request, POST_FILE, progress);
+    public IResponse postFile(IRequestBody request) throws Exception {
+        return exec(request, POST_FILE);
     }
 
-    @Override
-    public IResponse download(IRequestBody request, String filePath, IProgress progress) {
-        return exec(request, filePath, progress);
-    }
-
-    private Response exec(IRequestBody request, int method, IProgress progress) {
-        HttpURLConnection conn = null;
+    private IResponse exec(IRequestBody request, int method) throws Exception {
         try {
             conn = generate(request.getUrl(), request.getConnectedTimeout(), request.getReadTimeout(), method == GET
                 ? "GET" : "POST", request
                 .getHeader());
 
             HashMap<String, Object> params = method == GET ? null : request.getParams();
-            if (openLog) {
-                Platform platform = Platform.get();
-                platform.log(TAG, "url: " + request.getUrl());
-                platform.log(TAG, "connectedTimeout: " + request.getConnectedTimeout() + "ms");
-                platform.log(TAG, "readTimeout: " + request.getReadTimeout() + "ms");
-                platform.log(TAG, "method: " + (method == GET ? "GET" : "POST"));
+            if (HTTP.getConfig().isOpenLog()) {
+                Log.d(TAG, "url: " + request.getUrl());
+                Log.d(TAG, "connectedTimeout: " + request.getConnectedTimeout() + "ms");
+                Log.d(TAG, "readTimeout: " + request.getReadTimeout() + "ms");
+                Log.d(TAG, "method: " + (method == GET ? "GET" : "POST"));
                 Map<String, List<String>> requestProperties = conn.getRequestProperties();
                 for (Map.Entry<String, List<String>> entry : requestProperties.entrySet()) {
-                    platform.log(TAG, "header: " + entry.getKey() + "=" + entry.getValue());
+                    Log.d(TAG, "header: " + entry.getKey() + "=" + entry.getValue());
                 }
                 if (params != null) {
                     for (Map.Entry<String, Object> entry : params.entrySet()) {
-                        platform.log(TAG, "params: " + entry.getKey() + "=" + entry.getValue());
+                        Log.d(TAG, "params: " + entry.getKey() + "=" + entry.getValue());
                     }
                 }
             }
-            long startTime = System.currentTimeMillis();
             // params
             if (!doDeal(conn, params)) {
                 switch (method) {
@@ -169,76 +161,16 @@ public class DefaultRealRequest implements IRealRequest {
                         doPostJson(conn, params);
                         break;
                     case POST_FILE:
-                        doPostFile(conn, params, progress);
+                        doPostFile(conn, params, request);
                         break;
                     default:
                         break;
                 }
             }
-
-            // response
-            if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                InputStream in = conn.getInputStream();
-                ByteArrayOutputStream os = new ByteArrayOutputStream();
-                byte[] buf = new byte[1024 * 10];
-                int len;
-                while ((len = in.read(buf)) >= 0) {
-                    os.write(buf, 0, len);
-                }
-                buf = os.toByteArray();
-                in.close();
-                if (openLog) {
-                    Platform.get().log(TAG, "response: time=" + (System.currentTimeMillis() - startTime));
-                    Platform.get().log(TAG, "response:" + new String(buf));
-                }
-                return Response.get(buf);
-            } else {
-                if (openLog) {
-                    Platform.get()
-                        .log(TAG,
-                            "response error: code=" + conn.getResponseCode() + " msg=" + conn.getResponseMessage());
-                }
-                return Response.get(String.valueOf(conn.getResponseCode()), conn.getResponseMessage(), null);
-            }
+            return new UrlResponse(conn);
         } catch (Exception e) {
-            if (openLog) {
-                Platform.get().log(TAG, "response error: " + e.getLocalizedMessage(), e);
-            }
-            return Response.get("-1", "", e);
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
-    }
-
-    private Response exec(IRequestBody request, String filePath, IProgress callback) {
-        HttpURLConnection conn = null;
-        try {
-            conn = generate(request.getUrl(), request.getConnectedTimeout(), request.getReadTimeout(), "GET",
-                request.getHeader());
-
-            // header
-            HashMap<String, String> header = request.getHeader();
-            for (Map.Entry<String, String> entry : header.entrySet()) {
-                conn.setRequestProperty(entry.getKey(), entry.getValue());
-            }
-
-            // response
-            if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                InputStream in = conn.getInputStream();
-                File file = doDown(in, conn.getContentLength(), filePath, callback);
-                in.close();
-                return Response.get(filePath);
-            } else {
-                return Response.get(String.valueOf(conn.getResponseCode()), conn.getResponseMessage(), null);
-            }
-        } catch (Exception e) {
-            return Response.get("-1", "", e);
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
+            close();
+            throw e;
         }
     }
 
@@ -250,41 +182,6 @@ public class DefaultRealRequest implements IRealRequest {
         conn.setDoOutput(false);
         conn.setDoInput(true);
         conn.connect();
-    }
-
-    private File doDown(InputStream in, int totalLen, String filePath, IProgress callback) throws IOException {
-        File file = new File(filePath);
-        if (file.exists()) {
-            file.delete();
-        }
-        file.createNewFile();
-
-        FileOutputStream os = new FileOutputStream(file);
-        long start = System.currentTimeMillis();
-
-        byte[] buf = new byte[1024 * 10];
-        int ret, len = 0;
-        if (callback != null) {
-            callback.progress(0);
-        }
-        while ((ret = in.read(buf)) >= 0) {
-            os.write(buf, 0, ret);
-            len += ret;
-            if (System.currentTimeMillis() - start > 500) {
-                start = System.currentTimeMillis();
-                if (callback != null) {
-                    if (totalLen == 0) {
-                        totalLen = -1;
-                    }
-                    callback.progress(len * 1f / totalLen);
-                }
-            }
-        }
-        if (callback != null) {
-            callback.progress(1);
-        }
-        in.close();
-        return file;
     }
 
     private static void doPost(HttpURLConnection conn, Map<String, Object> params) throws IOException {
@@ -308,7 +205,7 @@ public class DefaultRealRequest implements IRealRequest {
         out.close();
     }
 
-    private static void doPostFile(HttpURLConnection conn, Map<String, Object> params, IProgress progress) throws IOException {
+    private static void doPostFile(HttpURLConnection conn, Map<String, Object> params, IRequestBody progress) throws IOException {
         conn.setDoOutput(true);
         conn.setDoInput(true);
         conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + BOUNDARY);
@@ -321,7 +218,7 @@ public class DefaultRealRequest implements IRealRequest {
 
         long totalLength = 0;
         if (progress != null) {
-            progress.progress(0);
+            progress.publishProgress(0);
         }
         StringBuilder strBuf = new StringBuilder();
         if (params != null) {
@@ -359,14 +256,14 @@ public class DefaultRealRequest implements IRealRequest {
         strBuf.append(end).append(twoHyphens).append(BOUNDARY).append(twoHyphens).append(end);
         out.write(strBuf.toString().getBytes());
         if (progress != null) {
-            progress.progress(1);
+            progress.publishProgress(1);
         }
         out.flush();
         out.close();
     }
 
     private static void writeFile(OutputStream out, String key, File file, final long totalLength, long sendLen,
-                                  IProgress progress) throws IOException {
+                                  IRequestBody progress) throws IOException {
         final String end = "\r\n";
         final String twoHyphens = "--";
         StringBuilder strBuf = new StringBuilder();
@@ -389,7 +286,7 @@ public class DefaultRealRequest implements IRealRequest {
             if (System.currentTimeMillis() - lastTime > 500) {
                 lastTime = System.currentTimeMillis();
                 if (progress != null) {
-                    progress.progress(Double.valueOf(sendLen * 1d / totalLength).floatValue());
+                    progress.publishProgress(Double.valueOf(sendLen * 1d / totalLength).floatValue());
                 }
             }
         }
@@ -405,5 +302,13 @@ public class DefaultRealRequest implements IRealRequest {
 
         out.flush();
         out.close();
+    }
+
+    @Override
+    public void close() {
+        if (conn != null) {
+            conn.disconnect();
+        }
+        conn = null;
     }
 }

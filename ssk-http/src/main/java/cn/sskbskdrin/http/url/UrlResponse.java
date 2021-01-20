@@ -1,4 +1,4 @@
-package cn.sskbskdrin.http;
+package cn.sskbskdrin.http.url;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Map;
+
+import cn.sskbskdrin.http.IResponse;
 
 /**
  * Created by keayuan on 2021/1/19.
@@ -15,14 +17,23 @@ import java.util.Map;
 class UrlResponse implements IResponse {
 
     private HttpURLConnection connection;
+    private String code;
+    private String msg;
+    private Throwable throwable;
 
     UrlResponse(HttpURLConnection connection) {
         this.connection = connection;
     }
 
+    UrlResponse(String code, String desc, Exception e) {
+        this.code = code;
+        this.msg = desc;
+        this.throwable = e;
+    }
+
     @Override
-    public byte[] bytes() {
-        try {
+    public byte[] bytes() throws IOException {
+        if (connection != null) {
             InputStream is = connection.getInputStream();
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             byte[] buf = new byte[1024 * 8];
@@ -31,44 +42,47 @@ class UrlResponse implements IResponse {
                 os.write(buf, 0, len);
             }
             return os.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
         return new byte[0];
     }
 
     @Override
-    public String string() {
+    public String string() throws IOException {
         return new String(bytes());
     }
 
     @Override
     public int code() {
-        try {
-            return connection.getResponseCode();
-        } catch (IOException ignored) {
+        if (connection != null) {
+            try {
+                return connection.getResponseCode();
+            } catch (IOException ignored) {
+            }
         }
-        return -1;
+        if (code == null || code.length() == 0) return -1;
+        return Integer.parseInt(code);
     }
 
     @Override
     public String message() {
-        return null;
+        if (connection != null) {
+            try {
+                return connection.getResponseMessage();
+            } catch (IOException e) {
+            }
+        }
+        return msg;
     }
 
     @Override
-    public Exception exception() {
-        return null;
+    public Throwable throwable() {
+        return throwable;
     }
 
     @Override
     public boolean isSuccess() {
-        try {
-            int code = connection.getResponseCode();
-            return code >= 200 && code < 300;
-        } catch (IOException ignored) {
-        }
-        return false;
+        int code = code();
+        return code >= 200 && code < 300;
     }
 
     @Override
@@ -89,5 +103,13 @@ class UrlResponse implements IResponse {
     @Override
     public long getContentLength() {
         return connection.getContentLength();
+    }
+
+    @Override
+    public void close() {
+        if (connection != null) {
+            connection.disconnect();
+            connection = null;
+        }
     }
 }

@@ -1,5 +1,7 @@
 package cn.sskbskdrin.http;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -9,26 +11,26 @@ import java.util.Map;
  *
  * @author keayuan
  */
-public interface IResponse {
+public interface IResponse extends Closeable {
     /**
      * 返回byte数据
      *
      * @return 数据数组
      */
-    byte[] bytes();
+    byte[] bytes() throws IOException;
 
     /**
      * 返回数据转字符串
      *
      * @return 返回的字符串
      */
-    String string();
+    String string() throws IOException;
 
     int code();
 
     String message();
 
-    Exception exception();
+    Throwable throwable();
 
     boolean isSuccess();
 
