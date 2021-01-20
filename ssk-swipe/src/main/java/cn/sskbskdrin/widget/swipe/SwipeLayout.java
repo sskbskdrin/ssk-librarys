@@ -17,9 +17,6 @@ import android.widget.TextView;
 import java.util.HashMap;
 import java.util.Map;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 import androidx.core.view.NestedScrollingChild;
 import androidx.core.view.NestedScrollingChildHelper;
 import androidx.core.view.NestedScrollingParent;
@@ -37,11 +34,6 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
 
     public static final int HORIZONTAL = 0;
     public static final int VERTICAL = 1;
-
-    @VisibleForTesting
-    static final int CIRCLE_DIAMETER = 40;
-    @VisibleForTesting
-    static final int CIRCLE_DIAMETER_LARGE = 56;
 
     private static final String LOG_TAG = SwipeLayout.class.getSimpleName();
 
@@ -68,8 +60,6 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
     // Whether this item is scaled up rather than clipped
 
     private static final int[] LAYOUT_ATTRS = new int[]{android.R.attr.enabled};
-
-    int mCustomSlingshotDistance;
 
     private SwipeHelper swipeHelper = new SwipeHelper(this);
     private int mOrientation = VERTICAL;
@@ -98,7 +88,7 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
      *
      * @param context
      */
-    public SwipeLayout(@NonNull Context context) {
+    public SwipeLayout(Context context) {
         this(context, null);
     }
 
@@ -108,7 +98,7 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
      * @param context
      * @param attrs
      */
-    public SwipeLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
+    public SwipeLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         setWillNotDraw(false);
@@ -128,11 +118,11 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
      * Set the listener to be notified when a refresh is triggered via the swipe
      * gesture.
      */
-    public void addSwipeRefreshListener(@Nullable SwipeRefreshListener listener) {
+    public void addSwipeRefreshListener(SwipeRefreshListener listener) {
         addSwipeRefreshListener(SwipePosition.TOP, listener);
     }
 
-    public void addSwipeRefreshListener(SwipePosition position, @Nullable SwipeRefreshListener listener) {
+    public void addSwipeRefreshListener(SwipePosition position, SwipeRefreshListener listener) {
         swipeHelper.addSwipeRefreshListener(position, listener);
     }
 
@@ -353,7 +343,7 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
         return mTarget.canScrollVertically(-1);
     }
 
-    private static boolean canScrollList(@NonNull AbsListView listView, int direction) {
+    private static boolean canScrollList(AbsListView listView, int direction) {
         if (Build.VERSION.SDK_INT >= 19) {
             // Call the framework version directly
             return listView.canScrollList(direction);

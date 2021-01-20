@@ -9,14 +9,15 @@ import android.view.View;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+
 import cn.sskbskdrin.base.IFragment;
 import cn.sskbskdrin.http.HTTP;
-import cn.sskbskdrin.http.HTTPNew;
 import cn.sskbskdrin.http.HttpUtils;
-import cn.sskbskdrin.http.ICallback2;
-import cn.sskbskdrin.http.INewRequest;
-import cn.sskbskdrin.http.IParseResult;
-import cn.sskbskdrin.http.Result;
+import cn.sskbskdrin.http.IRequest;
 import cn.sskbskdrin.lib.demo.R;
 import cn.sskbskdrin.lib.demo.simple.SimpleAdapter;
 
@@ -70,19 +71,25 @@ public class HttpFragment extends IFragment {
         checkPermission(1001, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE);
     }
 
+    private Set<Closeable> closeable = new HashSet<>();
+
     private void request() {
-        HTTP.globalConfig().setOpenLog(true);
+        HTTP.getConfig().setOpenLog(true);
+        //        HTTP.getConfig().setRealRequestFactory(null);
         String url = urlView.getText().toString().replaceAll("\n", "");
         if (!url.startsWith("http")) {
             url = protocolView.getSelectedItem() + url;
         }
-        INewRequest<String> request = HTTPNew.url(url)
-            .pre((tag, s) -> Log.d(TAG, s))
-            .parseResponse((tag, response, type) -> new Result<>(true, response.string()))
+        IRequest<String> request = HTTP.url(url)
+            .pre((tag, closeable) -> {
+                Log.d(TAG, "request: ");
+                //                this.closeable = closeable;
+            })
             .successIO((tag, s, stringIParseResult) -> Log.d(TAG, "successIO"))
             .success((tag, result, response) -> resultView.setText(response.getT()))
-            .error((tag, error) -> resultView.setText(error.code + "\n" + error.msg + "\n" + (error.throwable != null ? error.throwable
-                .getMessage() : "")))
+            .error((tag, code, msg, throwable) -> {
+                resultView.setText(code + "\n" + msg + "\n" + (throwable != null ? throwable.getMessage() : ""));
+            })
             .complete((tag, s) -> Log.d(TAG, s));
         switch (String.valueOf(methodView.getSelectedItem())) {
             case "GET":
@@ -98,8 +105,28 @@ public class HttpFragment extends IFragment {
                 request.postFile();
                 break;
             case "DOWNLOAD":
-                request.download("");
+                Closeable close = HTTP.download("https://static.iyuan.site/public.zip", getContext().getCacheDir()
+                    .getAbsolutePath() + "/public.zip")
+                    .pre((tag, closeable) -> this.closeable.add(closeable))
+                    .success((tag, file, fileIParseResult) -> resultView.setText(file.getAbsolutePath()))
+                    .get();
+                closeable.add(close);
                 break;
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        resultView = null;
+        if (closeable != null) {
+            try {
+                for (Closeable closeable1 : closeable) {
+                    closeable1.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
