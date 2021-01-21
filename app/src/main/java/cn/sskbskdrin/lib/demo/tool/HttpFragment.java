@@ -80,38 +80,39 @@ public class HttpFragment extends IFragment {
         if (!url.startsWith("http")) {
             url = protocolView.getSelectedItem() + url;
         }
-        IRequest<String> request = HTTP.url(url)
-            .pre((tag, closeable) -> {
-                Log.d(TAG, "request: ");
-                //                this.closeable = closeable;
-            })
-            .successIO((tag, s, stringIParseResult) -> Log.d(TAG, "successIO"))
-            .success((tag, result, response) -> resultView.setText(response.getT()))
-            .error((tag, code, msg, throwable) -> {
-                resultView.setText(code + "\n" + msg + "\n" + (throwable != null ? throwable.getMessage() : ""));
-            })
-            .complete((tag, s) -> Log.d(TAG, s));
+
+        IRequest<String> request = null;
         switch (String.valueOf(methodView.getSelectedItem())) {
             case "GET":
-                request.get();
+                request = HTTP.get(url, HTTP.STRING_PARSE_RESPONSE);
                 break;
             case "POST":
-                request.post();
+                request = HTTP.post(url, String.class);
                 break;
             case "JSON":
-                request.postJson();
+                request = HTTP.postJson(url, String.class);
                 break;
             case "POSTFILE":
-                request.postFile();
+                request = HTTP.postFile(url, String.class);
                 break;
             case "DOWNLOAD":
                 Closeable close = HTTP.download("https://static.iyuan.site/public.zip", getContext().getCacheDir()
                     .getAbsolutePath() + "/public.zip")
                     .pre((tag, closeable) -> this.closeable.add(closeable))
                     .success((tag, file, fileIParseResult) -> resultView.setText(file.getAbsolutePath()))
-                    .get();
+                    .request();
                 closeable.add(close);
                 break;
+        }
+        if (request != null) {
+            request.pre((tag, closeable) -> Log.d(TAG, "request: "))
+                .successIO((tag, s, stringIParseResult) -> Log.d(TAG, "successIO"))
+                .success((tag, result, response) -> resultView.setText(response.getT()))
+                .error((tag, code, msg, throwable) -> {
+                    resultView.setText(code + "\n" + msg + "\n" + (throwable != null ? throwable.getMessage() : ""));
+                })
+                .complete((tag, s) -> Log.d(TAG, s.toString()))
+                .request();
         }
     }
 

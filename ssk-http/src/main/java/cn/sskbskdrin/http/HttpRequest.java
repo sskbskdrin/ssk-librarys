@@ -2,7 +2,7 @@ package cn.sskbskdrin.http;
 
 import android.util.Log;
 
-import java.io.Closeable;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author sskbskdrin
  */
-class HttpRequest<V> implements IRequest<V>, IRequestBody, Closeable {
+class HttpRequest<V> implements IRequest<V>, IRequestBody {
     private static final String TAG = "HttpRequest";
 
     private final HashMap<String, String> mHeader = new HashMap<>();
@@ -24,13 +24,13 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody, Closeable {
     private IMap<String, String> iHeader;
     private IMap<String, Object> iParams;
 
-    private ICallback<Closeable> mPreRequest;
+    private ICallback<IRequest<V>> mPreRequest;
     private IParseResponse<V> mParseResponse;
     private ICallback<Float> mProgress;
     private ICallback2<V, IParseResult<V>> mSuccess;
     private ICallback2<V, IParseResult<V>> mSuccessIO;
     private ICallback3<String, String, Throwable> mError;
-    private ICallback<String> mComplete;
+    private ICallback<IRequest<V>> mComplete;
 
     private String mTag;
     private final String mUrl;
@@ -44,65 +44,26 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody, Closeable {
     private static int mId = 0;
 
     HttpRequest(String url, Type type) {
-        mUrl = Config.fixUrl(url);
-        mType = type;
+        this(url, type, CONTENT_TYPE_GET);
     }
 
     HttpRequest(String url, IParseResponse<V> iParseResponse) {
+        this(url, iParseResponse, CONTENT_TYPE_GET);
+    }
+
+    HttpRequest(String url, IParseResponse<V> iParse, String contentType) {
         mUrl = Config.fixUrl(url);
-        parseResponse(iParseResponse);
+        mParseResponse = iParse;
+        mContentType = contentType;
+        if (iParse != null) {
+            mType = ((ParameterizedType) iParse.getClass().getGenericInterfaces()[0]).getActualTypeArguments()[0];
+        }
     }
 
-    @Override
-    public Closeable get() {
-        mContentType = CONTENT_TYPE_GET;
-        request();
-        return this;
-    }
-
-    @Override
-    public IResponse getSync() throws Exception {
-        mContentType = CONTENT_TYPE_GET;
-        return request(getConfig().getRealRequest());
-    }
-
-    @Override
-    public Closeable post() {
-        mContentType = CONTENT_TYPE_FORM;
-        request();
-        return this;
-    }
-
-    @Override
-    public IResponse postSync() throws Exception {
-        mContentType = CONTENT_TYPE_FORM;
-        return request(getConfig().getRealRequest());
-    }
-
-    @Override
-    public Closeable postJson() {
-        mContentType = CONTENT_TYPE_JSON;
-        request();
-        return this;
-    }
-
-    @Override
-    public IResponse postJsonSync() throws Exception {
-        mContentType = CONTENT_TYPE_JSON;
-        return request(getConfig().getRealRequest());
-    }
-
-    @Override
-    public Closeable postFile() {
-        mContentType = CONTENT_TYPE_MULTIPART;
-        request();
-        return this;
-    }
-
-    @Override
-    public IResponse postFileSync() throws Exception {
-        mContentType = CONTENT_TYPE_MULTIPART;
-        return request(getConfig().getRealRequest());
+    HttpRequest(String url, Type type, String contentType) {
+        mUrl = Config.fixUrl(url);
+        mType = type;
+        mContentType = contentType;
     }
 
     @Override
@@ -148,7 +109,7 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody, Closeable {
     }
 
     @Override
-    public IRequest<V> pre(ICallback<Closeable> request) {
+    public IRequest<V> pre(ICallback<IRequest<V>> request) {
         mPreRequest = request;
         return this;
     }
@@ -184,12 +145,18 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody, Closeable {
     }
 
     @Override
-    public IRequest<V> complete(ICallback<String> complete) {
+    public IRequest<V> complete(ICallback<IRequest<V>> complete) {
         mComplete = complete;
         return this;
     }
 
-    private void request() {
+    @Override
+    public IResponse requestSync() throws Exception {
+        return request(getConfig().getRealRequest());
+    }
+
+    @Override
+    public IRequest<V> request() {
         if (mTag == null) {
             mTag = "tag-" + mId++;
         }
@@ -197,7 +164,7 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody, Closeable {
         if (realRequest == null) {
             error(ERROR_REAL_REQUEST, "没找到请求实现类，请先设置请求工厂",
                 new IllegalAccessException("IRealRequestFactory " + "not " + "impl or IRealRequest is null"));
-            return;
+            return this;
         }
 
         getConfig().execute(new Runnable() {
@@ -246,6 +213,7 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody, Closeable {
                 Platform.safeClose(res);
             }
         });
+        return this;
     }
 
     private void preRequest() {
@@ -307,7 +275,7 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody, Closeable {
                 public void run() {
                     if (isCancel.get()) return;
                     if (mComplete != null) {
-                        mComplete.onCallback(mTag, "complete");
+                        mComplete.onCallback(mTag, HttpRequest.this);
                     }
                 }
             });
@@ -342,11 +310,6 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody, Closeable {
 
     @Override
     public void close() {
-        cancel();
-    }
-
-    @Override
-    public void cancel() {
         if (isCancel.get()) return;
         isCancel.set(true);
         Log.w(TAG, mTag + " cancel: ");

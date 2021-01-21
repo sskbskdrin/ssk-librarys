@@ -7,7 +7,7 @@ import java.io.Closeable;
  *
  * @author keayuan
  */
-public interface IRequest<V> {
+public interface IRequest<V> extends Closeable {
 
     String ERROR_UNKNOWN = "-1";
     String ERROR_REAL_REQUEST = "-1001";
@@ -31,34 +31,6 @@ public interface IRequest<V> {
      * get请求时，忽略CONTENT_TYPE
      */
     String CONTENT_TYPE_GET = "*/*";
-
-    /**
-     * 发起get请求，忽略CONTENT_TYPE
-     */
-    Closeable get();
-
-    IResponse getSync() throws Exception;
-
-    /**
-     * 发起post请求，content_type为表单{@link #CONTENT_TYPE_FORM}
-     */
-    Closeable post();
-
-    IResponse postSync() throws Exception;
-
-    /**
-     * 发起post请求，content_type为json数据类型{@link #CONTENT_TYPE_JSON}
-     */
-    Closeable postJson();
-
-    IResponse postJsonSync() throws Exception;
-
-    /**
-     * 发起post请求，content_type为表单{@link #CONTENT_TYPE_MULTIPART}
-     */
-    Closeable postFile();
-
-    IResponse postFileSync() throws Exception;
 
     /**
      * 添加请求头信息
@@ -124,7 +96,7 @@ public interface IRequest<V> {
      * @param request 回调
      * @return IRequest
      */
-    IRequest<V> pre(ICallback<Closeable> request);
+    IRequest<V> pre(ICallback<IRequest<V>> request);
 
     /**
      * 设置请求结果解析方法，在子线程处理，设置此解析时，全局解析器不会再调用
@@ -172,11 +144,26 @@ public interface IRequest<V> {
      * @param complete 回调监听器
      * @return IRequest
      */
-    IRequest<V> complete(ICallback<String> complete);
+    IRequest<V> complete(ICallback<IRequest<V>> complete);
+
+    /**
+     * 发起请求
+     *
+     * @return IRequest
+     */
+    Closeable request();
+
+    /**
+     * 发起同步请求
+     *
+     * @return 返回响应体
+     * @throws Exception 可能抛出异常
+     */
+    IResponse requestSync() throws Exception;
 
     /**
      * 取消请求
      */
-    void cancel();
-
+    @Override
+    void close();
 }

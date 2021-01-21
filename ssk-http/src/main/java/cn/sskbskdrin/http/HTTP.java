@@ -23,34 +23,74 @@ public final class HTTP {
         return Config.INSTANCE;
     }
 
-    public static IRequest<String> url(String url) {
-        return new HttpRequest<>(url, stringParseResponse);
+    public static <V> IRequest<V> url(String url, Class<V> tClass, String contentType) {
+        return new HttpRequest<>(url, tClass, contentType);
     }
 
-    public static <V> IRequest<V> url(String url, Class<V> tClass) {
-        return new HttpRequest<>(url, tClass);
+    public static <V> IRequest<V> url(String url, TypeToken<V> token, String contentType) {
+        return new HttpRequest<>(url, token.getType(), contentType);
     }
 
-    public static <V, T> IRequest<V> url(String url, TypeToken<T> token) {
-        return new HttpRequest<>(url, token.getType());
+    public static <V> IRequest<V> url(String url, IParseResponse<V> iParseResponse, String contentType) {
+        return new HttpRequest<>(url, iParseResponse, contentType);
     }
 
-    public static <V> IRequest<V> url(String url, IParseResponse<V> iParseResponse) {
-        return new HttpRequest<>(url, iParseResponse);
+    public static <V> IRequest<V> get(String url, TypeToken<V> token) {
+        return url(url, token, IRequest.CONTENT_TYPE_GET);
+    }
+
+    public static <V> IRequest<V> get(String url, IParseResponse<V> iParseResponse) {
+        return url(url, iParseResponse, IRequest.CONTENT_TYPE_GET);
+    }
+
+    public static <V> IRequest<V> post(String url, Class<V> tClass) {
+        return url(url, tClass, IRequest.CONTENT_TYPE_FORM);
+    }
+
+    public static <V> IRequest<V> post(String url, TypeToken<V> token) {
+        return url(url, token, IRequest.CONTENT_TYPE_FORM);
+    }
+
+    public static <V> IRequest<V> post(String url, IParseResponse<V> iParseResponse) {
+        return url(url, iParseResponse, IRequest.CONTENT_TYPE_FORM);
+    }
+
+    public static <V> IRequest<V> postJson(String url, Class<V> tClass) {
+        return url(url, tClass, IRequest.CONTENT_TYPE_JSON);
+    }
+
+    public static <V> IRequest<V> postJson(String url, TypeToken<V> token) {
+        return url(url, token, IRequest.CONTENT_TYPE_JSON);
+    }
+
+    public static <V> IRequest<V> postJson(String url, IParseResponse<V> iParseResponse) {
+        return url(url, iParseResponse, IRequest.CONTENT_TYPE_JSON);
+    }
+
+    public static <V> IRequest<V> postFile(String url, Class<V> tClass) {
+        return url(url, tClass, IRequest.CONTENT_TYPE_MULTIPART);
+    }
+
+    public static <V> IRequest<V> postFile(String url, TypeToken<V> token) {
+        return url(url, token, IRequest.CONTENT_TYPE_MULTIPART);
+    }
+
+    public static <V> IRequest<V> postFile(String url, IParseResponse<V> iParseResponse) {
+        return url(url, iParseResponse, IRequest.CONTENT_TYPE_MULTIPART);
     }
 
     public static IRequest<File> download(String url, String filePath) {
         return new HttpRequest<>(url, new FileParse(filePath));
     }
 
-    private static IParseResponse<String> stringParseResponse = new IParseResponse<String>() {
+    public static IParseResponse<String> STRING_PARSE_RESPONSE = new IParseResponse<String>() {
         @Override
         public IParseResult<String> parse(String tag, IResponse response, Type type, IRequestBody request) throws Throwable {
             return new Result<>(true, response.string());
         }
     };
 
-    private static class FileParse implements IParseResponse<File> {
+    public static class FileParse implements IParseResponse<File> {
 
         private String filePath;
 
