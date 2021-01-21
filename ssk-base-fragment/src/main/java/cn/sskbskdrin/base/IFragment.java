@@ -8,17 +8,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.fragment.app.Fragment;
+
 /**
  * Created by sskbskdrin on 2015/5/25.
  * Fragment 基类
  */
-public abstract class IFragment extends androidx.fragment.app.Fragment implements IA {
+public abstract class IFragment extends Fragment implements IA {
     protected final String TAG;
     /**
      * 在initData中可直接使用
      */
     protected View mRootView;
-    protected boolean isRunning;
 
     private Activity mActivity;
 
@@ -33,14 +34,19 @@ public abstract class IFragment extends androidx.fragment.app.Fragment implement
     protected abstract int getLayoutId();
 
     /**
-     * 在{@link IFragment#onViewCreated(View, Bundle)}被调用时调用
+     * 在{@link IFragment#onActivityCreated(Bundle)} 被调用时调用
+     *
+     * @param arguments 创建时传递的参数
      */
     protected void onInitData(Bundle arguments) {}
 
     /**
-     * 在view被创建时调用,在{@link IFragment#onInitData(Bundle)}之后调用
+     * 在view被创建时调用,在{@link IFragment#onCreateView(LayoutInflater, ViewGroup, Bundle)} 时调用，如果只不销毁view，就只会调用一次
+     *
+     * @param rootView           创建的根view
+     * @param savedInstanceState 数据
      */
-    protected abstract void onViewCreated(View rootView, Bundle arguments, Bundle savedInstanceState);
+    protected abstract void onInitView(View rootView, Bundle savedInstanceState);
 
     @Override
     public void onAttach(Context context) {
@@ -54,9 +60,10 @@ public abstract class IFragment extends androidx.fragment.app.Fragment implement
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        isRunning = true;
         Log.v(TAG, "onCreate");
     }
+
+    private boolean firstCreateView = true;
 
     @Override
     public final View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -77,23 +84,47 @@ public abstract class IFragment extends androidx.fragment.app.Fragment implement
                 parent.removeView(mRootView);
             }
         }
+        if (firstCreateView) {
+            firstCreateView = false;
+            onInitView(mRootView, savedInstanceState);
+        }
         return mRootView;
     }
 
     @Override
-    public final void onViewCreated(View view, Bundle savedInstanceState) {
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
         onInitData(getArguments());
-        onViewCreated(view, getArguments(), savedInstanceState);
     }
 
     /**
      * 当{@link IFragment#getLayoutId()} 返回值小于等于0时调用，可动态创建view
      *
-     * @param inflater 构建view用的inflater
+     * @param inflater           构建view用的inflater
+     * @param container          父view
+     * @param savedInstanceState 保存的数据
      * @return 返回要显示的view
      */
     protected View generateRootView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return null;
+    }
+
+    /**
+     * 在{@link IFragment#onDestroyView()}时是否销毁view
+     *
+     * @return true则销毁，重新打开时，会重新创建view
+     */
+    protected boolean isDestroyView() {
+        return false;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (isDestroyView()) {
+            mRootView = null;
+            firstCreateView = true;
+        }
     }
 
     @Override
@@ -101,7 +132,6 @@ public abstract class IFragment extends androidx.fragment.app.Fragment implement
         super.onDestroy();
         Log.v(TAG, "onDestroy");
         mActivity = null;
-        isRunning = false;
     }
 
     @Override
@@ -132,8 +162,4 @@ public abstract class IFragment extends androidx.fragment.app.Fragment implement
         return (T) mRootView;
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        requestPermissionsResult(requestCode, permissions, grantResults);
-    }
 }
