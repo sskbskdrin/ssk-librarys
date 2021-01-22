@@ -127,7 +127,12 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
     }
 
     public void setRefreshing() {
-        swipeToTarget(swipeHelper.getSwipeLoad());
+        postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                swipeToTarget(swipeHelper.getController(SwipePosition.TOP).getSwipeLoad());
+            }
+        }, 100);
     }
 
     public void refreshComplete(SwipePosition position, boolean success) {
@@ -700,6 +705,10 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
             scrollAnimation.cancel();
         }
         final int total = targetPos - mCurrentOffsetY;
+        long time = SCROLL_DURATION;
+        if (Math.abs(total) < 300) {
+            time = (long) (SCROLL_DURATION * Math.abs(total) / 300f);
+        }
         scrollAnimation = new Animation() {
             float last = 0;
 
@@ -708,6 +717,7 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
                 Log.i(TAG, "applyTransformation: " + interpolatedTime);
                 if (interpolatedTime == 1) {
                     moveSpinner(targetPos - mCurrentOffsetY, true);
+                    finishSpinner();
                     isAnimation = false;
                 } else {
                     moveSpinner((int) (total * (interpolatedTime - last)), true);
@@ -715,10 +725,6 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
                 last = interpolatedTime;
             }
         };
-        long time = SCROLL_DURATION;
-        if (Math.abs(total) < 300) {
-            time = (long) (SCROLL_DURATION * Math.abs(total) / 300f);
-        }
         scrollAnimation.setDuration(time);
         mTarget.clearAnimation();
         isAnimation = true;
@@ -742,12 +748,19 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
     }
 
     private void setTargetOffsetTopAndBottom(int offset) {
-        if (mCurrentOffsetY > 0) {
-            if (offset + mCurrentOffsetY > swipeHelper.getSwipeMax()) {
-                offset = swipeHelper.getSwipeMax() - mCurrentOffsetY;
+        if (mCurrentOffsetY == 0) {
+            SwipePosition position = getPosition(offset);
+            if (!swipeHelper.getController(position).isEnable()) {
+                offset = 0;
             }
-        } else if (offset + mCurrentOffsetY < -swipeHelper.getSwipeMax()) {
-            offset = -swipeHelper.getSwipeMax() - mCurrentOffsetY;
+        } else {
+            if (mCurrentOffsetY > 0) {
+                if (offset + mCurrentOffsetY > swipeHelper.getSwipeMax()) {
+                    offset = swipeHelper.getSwipeMax() - mCurrentOffsetY;
+                }
+            } else if (offset + mCurrentOffsetY < -swipeHelper.getSwipeMax()) {
+                offset = -swipeHelper.getSwipeMax() - mCurrentOffsetY;
+            }
         }
         if (offset == 0) return;
         SwipePosition position = getPosition(offset);

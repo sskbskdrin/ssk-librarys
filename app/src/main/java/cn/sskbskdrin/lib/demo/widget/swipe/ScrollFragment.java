@@ -19,8 +19,8 @@ public class ScrollFragment extends BaseFragment {
     }
 
     @Override
-    protected void onViewCreated(View rootView, Bundle arguments, Bundle savedInstanceState) {
-        super.onViewCreated(rootView, arguments, savedInstanceState);
+    protected void onInitView(View rootView,  Bundle savedInstanceState) {
+        super.onInitView(rootView, savedInstanceState);
         content = getView(R.id.scroll_text);
     }
 

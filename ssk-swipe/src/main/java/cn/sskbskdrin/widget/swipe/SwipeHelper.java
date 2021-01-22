@@ -227,7 +227,7 @@ final class SwipeHelper {
             if (handler != null) {
                 return handler.getSwipeLoad();
             }
-            return Integer.MAX_VALUE;
+            return Integer.MAX_VALUE - 2;
         }
 
         int getSwipeMax() {

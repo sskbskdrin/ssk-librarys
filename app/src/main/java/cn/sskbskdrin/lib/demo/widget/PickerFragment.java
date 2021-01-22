@@ -23,7 +23,7 @@ public class PickerFragment extends IFragment {
     }
 
     @Override
-    protected void onViewCreated(View view, Bundle arguments, Bundle savedInstanceState) {
+    protected void onInitView(View view,  Bundle savedInstanceState) {
         DateTimePicker mDateTimePicker = getView(R.id.picker_date_time);
         mDateTimePicker.setEnable(true, true);
 

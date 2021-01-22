@@ -22,7 +22,7 @@ public class FlowFragment extends IFragment {
     }
 
     @Override
-    protected void onViewCreated(View view, Bundle arguments, Bundle savedInstanceState) {
+    protected void onInitView(View view,  Bundle savedInstanceState) {
         SeekBar seed_h = getView(R.id.flow_seek_h);
         SeekBar seed_v = getView(R.id.flow_seek_v);
         SeekBar.OnSeekBarChangeListener listener = new SeekBar.OnSeekBarChangeListener() {

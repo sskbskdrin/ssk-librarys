@@ -21,7 +21,7 @@ public class TabHostFragment extends IFragment {
     }
 
     @Override
-    protected void onViewCreated(View view, Bundle arguments, Bundle savedInstanceState) {
+    protected void onInitView(View view,  Bundle savedInstanceState) {
         TabHostWidget tabHostWidget = getView(R.id.tab_host_tab_host);
         List<Class<? extends Fragment>> list = new ArrayList<>();
         list.add(TestFragment.class);
@@ -63,7 +63,7 @@ public class TabHostFragment extends IFragment {
         }
 
         @Override
-        protected void onViewCreated(View view, Bundle arguments, Bundle savedInstanceState) {
+        protected void onInitView(View view,  Bundle savedInstanceState) {
             TextView text = getView(R.id.simple_text);
             text.setTextSize(20 * getResources().getDisplayMetrics().density);
             text.setText("Test " + ++count);

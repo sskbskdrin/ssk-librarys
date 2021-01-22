@@ -18,7 +18,7 @@ abstract class BaseFragment extends IFragment implements SwipeRefreshListener {
     protected SwipeLayout mSwipeLayout;
 
     @Override
-    protected void onViewCreated(View rootView, Bundle arguments, Bundle savedInstanceState) {
+    protected void onInitView(View rootView,  Bundle savedInstanceState) {
         if (mRootView instanceof SwipeLayout) {
             mSwipeLayout = (SwipeLayout) mRootView;
         } else {

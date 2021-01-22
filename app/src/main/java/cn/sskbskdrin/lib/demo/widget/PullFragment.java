@@ -34,7 +34,7 @@ public class PullFragment extends IFragment {
     }
 
     @Override
-    protected void onViewCreated(View rootView, Bundle arguments, Bundle savedInstanceState) {
+    protected void onInitView(View rootView, Bundle savedInstanceState) {
         RecyclerView recyclerView = getView(R.id.pull_recycle);
         recyclerView.setLayoutManager(new LinearLayoutManager(rootView.getContext()));
         for (int i = 0; i < 20; i++) {
@@ -121,5 +121,6 @@ public class PullFragment extends IFragment {
         }, 1000));
 
         recyclerView.addItemDecoration(new DividerItemDecoration(getContext(), 1));
+        refreshLayout.setRefreshing();
     }
 }

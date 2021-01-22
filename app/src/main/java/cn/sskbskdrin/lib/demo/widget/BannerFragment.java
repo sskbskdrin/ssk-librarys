@@ -22,7 +22,7 @@ public class BannerFragment extends IFragment {
     }
 
     @Override
-    protected void onViewCreated(View rootView, Bundle arguments, Bundle savedInstanceState) {
+    protected void onInitView(View rootView,  Bundle savedInstanceState) {
         BannerView bannerView = getView(R.id.banner);
         bannerView.setAdapter(new SimpleAdapter<>(Utils.getSimpleList(6)));
         BannerIndicatorView indicatorView = getView(R.id.indicator);

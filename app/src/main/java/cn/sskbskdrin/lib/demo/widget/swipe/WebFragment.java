@@ -21,8 +21,8 @@ public class WebFragment extends BaseFragment {
     }
 
     @Override
-    protected void onViewCreated(View rootView, Bundle arguments, Bundle savedInstanceState) {
-        super.onViewCreated(rootView, arguments, savedInstanceState);
+    protected void onInitView(View rootView, Bundle savedInstanceState) {
+        super.onInitView(rootView, savedInstanceState);
         content = getView(R.id.web_content);
         content.setWebViewClient(new WebViewClient() {
             @Override
@@ -31,7 +31,7 @@ public class WebFragment extends BaseFragment {
             }
         });
         refreshTop();
-//        mSwipeLayout.setRefreshing();
+        mSwipeLayout.setRefreshing();
     }
 
     @Override

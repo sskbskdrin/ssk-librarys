@@ -38,7 +38,7 @@ public class HttpFragment extends IFragment {
     }
 
     @Override
-    protected void onViewCreated(View rootView, Bundle arguments, Bundle savedInstanceState) {
+    protected void onInitView(View rootView,  Bundle savedInstanceState) {
         resultView = getView(R.id.http_result);
         resultView.setMovementMethod(ScrollingMovementMethod.getInstance());
         urlView = getView(R.id.http_url);

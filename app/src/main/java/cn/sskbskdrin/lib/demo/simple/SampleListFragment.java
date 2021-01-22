@@ -42,14 +42,10 @@ public class SampleListFragment extends IFragment implements OnItemClickListener
     }
 
     @Override
-    protected void onViewCreated(View rootView, Bundle arguments, Bundle savedInstanceState) {
+    protected void onInitView(View rootView, Bundle savedInstanceState) {
         mListView = getView(R.id.simple_list);
         PullLayout pullLayout = getView(R.id.simple_pull);
         refreshHolder = pullLayout.getPullRefreshHolder();
-        List<Object> temp = null;
-        if (arguments != null) {
-            temp = (List<Object>) arguments.getSerializable(LIST_DATA);
-        }
         final LoadMoreAdapter adapter = new LoadMoreAdapter(list, 20) {
 
             @Override
