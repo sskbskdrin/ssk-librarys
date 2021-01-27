@@ -11,6 +11,10 @@ import java.lang.reflect.Type;
  * @author sskbskdrin
  */
 public final class HTTP {
+    public static final String METHOD_GET = IRequest.CONTENT_TYPE_GET;
+    public static final String METHOD_POST = IRequest.CONTENT_TYPE_FORM;
+    public static final String METHOD_POST_FILE = IRequest.CONTENT_TYPE_MULTIPART;
+    public static final String METHOD_POST_JSON = IRequest.CONTENT_TYPE_JSON;
 
     static {
         try {
@@ -23,64 +27,56 @@ public final class HTTP {
         return Config.INSTANCE;
     }
 
-    public static <V> IRequest<V> url(String url, Class<V> tClass, String contentType) {
-        return new HttpRequest<>(url, tClass, contentType);
+    public static <V> IRequest<V> url(String url, Type type, String method) {
+        return new HttpRequest<>(url, type, method);
     }
 
-    public static <V> IRequest<V> url(String url, TypeToken<V> token, String contentType) {
-        return new HttpRequest<>(url, token.getType(), contentType);
+    public static <V> IRequest<V> url(String url, Class<V> tClass, String method) {
+        return new HttpRequest<>(url, tClass, method);
     }
 
-    public static <V> IRequest<V> url(String url, IParseResponse<V> iParseResponse, String contentType) {
-        return new HttpRequest<>(url, iParseResponse, contentType);
+    public static <V> IRequest<V> url(String url, TypeToken<V> token, String method) {
+        return new HttpRequest<>(url, token.getType(), method);
+    }
+
+    public static <V> IRequest<V> get(String url, Type type) {
+        return url(url, type, METHOD_GET);
+    }
+
+    public static <V> IRequest<V> get(String url, Class<V> clazz) {
+        return url(url, clazz, METHOD_GET);
     }
 
     public static <V> IRequest<V> get(String url, TypeToken<V> token) {
-        return url(url, token, IRequest.CONTENT_TYPE_GET);
-    }
-
-    public static <V> IRequest<V> get(String url, IParseResponse<V> iParseResponse) {
-        return url(url, iParseResponse, IRequest.CONTENT_TYPE_GET);
+        return url(url, token, METHOD_GET);
     }
 
     public static <V> IRequest<V> post(String url, Class<V> tClass) {
-        return url(url, tClass, IRequest.CONTENT_TYPE_FORM);
+        return url(url, tClass, METHOD_POST);
     }
 
     public static <V> IRequest<V> post(String url, TypeToken<V> token) {
-        return url(url, token, IRequest.CONTENT_TYPE_FORM);
-    }
-
-    public static <V> IRequest<V> post(String url, IParseResponse<V> iParseResponse) {
-        return url(url, iParseResponse, IRequest.CONTENT_TYPE_FORM);
+        return url(url, token, METHOD_POST);
     }
 
     public static <V> IRequest<V> postJson(String url, Class<V> tClass) {
-        return url(url, tClass, IRequest.CONTENT_TYPE_JSON);
+        return url(url, tClass, METHOD_POST_JSON);
     }
 
     public static <V> IRequest<V> postJson(String url, TypeToken<V> token) {
-        return url(url, token, IRequest.CONTENT_TYPE_JSON);
-    }
-
-    public static <V> IRequest<V> postJson(String url, IParseResponse<V> iParseResponse) {
-        return url(url, iParseResponse, IRequest.CONTENT_TYPE_JSON);
+        return url(url, token, METHOD_POST_JSON);
     }
 
     public static <V> IRequest<V> postFile(String url, Class<V> tClass) {
-        return url(url, tClass, IRequest.CONTENT_TYPE_MULTIPART);
+        return url(url, tClass, METHOD_POST_FILE);
     }
 
     public static <V> IRequest<V> postFile(String url, TypeToken<V> token) {
-        return url(url, token, IRequest.CONTENT_TYPE_MULTIPART);
-    }
-
-    public static <V> IRequest<V> postFile(String url, IParseResponse<V> iParseResponse) {
-        return url(url, iParseResponse, IRequest.CONTENT_TYPE_MULTIPART);
+        return url(url, token, METHOD_POST_FILE);
     }
 
     public static IRequest<File> download(String url, String filePath) {
-        return new HttpRequest<>(url, new FileParse(filePath));
+        return url(url, File.class, METHOD_GET).parseResponse(new FileParse(filePath));
     }
 
     public static IParseResponse<String> STRING_PARSE_RESPONSE = new IParseResponse<String>() {

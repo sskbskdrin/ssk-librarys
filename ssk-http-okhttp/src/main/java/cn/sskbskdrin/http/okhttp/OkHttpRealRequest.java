@@ -119,7 +119,7 @@ public class OkHttpRealRequest implements IRealRequest {
         return deliverRequest(request, buildRequest(request, "POST", body, null));
     }
 
-    private Request buildRequest(IRequestBody iRequest, String method, RequestBody requestBody, String tag) throws Exception {
+    protected Request buildRequest(IRequestBody iRequest, String method, RequestBody requestBody, String tag) throws Exception {
         Request.Builder builder = new Request.Builder().url(iRequest.getUrl())
             .headers(Headers.of(iRequest.getHeader()));
         if (tag != null) {
@@ -128,7 +128,7 @@ public class OkHttpRealRequest implements IRealRequest {
         return builder.method(method, requestBody).build();
     }
 
-    private synchronized IResponse deliverRequest(IRequestBody iRequest, final Request request) throws Exception {
+    protected synchronized IResponse deliverRequest(IRequestBody iRequest, final Request request) throws Exception {
         if (HTTP.getConfig().isOpenLog()) {
             Log.d(TAG, "request url======>>" + request.url());
             Log.d(TAG, "request header===>>" + request.headers().toString().replaceAll("\n", ""));
@@ -154,7 +154,7 @@ public class OkHttpRealRequest implements IRealRequest {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         if (call != null) {
             call.cancel();
         }

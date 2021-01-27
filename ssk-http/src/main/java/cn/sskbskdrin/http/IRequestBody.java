@@ -39,5 +39,17 @@ public interface IRequestBody {
      */
     long getReadTimeout();
 
+    /**
+     * 获取需要缓存的时间
+     *
+     * @return 缓存时间，小于等于0时不缓存
+     */
+    long getCacheTimeout();
+
+    /**
+     * 发布下载进度
+     *
+     * @param progress 进度
+     */
     void publishProgress(float progress);
 }

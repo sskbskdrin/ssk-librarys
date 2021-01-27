@@ -15,7 +15,8 @@ public interface IRealRequest extends Closeable {
      * 发起get请求
      *
      * @param request 请求体，默认为HttpRequest
-     * @return
+     * @return 返回带有原始响应体的 {@link IResponse}
+     * @throws Exception 可能抛出异常
      */
     IResponse get(IRequestBody request) throws Exception;
 
@@ -23,7 +24,8 @@ public interface IRealRequest extends Closeable {
      * 发起post请求
      *
      * @param request 请求体，默认为HttpRequest
-     * @return
+     * @return 返回带有原始响应体的 {@link IResponse}
+     * @throws Exception 可能抛出异常
      */
     IResponse post(IRequestBody request) throws Exception;
 
@@ -31,7 +33,8 @@ public interface IRealRequest extends Closeable {
      * 发起post json请求
      *
      * @param request 请求体，默认为HttpRequest
-     * @return
+     * @return 返回带有原始响应体的 {@link IResponse}
+     * @throws Exception 可能抛出异常
      */
     IResponse postJson(IRequestBody request) throws Exception;
 
@@ -39,7 +42,8 @@ public interface IRealRequest extends Closeable {
      * 发起post file请求
      *
      * @param request 请求体，默认为HttpRequest
-     * @return
+     * @return 返回带有原始响应体的 {@link IResponse}
+     * @throws Exception 可能抛出异常
      */
     IResponse postFile(IRequestBody request) throws Exception;
 

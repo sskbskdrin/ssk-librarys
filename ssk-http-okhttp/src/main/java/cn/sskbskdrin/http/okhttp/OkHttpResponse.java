@@ -94,4 +94,9 @@ class OkHttpResponse implements IResponse {
     private boolean check() {
         return response != null && response.body() != null;
     }
+
+    @Override
+    public Response getRawResponse() {
+        return response;
+    }
 }

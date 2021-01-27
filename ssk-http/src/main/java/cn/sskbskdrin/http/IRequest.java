@@ -83,6 +83,14 @@ public interface IRequest<V> extends Closeable {
     IRequest<V> readTimeout(long time);
 
     /**
+     * 设置缓存时间
+     *
+     * @param second 缓存时间，单位为s，小于等于0时不缓存
+     * @return IRequest
+     */
+    IRequest<V> cacheTimeout(long second);
+
+    /**
      * 设置请求的tag信息
      *
      * @param tag tag名称

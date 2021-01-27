@@ -16,6 +16,7 @@ public interface IResponse extends Closeable {
      * 返回byte数据
      *
      * @return 数据数组
+     * @throws IOException 可能抛出异常
      */
     byte[] bytes() throws IOException;
 
@@ -23,6 +24,7 @@ public interface IResponse extends Closeable {
      * 返回数据转字符串
      *
      * @return 返回的字符串
+     * @throws IOException 可能抛出异常
      */
     String string() throws IOException;
 
@@ -39,4 +41,6 @@ public interface IResponse extends Closeable {
     Map<String, List<String>> getHeaders();
 
     long getContentLength();
+
+    Object getRawResponse();
 }

@@ -2,7 +2,6 @@ package cn.sskbskdrin.http;
 
 import android.util.Log;
 
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +35,7 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody {
     private final String mUrl;
     private long readTimeout = -1;
     private long connectedTimeout = -1;
+    private long cacheTimeout = -1;
 
     private final AtomicBoolean isCancel = new AtomicBoolean(false);
     private Type mType;
@@ -45,19 +45,6 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody {
 
     HttpRequest(String url, Type type) {
         this(url, type, CONTENT_TYPE_GET);
-    }
-
-    HttpRequest(String url, IParseResponse<V> iParseResponse) {
-        this(url, iParseResponse, CONTENT_TYPE_GET);
-    }
-
-    HttpRequest(String url, IParseResponse<V> iParse, String contentType) {
-        mUrl = Config.fixUrl(url);
-        mParseResponse = iParse;
-        mContentType = contentType;
-        if (iParse != null) {
-            mType = ((ParameterizedType) iParse.getClass().getGenericInterfaces()[0]).getActualTypeArguments()[0];
-        }
     }
 
     HttpRequest(String url, Type type, String contentType) {
@@ -99,6 +86,12 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody {
     @Override
     public IRequest<V> readTimeout(long ms) {
         readTimeout = ms;
+        return this;
+    }
+
+    @Override
+    public IRequest<V> cacheTimeout(long second) {
+        cacheTimeout = second;
         return this;
     }
 
@@ -360,6 +353,11 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody {
     @Override
     public long getConnectedTimeout() {
         return connectedTimeout < 0 ? getConfig().connectedTimeout : connectedTimeout;
+    }
+
+    @Override
+    public long getCacheTimeout() {
+        return cacheTimeout;
     }
 
     @Override

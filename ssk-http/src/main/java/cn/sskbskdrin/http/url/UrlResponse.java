@@ -112,4 +112,9 @@ class UrlResponse implements IResponse {
             connection = null;
         }
     }
+
+    @Override
+    public UrlResponse getRawResponse() {
+        return this;
+    }
 }
