@@ -1,21 +1,22 @@
 package cn.sskbskdrin.flow;
 
+import java.io.Closeable;
+
 /**
  * Created by keayuan on 2020/8/21.
  *
  * @author keayuan
  */
-public interface IFlow {
+public interface IFlow<L> extends Closeable {
     /**
      * 运行在主线程
      *
      * @param p    Process处理器
      * @param args process参数
      * @param <T>  process参数返回值类型
-     * @param <L>  前一次执行返回的结果
      * @return process计算结果
      */
-    <T, L> IFlow main(IProcess<T, L> p, Object... args);
+    <T> IFlow<T> main(IProcess<T, L> p, Object... args);
 
     /**
      * 运行在主线程
@@ -24,10 +25,9 @@ public interface IFlow {
      * @param p    Process处理器
      * @param args process参数
      * @param <T>  process参数返回值类型
-     * @param <L>  前一次执行返回的结果
      * @return process计算结果
      */
-    <T, L> IFlow main(String tag, IProcess<T, L> p, Object... args);
+    <T> IFlow<T> main(String tag, IProcess<T, L> p, Object... args);
 
     /**
      * 运行在io线程
@@ -35,10 +35,9 @@ public interface IFlow {
      * @param p    Process处理器
      * @param args process参数
      * @param <T>  process参数返回值类型
-     * @param <L>  前一次执行返回的结果
      * @return process计算结果
      */
-    <T, L> IFlow io(IProcess<T, L> p, Object... args);
+    <T> IFlow<T> io(IProcess<T, L> p, Object... args);
 
     /**
      * 运行在io线程
@@ -47,13 +46,14 @@ public interface IFlow {
      * @param p    Process处理器
      * @param args process参数
      * @param <T>  process参数返回值类型
-     * @param <L>  前一次执行返回的结果
      * @return process计算结果
      */
-    <T, L> IFlow io(String tag, IProcess<T, L> p, Object... args);
+    <T> IFlow<T> io(String tag, IProcess<T, L> p, Object... args);
 
     void remove(String tag);
 
-    void removeAll();
+    Closeable start();
 
+    @Override
+    void close();
 }
