@@ -51,6 +51,10 @@ public final class HTTP {
         return url(url, token, METHOD_GET);
     }
 
+    public static <V> IRequest<V> post(String url, Type tClass) {
+        return url(url, tClass, METHOD_POST);
+    }
+
     public static <V> IRequest<V> post(String url, Class<V> tClass) {
         return url(url, tClass, METHOD_POST);
     }
@@ -59,12 +63,20 @@ public final class HTTP {
         return url(url, token, METHOD_POST);
     }
 
+    public static <V> IRequest<V> postJson(String url, Type tClass) {
+        return url(url, tClass, METHOD_POST_JSON);
+    }
+
     public static <V> IRequest<V> postJson(String url, Class<V> tClass) {
         return url(url, tClass, METHOD_POST_JSON);
     }
 
     public static <V> IRequest<V> postJson(String url, TypeToken<V> token) {
         return url(url, token, METHOD_POST_JSON);
+    }
+
+    public static <V> IRequest<V> postFile(String url, Type tClass) {
+        return url(url, tClass, METHOD_POST_FILE);
     }
 
     public static <V> IRequest<V> postFile(String url, Class<V> tClass) {

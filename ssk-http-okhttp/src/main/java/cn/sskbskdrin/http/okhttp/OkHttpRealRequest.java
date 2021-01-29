@@ -16,6 +16,8 @@ import cn.sskbskdrin.http.IRealRequestFactory;
 import cn.sskbskdrin.http.IRequest;
 import cn.sskbskdrin.http.IRequestBody;
 import cn.sskbskdrin.http.IResponse;
+import okhttp3.Cache;
+import okhttp3.CacheControl;
 import okhttp3.Call;
 import okhttp3.FormBody;
 import okhttp3.Headers;
@@ -24,6 +26,7 @@ import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 import okio.Buffer;
 
 /**
@@ -41,7 +44,7 @@ public class OkHttpRealRequest implements IRealRequest {
         }
     };
 
-    private Call call;
+    protected Call call;
 
     static {
         HTTP.getConfig().setRealRequestFactory(factory);
@@ -49,12 +52,17 @@ public class OkHttpRealRequest implements IRealRequest {
     }
 
     private static OkHttpClient mOkHttpClient;
+    private static Cache mCache;
 
     public static void setOkHttpClient(OkHttpClient client) {
         mOkHttpClient = client;
         if (mOkHttpClient == null) {
             mOkHttpClient = new OkHttpClient();
         }
+    }
+
+    public static void setCache(Cache cache) {
+        mCache = cache;
     }
 
     @Override
@@ -125,6 +133,10 @@ public class OkHttpRealRequest implements IRealRequest {
         if (tag != null) {
             builder.tag(tag);
         }
+        if (iRequest.getCacheTimeout() >= 0) {
+            builder.cacheControl(new CacheControl.Builder().maxAge((int) iRequest.getCacheTimeout(), TimeUnit.SECONDS)
+                .build());
+        }
         return builder.method(method, requestBody).build();
     }
 
@@ -143,14 +155,20 @@ public class OkHttpRealRequest implements IRealRequest {
                 Log.d(TAG, "request body=====>>" + buffer.readUtf8());
             }
         }
-        call = mOkHttpClient.newBuilder()
+        OkHttpClient.Builder builder = mOkHttpClient.newBuilder()
             .retryOnConnectionFailure(true)
             .connectTimeout(iRequest.getConnectedTimeout(), TimeUnit.MILLISECONDS)
             .readTimeout(iRequest.getReadTimeout(), TimeUnit.MILLISECONDS)
-            .retryOnConnectionFailure(true)
-            .build()
-            .newCall(request);
-        return new OkHttpResponse(call.execute());
+            .retryOnConnectionFailure(true);
+        if (mCache != null) {
+            builder.cache(mCache);
+        }
+        call = builder.build().newCall(request);
+        return generateResponse(call.execute());
+    }
+
+    protected IResponse generateResponse(Response response) {
+        return new OkHttpResponse(response);
     }
 
     @Override

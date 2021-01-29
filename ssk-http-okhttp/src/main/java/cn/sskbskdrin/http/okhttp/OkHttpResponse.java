@@ -15,18 +15,18 @@ import okhttp3.Response;
  *
  * @author keayuan
  */
-class OkHttpResponse implements IResponse {
+public class OkHttpResponse implements IResponse {
 
     private Response response;
     private String code;
     private String msg;
     private Throwable throwable;
 
-    OkHttpResponse(Response response) {
+    public OkHttpResponse(Response response) {
         this.response = response;
     }
 
-    OkHttpResponse(String code, String desc, Exception e) {
+    public OkHttpResponse(String code, String desc, Exception e) {
         this.code = code;
         this.msg = desc;
         this.throwable = e;
