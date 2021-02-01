@@ -84,7 +84,7 @@ public class HttpFragment extends IFragment {
         IRequest<String> request = null;
         switch (String.valueOf(methodView.getSelectedItem())) {
             case "GET":
-                request = HTTP.get(url, HTTP.STRING_PARSE_RESPONSE);
+                request = HTTP.get(url, String.class);
                 break;
             case "POST":
                 request = HTTP.post(url, String.class);

@@ -3,6 +3,7 @@ package cn.sskbskdrin.lib.demo;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ListView;
 
 import java.io.Serializable;
@@ -11,6 +12,7 @@ import java.util.List;
 
 import androidx.fragment.app.FragmentActivity;
 import cn.sskbskdrin.base.IA;
+import cn.sskbskdrin.flow.FlowProcess;
 import cn.sskbskdrin.lib.demo.simple.SampleListFragment;
 import cn.sskbskdrin.lib.demo.simple.SimpleAdapter;
 import cn.sskbskdrin.lib.demo.tool.HttpFragment;
@@ -57,6 +59,27 @@ public class MainActivity extends FragmentActivity implements IA {
                 openActivity(CommonFragmentActivity.class, bundle);
             }
         });
+        for (int i = 0; i < 30; i++) {
+            final int id = i;
+            FlowProcess.create("1").io((flowProcess, last, params) -> {
+                Log.d(TAG, "process: " + Thread.currentThread().getName() + " " + id + " " + last);
+                return 2;
+            }).main((flowProcess, last, params) -> {
+                Log.d(TAG, "process: " + Thread.currentThread().getName() + " " + id + " " + last);
+                return 3;
+            }).io("", (flowProcess, last, params) -> {
+                Log.d(TAG, "process: " + Thread.currentThread().getName() + " " + id + " " + last);
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return "s+" + last;
+            }).main((flowProcess, last, params) -> {
+                Log.d(TAG, "process: " + Thread.currentThread().getName() + " " + id + " " + last);
+                return null;
+            }).start();
+        }
     }
 
     @Override

@@ -97,25 +97,36 @@ install {
         }
     }
 }
-
 // This generates sources.jar
 task sourcesJar(type: Jar) {
+    println("sourcesJar")
     from android.sourceSets.main.java.srcDirs
     classifier = 'sources'
 }
 
 task javadoc(type: Javadoc) {
+    println("task javadoc")
+    options {
+        encoding "UTF-8"
+        charSet 'UTF-8'
+        author true
+        version proVersion
+        links "http://docs.oracle.com/javase/8/docs/api"
+        title proName
+    }
     source = android.sourceSets.main.java.srcDirs
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
+    println("javadocJar")
     classifier = 'javadoc'
     from javadoc.destinationDir
 }
 
 if (proPkgExt == 'jar') {
-    task makeJar(type: Jar) {
+    task makeJar(type: Jar, dependsOn: assemble) {
+        println("makeJar")
         delete 'build/libs/'
         from("build/intermediates/javac/release/classes/$proPkg")
         into proPkg
@@ -125,22 +136,11 @@ if (proPkgExt == 'jar') {
 }
 
 artifacts {
-    archives javadocJar
+    println("artifacts")
     archives sourcesJar
+    archives javadocJar
     if (proPkgExt == 'jar') {
         archives makeJar
-    }
-}
-
-// javadoc configuration
-javadoc {
-    options {
-        encoding "UTF-8"
-        charSet 'UTF-8'
-        author true
-        version proVersion
-        links "http://docs.oracle.com/javase/8/docs/api"
-        title proName
     }
 }
 
