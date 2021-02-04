@@ -77,7 +77,6 @@ public class FlowProcess<P> implements IFlow<P>, Runnable {
 
     private FlowProcess(P first) {
         lastResult = first;
-        tail = head = new Node<>(null, null, true);
     }
 
     @Override
@@ -91,11 +90,13 @@ public class FlowProcess<P> implements IFlow<P>, Runnable {
             }
         }
         mLock.lock();
-        head = (Node<P, ?>) head.next;
         if (head != null) {
-            execute(this, head.isMain);
-        } else {
-            tail = null;
+            head = (Node<P, ?>) head.next;
+            if (head != null) {
+                execute(this, head.isMain);
+            } else {
+                tail = null;
+            }
         }
         mLock.unlock();
     }
@@ -156,7 +157,7 @@ public class FlowProcess<P> implements IFlow<P>, Runnable {
 
     @Override
     public Closeable start() {
-        run();
+        execute(this, head.isMain);
         return this;
     }
 
@@ -164,8 +165,11 @@ public class FlowProcess<P> implements IFlow<P>, Runnable {
     public void close() {
         isClose = true;
         mLock.lock();
-        head.next = null;
-        tail = head;
+        if (head != null) {
+            head.next = null;
+        }
+        head = null;
+        tail = null;
         mLock.unlock();
     }
 

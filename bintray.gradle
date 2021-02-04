@@ -125,7 +125,7 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 }
 
 if (proPkgExt == 'jar') {
-    task makeJar(type: Jar, dependsOn: assemble) {
+    task makeJar(type: Jar) {
         println("makeJar")
         delete 'build/libs/'
         from("build/intermediates/javac/release/classes/$proPkg")
