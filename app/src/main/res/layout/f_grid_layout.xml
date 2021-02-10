@@ -5,7 +5,7 @@
 
     <cn.sskbskdrin.widget.GridLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="400dp"
         android:layout_margin="10dp"
         android:background="@color/gray_c"
         android:columnCount="3"
@@ -17,18 +17,20 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_columnSpan="2"
             android:layout_gravity="center_vertical"
+            android:startOffset="1"
             android:layout_margin="16dp"
             android:background="@color/main_color"
             android:text="2341" />
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_columnSpan="1"
             android:layout_margin="10dp"
             android:background="@color/main_color"
-            android:text="315468754767646976876464646315468754767646976876464646" />
+            android:text="3154646" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -37,7 +39,8 @@
             android:layout_gravity="bottom"
             android:background="@color/main_color"
             android:padding="10dp"
-            android:text="315468754767646976876464646315468754767646976876464646" />
+            android:startOffset="1"
+            android:text="315464766" />
 
         <TextView
             android:layout_width="match_parent"

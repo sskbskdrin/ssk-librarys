@@ -12,5 +12,6 @@
     <declare-styleable name="GridLayout_Layout">
         <attr name="android:layout_columnSpan" />
         <attr name="android:layout_gravity" />
+        <attr name="android:startOffset" />
     </declare-styleable>
 </resources>

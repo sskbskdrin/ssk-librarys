@@ -63,6 +63,8 @@ public class GridLayout extends ViewGroup {
         return (gridWidth + horizontalSpacing) * span - horizontalSpacing;
     }
 
+    Rect[] pos = null;
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int sizeWidth = MeasureSpec.getSize(widthMeasureSpec);
@@ -72,41 +74,41 @@ public class GridLayout extends ViewGroup {
         int gridWidth =
             (sizeWidth - getPaddingLeft() - getPaddingRight() - (columnCount - 1) * horizontalSpacing) / columnCount;
         int count = getChildCount();
-        int span = 0;
+        int currentSpan = 0;
         int heightTotal = getPaddingTop() + getPaddingBottom();
         int lineHeight = 0;
         for (int i = 0; i < count; i++) {
             View child = getChildAt(i);
             LayoutParams lp = (LayoutParams) child.getLayoutParams();
-            if (lp.columnSpan > columnCount) {
-                lp.columnSpan = columnCount;
+            if (lp.columnSpan > columnCount) lp.columnSpan = columnCount;
+            if (lp.columnSpan < 1) lp.columnSpan = 1;
+            if (lp.offsetSpan <= 0) lp.offsetSpan = 0;
+            else {
+                currentSpan += lp.offsetSpan;
+                currentSpan %= columnCount;
             }
-            if (lp.columnSpan < 1) {
-                lp.columnSpan = 1;
-            }
-            if (lp.columnSpan + span > columnCount) {
-                span = 0;
-                heightTotal += lineHeight + verticalSpacing;
+
+            if (lp.columnSpan + currentSpan > columnCount) {
+                lp.offsetSpan = columnCount - currentSpan;
+                currentSpan = 0;
+                if (lineHeight > 0) {
+                    heightTotal += lineHeight + verticalSpacing;
+                }
                 lineHeight = 0;
             }
-            int mode;
+            int mode = MeasureSpec.EXACTLY;
+            int width = getItemWidth(gridWidth, lp.columnSpan) - lp.leftMargin - lp.rightMargin;
             if (lp.width == LayoutParams.WRAP_CONTENT) {
                 mode = MeasureSpec.AT_MOST;
-            } else {
-                mode = MeasureSpec.EXACTLY;
-            }
-            int width;
-            if (lp.width >= 0) {
+            } else if (lp.width >= 0) {
                 width = lp.width;
-            } else {
-                width = getItemWidth(gridWidth, lp.columnSpan) - lp.leftMargin - lp.rightMargin;
             }
             child.measure(MeasureSpec.makeMeasureSpec(width, mode), MeasureSpec.makeMeasureSpec(heightMeasureSpec,
                 MeasureSpec.UNSPECIFIED));
-            span += lp.columnSpan;
+            currentSpan += lp.columnSpan;
             lineHeight = Math.max(lineHeight, child.getMeasuredHeight() + lp.topMargin + lp.bottomMargin);
         }
-        if (span > 0) {
+        if (currentSpan > 0) {
             heightTotal += lineHeight;
         }
         setMeasuredDimension(MeasureSpec.makeMeasureSpec(sizeWidth, MeasureSpec.EXACTLY),
@@ -122,20 +124,22 @@ public class GridLayout extends ViewGroup {
 
         int gridWidth =
             (r - l - getPaddingLeft() - getPaddingRight() - (columnCount - 1) * horizontalSpacing) / columnCount;
+
         int lineHeight = 0;
         int currentColumn = 0;
         int startChild = 0;
         for (int i = 0; i < count; i++) {
             View child = getChildAt(i);
             LayoutParams lp = (LayoutParams) child.getLayoutParams();
-            if (columnCount - currentColumn < lp.columnSpan) {
+            if (currentColumn + lp.columnSpan + lp.offsetSpan > columnCount) {
                 layoutRow(startChild, i, gridWidth, top, top + lineHeight);
                 top += lineHeight + verticalSpacing;
                 startChild = i;
                 lineHeight = 0;
-                currentColumn = 0;
+                currentColumn += lp.offsetSpan;
+                currentColumn %= columnCount;
             }
-            currentColumn += lp.columnSpan;
+            currentColumn += lp.columnSpan + lp.offsetSpan;
             lineHeight = Math.max(lineHeight, child.getMeasuredHeight() + lp.topMargin + lp.bottomMargin);
         }
         if (startChild < count) {
@@ -143,24 +147,28 @@ public class GridLayout extends ViewGroup {
         }
     }
 
+    int[] rowLeft;
     Rect[] lineTop;
 
-    void layoutRow(int start, int end, int gridWidth, int top, int bottom) {
-        int column = 0;
+    private void layoutRow(int start, int end, int gridWidth, int top, int bottom) {
+        int left = getPaddingLeft();
         for (int i = start; i < end; i++) {
             View child = getChildAt(i);
             LayoutParams lp = (LayoutParams) child.getLayoutParams();
-            int left = getPaddingLeft() + column * (gridWidth + horizontalSpacing);
-            layoutChildren(child, left, top, left + getItemWidth(gridWidth, lp.columnSpan), bottom);
-            lineTop[i] = new Rect(left, top, left + getItemWidth(gridWidth, lp.columnSpan), bottom);
-            column += lp.columnSpan;
+            int column = lp.columnSpan;
+            if (lp.offsetSpan > 0) {
+                left += lp.offsetSpan * (gridWidth + horizontalSpacing);
+            }
+            layoutChildren(child, left, top, left + getItemWidth(gridWidth, column), bottom);
+            lineTop[i] = new Rect(left, top, left + getItemWidth(gridWidth, column), bottom);
+            left += column * (gridWidth + horizontalSpacing);
         }
     }
 
     private Rect rect = new Rect();
     private Rect out = new Rect();
 
-    void layoutChildren(View child, int left, int top, int right, int bottom) {
+    private void layoutChildren(View child, int left, int top, int right, int bottom) {
         if (child.getVisibility() != GONE) {
             final LayoutParams lp = (LayoutParams) child.getLayoutParams();
 
@@ -188,7 +196,9 @@ public class GridLayout extends ViewGroup {
         paint.setStrokeWidth(3);
         paint.setStyle(Paint.Style.STROKE);
         for (Rect r : lineTop) {
-            canvas.drawRect(r, paint);
+            if (r != null) {
+                canvas.drawRect(r, paint);
+            }
         }
     }
 
@@ -210,6 +220,7 @@ public class GridLayout extends ViewGroup {
     public static class LayoutParams extends MarginLayoutParams {
 
         private int columnSpan = 1;
+        private int offsetSpan = 0;
         private int rowSpan = 1;
         private int gravity = GRAVITY_DEFAULT;
 
@@ -217,6 +228,7 @@ public class GridLayout extends ViewGroup {
             super(c, attrs);
             TypedArray a = c.obtainStyledAttributes(attrs, R.styleable.GridLayout_Layout);
             columnSpan = a.getInt(R.styleable.GridLayout_Layout_android_layout_columnSpan, 1);
+            offsetSpan = a.getInt(R.styleable.GridLayout_Layout_android_startOffset, 0);
             gravity = a.getInt(R.styleable.GridLayout_Layout_android_layout_gravity, GRAVITY_DEFAULT);
             a.recycle();
         }
