@@ -18,6 +18,7 @@ import cn.sskbskdrin.lib.demo.simple.SimpleAdapter;
 import cn.sskbskdrin.lib.demo.tool.HttpFragment;
 import cn.sskbskdrin.lib.demo.widget.BannerFragment;
 import cn.sskbskdrin.lib.demo.widget.FlowFragment;
+import cn.sskbskdrin.lib.demo.widget.GridFragment;
 import cn.sskbskdrin.lib.demo.widget.PickerFragment;
 import cn.sskbskdrin.lib.demo.widget.PullFragment;
 import cn.sskbskdrin.lib.demo.widget.SwitchButtonFragment;
@@ -41,6 +42,7 @@ public class MainActivity extends FragmentActivity implements IA {
         mList.add(new ClassItem(PullFragment.class, "PullLayout"));
         mList.add(new ClassItem(WebFragment.class, "SwipeWebLayout"));
         mList.add(new ClassItem(ScrollFragment.class, "SwipeScrollLayout"));
+        mList.add(new ClassItem(GridFragment.class, "GridLayout"));
     }
 
     @Override

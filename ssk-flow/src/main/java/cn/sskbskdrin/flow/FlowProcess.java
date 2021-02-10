@@ -86,7 +86,10 @@ public class FlowProcess<P> implements IFlow<P>, Runnable {
         lastResult = node.process(this, (P) lastResult);
         if (!node.isMain) {
             while (executor.getQueue().size() < CPU_COUNT && !queue.isEmpty()) {
-                execute(queue.poll(), false);
+                Runnable runnable = queue.poll();
+                if (runnable != null) {
+                    execute(runnable, false);
+                }
             }
         }
         mLock.lock();

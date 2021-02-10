@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <cn.sskbskdrin.widget.GridLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="@color/gray_c"
+        android:columnCount="3"
+        android:gravity="center"
+        android:horizontalSpacing="10dp"
+        android:padding="8dp"
+        android:verticalSpacing="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="16dp"
+            android:background="@color/main_color"
+            android:text="2341" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_columnSpan="1"
+            android:layout_margin="10dp"
+            android:background="@color/main_color"
+            android:text="315468754767646976876464646315468754767646976876464646" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnSpan="1"
+            android:layout_gravity="bottom"
+            android:background="@color/main_color"
+            android:padding="10dp"
+            android:text="315468754767646976876464646315468754767646976876464646" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_columnSpan="2"
+            android:layout_margin="20dp"
+            android:background="@color/main_color"
+            android:text="fsfjslefhlshflsifjeeis;sljf4353534fjlsijflejsljfejj453liejfs;ljij;ijijj;ij;ijelifjslfijj" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_columnSpan="2"
+            android:layout_margin="20dp"
+            android:background="@color/main_color"
+            android:text="fsfjslefhlshflsifjeeis;sljf4353534fjlsijflejsljfejj453liejfs;ljij;ijijj;ij;ijelifjslfijj" />
+    </cn.sskbskdrin.widget.GridLayout>
+</FrameLayout>

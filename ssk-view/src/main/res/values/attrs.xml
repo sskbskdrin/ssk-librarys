@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="GridLayout">
+        <attr name="android:orientation" />
+        <attr name="android:gravity" />
+        <attr name="android:columnCount" />
+        <attr name="android:rowCount" />
+        <attr name="android:spacing" />
+        <attr name="android:horizontalSpacing" />
+        <attr name="android:verticalSpacing" />
+    </declare-styleable>
+    <declare-styleable name="GridLayout_Layout">
+        <attr name="android:layout_columnSpan" />
+        <attr name="android:layout_gravity" />
+    </declare-styleable>
+</resources>
