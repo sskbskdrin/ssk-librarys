@@ -5,24 +5,60 @@
 
     <cn.sskbskdrin.widget.GridLayout
         android:layout_width="wrap_content"
-        android:layout_height="400dp"
+        android:layout_height="wrap_content"
         android:layout_margin="10dp"
         android:background="@color/gray_c"
-        android:columnCount="3"
-        android:gravity="center"
-        android:horizontalSpacing="10dp"
+        android:columnCount="4"
         android:padding="8dp"
-        android:verticalSpacing="20dp">
+        android:spacing="10dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_columnSpan="2"
-            android:layout_gravity="center_vertical"
-            android:startOffset="1"
-            android:layout_margin="16dp"
+            android:layout_margin="12dp"
             android:background="@color/main_color"
+            android:startOffset="0"
             android:text="2341" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:background="@color/main_color"
+            android:startOffset="0"
+            android:text="2341" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:background="@color/main_color"
+            android:startOffset="0"
+            android:text="2341" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:background="@color/main_color"
+            android:startOffset="5"
+            android:text="2341" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:background="@color/main_color"
+            android:startOffset="4"
+            android:text="2341" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnSpan="4"
+            android:layout_margin="10dp"
+            android:background="@color/main_color"
+            android:text="31546843543546874644646" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -30,16 +66,31 @@
             android:layout_columnSpan="1"
             android:layout_margin="10dp"
             android:background="@color/main_color"
-            android:text="3154646" />
+            android:text="31546843543546874644646" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_columnSpan="1"
-            android:layout_gravity="bottom"
+            android:layout_margin="10dp"
+            android:background="@color/main_color"
+            android:text="31546843543546874644646" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnSpan="1"
+            android:layout_margin="10dp"
+            android:background="@color/main_color"
+            android:text="31546843543546874644646" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnSpan="1"
             android:background="@color/main_color"
             android:padding="10dp"
-            android:startOffset="1"
+            android:startOffset="2"
             android:text="315464766" />
 
         <TextView
@@ -48,6 +99,7 @@
             android:layout_columnSpan="2"
             android:layout_margin="20dp"
             android:background="@color/main_color"
+            android:startOffset="1"
             android:text="fsfjslefhlshflsifjeeis;sljf4353534fjlsijflejsljfejj453liejfs;ljij;ijijj;ij;ijelifjslfijj" />
 
         <TextView
@@ -56,6 +108,7 @@
             android:layout_columnSpan="2"
             android:layout_margin="20dp"
             android:background="@color/main_color"
+            android:startOffset="16"
             android:text="fsfjslefhlshflsifjeeis;sljf4353534fjlsijflejsljfejj453liejfs;ljij;ijijj;ij;ijelifjslfijj" />
     </cn.sskbskdrin.widget.GridLayout>
 </FrameLayout>

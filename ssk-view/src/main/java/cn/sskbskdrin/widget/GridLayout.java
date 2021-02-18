@@ -19,7 +19,7 @@ import cn.sskbskdrin.view.R;
  * @author keayuan
  */
 public class GridLayout extends ViewGroup {
-    private static int GRAVITY_DEFAULT = Gravity.NO_GRAVITY;
+    private static int GRAVITY_DEFAULT = Gravity.LEFT | Gravity.TOP;
     private static int HORIZONTAL = 0;
     private static int VERTICAL = 1;
 
@@ -59,11 +59,44 @@ public class GridLayout extends ViewGroup {
         a.recycle();
     }
 
+    private boolean debugDraw = true;
+    private Rect[] debugFrame;
+
+    public void debugDraw(boolean draw) {
+        debugDraw = draw;
+        requestLayout();
+    }
+
+    public void setColumnCount(int columnCount) {
+        if (columnCount < 1) return;
+        this.columnCount = columnCount;
+        requestLayout();
+    }
+
+    public void setGravity(int gravity) {
+        this.gravity = gravity;
+        requestLayout();
+    }
+
+    public void setHorizontalSpacing(int spacing) {
+        this.horizontalSpacing = spacing;
+        requestLayout();
+    }
+
+    public void setVerticalSpacing(int spacing) {
+        this.verticalSpacing = spacing;
+        requestLayout();
+    }
+
+    public void setSpacing(int horizontalSpacing, int verticalSpacing) {
+        this.horizontalSpacing = horizontalSpacing;
+        this.verticalSpacing = verticalSpacing;
+        requestLayout();
+    }
+
     private int getItemWidth(int gridWidth, int span) {
         return (gridWidth + horizontalSpacing) * span - horizontalSpacing;
     }
-
-    Rect[] pos = null;
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -83,18 +116,26 @@ public class GridLayout extends ViewGroup {
             if (lp.columnSpan > columnCount) lp.columnSpan = columnCount;
             if (lp.columnSpan < 1) lp.columnSpan = 1;
             if (lp.offsetSpan <= 0) lp.offsetSpan = 0;
-            else {
-                currentSpan += lp.offsetSpan;
-                currentSpan %= columnCount;
-            }
 
-            if (lp.columnSpan + currentSpan > columnCount) {
-                lp.offsetSpan = columnCount - currentSpan;
+            int remainSpan = columnCount - currentSpan;
+            lp.realOffsetSpan = 0;
+            if (lp.offsetSpan + lp.columnSpan > remainSpan) {
                 currentSpan = 0;
+                if (lp.offsetSpan >= remainSpan) {
+                    int tempOffset = lp.offsetSpan - remainSpan;
+                    tempOffset %= columnCount;
+                    if (tempOffset + lp.columnSpan > columnCount) {
+                        lp.realOffsetSpan = 0;
+                    } else {
+                        lp.realOffsetSpan = tempOffset;
+                    }
+                }
                 if (lineHeight > 0) {
                     heightTotal += lineHeight + verticalSpacing;
                 }
                 lineHeight = 0;
+            } else {
+                lp.realOffsetSpan = lp.offsetSpan;
             }
             int mode = MeasureSpec.EXACTLY;
             int width = getItemWidth(gridWidth, lp.columnSpan) - lp.leftMargin - lp.rightMargin;
@@ -105,10 +146,10 @@ public class GridLayout extends ViewGroup {
             }
             child.measure(MeasureSpec.makeMeasureSpec(width, mode), MeasureSpec.makeMeasureSpec(heightMeasureSpec,
                 MeasureSpec.UNSPECIFIED));
-            currentSpan += lp.columnSpan;
+            currentSpan += lp.columnSpan + lp.realOffsetSpan;
             lineHeight = Math.max(lineHeight, child.getMeasuredHeight() + lp.topMargin + lp.bottomMargin);
         }
-        if (currentSpan > 0) {
+        if (lineHeight > 0) {
             heightTotal += lineHeight;
         }
         setMeasuredDimension(MeasureSpec.makeMeasureSpec(sizeWidth, MeasureSpec.EXACTLY),
@@ -118,9 +159,14 @@ public class GridLayout extends ViewGroup {
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         int count = getChildCount();
+        if (count < 0) return;
         int top = getPaddingTop();
 
-        lineTop = new Rect[count];
+        if (debugDraw) {
+            if (debugFrame == null || debugFrame.length != count) {
+                debugFrame = new Rect[count];
+            }
+        }
 
         int gridWidth =
             (r - l - getPaddingLeft() - getPaddingRight() - (columnCount - 1) * horizontalSpacing) / columnCount;
@@ -133,13 +179,14 @@ public class GridLayout extends ViewGroup {
             LayoutParams lp = (LayoutParams) child.getLayoutParams();
             if (currentColumn + lp.columnSpan + lp.offsetSpan > columnCount) {
                 layoutRow(startChild, i, gridWidth, top, top + lineHeight);
-                top += lineHeight + verticalSpacing;
+                if (lineHeight > 0) {
+                    top += lineHeight + verticalSpacing;
+                }
                 startChild = i;
                 lineHeight = 0;
-                currentColumn += lp.offsetSpan;
-                currentColumn %= columnCount;
+                currentColumn = 0;
             }
-            currentColumn += lp.columnSpan + lp.offsetSpan;
+            currentColumn += lp.columnSpan + lp.realOffsetSpan;
             lineHeight = Math.max(lineHeight, child.getMeasuredHeight() + lp.topMargin + lp.bottomMargin);
         }
         if (startChild < count) {
@@ -147,21 +194,21 @@ public class GridLayout extends ViewGroup {
         }
     }
 
-    int[] rowLeft;
-    Rect[] lineTop;
-
     private void layoutRow(int start, int end, int gridWidth, int top, int bottom) {
         int left = getPaddingLeft();
-        for (int i = start; i < end; i++) {
-            View child = getChildAt(i);
+        while (start < end) {
+            View child = getChildAt(start++);
             LayoutParams lp = (LayoutParams) child.getLayoutParams();
             int column = lp.columnSpan;
-            if (lp.offsetSpan > 0) {
-                left += lp.offsetSpan * (gridWidth + horizontalSpacing);
+            if (lp.realOffsetSpan > 0) {
+                left += lp.realOffsetSpan * (gridWidth + horizontalSpacing);
             }
-            layoutChildren(child, left, top, left + getItemWidth(gridWidth, column), bottom);
-            lineTop[i] = new Rect(left, top, left + getItemWidth(gridWidth, column), bottom);
-            left += column * (gridWidth + horizontalSpacing);
+            int width = getItemWidth(gridWidth, column);
+            layoutChildren(child, left, top, left + width, bottom);
+            if (debugDraw) {
+                debugFrame[start - 1] = new Rect(left, top, left + width, bottom);
+            }
+            left += width + horizontalSpacing;
         }
     }
 
@@ -191,13 +238,15 @@ public class GridLayout extends ViewGroup {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        paint.setAntiAlias(true);
-        paint.setColor(Color.RED);
-        paint.setStrokeWidth(3);
-        paint.setStyle(Paint.Style.STROKE);
-        for (Rect r : lineTop) {
-            if (r != null) {
-                canvas.drawRect(r, paint);
+        if (debugDraw) {
+            paint.setAntiAlias(true);
+            paint.setColor(Color.RED);
+            paint.setStrokeWidth(3);
+            paint.setStyle(Paint.Style.STROKE);
+            for (Rect r : debugFrame) {
+                if (r != null) {
+                    canvas.drawRect(r, paint);
+                }
             }
         }
     }
@@ -221,15 +270,16 @@ public class GridLayout extends ViewGroup {
 
         private int columnSpan = 1;
         private int offsetSpan = 0;
+        private int realOffsetSpan = 0;
         private int rowSpan = 1;
-        private int gravity = GRAVITY_DEFAULT;
+        private int gravity = -1;
 
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
             TypedArray a = c.obtainStyledAttributes(attrs, R.styleable.GridLayout_Layout);
             columnSpan = a.getInt(R.styleable.GridLayout_Layout_android_layout_columnSpan, 1);
             offsetSpan = a.getInt(R.styleable.GridLayout_Layout_android_startOffset, 0);
-            gravity = a.getInt(R.styleable.GridLayout_Layout_android_layout_gravity, GRAVITY_DEFAULT);
+            gravity = a.getInt(R.styleable.GridLayout_Layout_android_layout_gravity, -1);
             a.recycle();
         }
 
