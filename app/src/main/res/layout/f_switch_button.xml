@@ -5,6 +5,10 @@
     android:orientation="vertical"
     android:padding="20dp">
 
+    <cn.sskbskdrin.lib.demo.widget.CubicBezierView
+        android:layout_width="match_parent"
+        android:layout_height="300dp" />
+
     <cn.sskbskdrin.widget.SwitchButton
         android:layout_width="match_parent"
         android:layout_height="40dp" />

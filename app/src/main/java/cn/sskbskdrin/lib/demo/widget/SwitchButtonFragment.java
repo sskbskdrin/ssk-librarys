@@ -22,7 +22,7 @@ public class SwitchButtonFragment extends IFragment {
     @Override
     protected void onInitView(View view,  Bundle savedInstanceState) {
         ViewGroup root = (ViewGroup) getRootView();
-        SwitchButton button = (SwitchButton) root.getChildAt(0);
+        SwitchButton button = (SwitchButton) root.getChildAt(1);
         button.setText("on", "off");
         button.setBackMeasureRatio(2);
         button.setThumbSize(200, 200);

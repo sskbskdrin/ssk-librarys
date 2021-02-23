@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--自定义圆形图片属性-->
+    <declare-styleable name="RoundImageView">
+        <attr name="android:strokeWidth" format="float" />
+        <attr name="android:strokeColor" format="color" />
+        <attr name="android:radius" format="dimension" />
+        <attr name="android:topLeftRadius" format="dimension" />
+        <attr name="android:topRightRadius" format="dimension" />
+        <attr name="android:bottomLeftRadius" format="dimension" />
+        <attr name="android:bottomRightRadius" format="dimension" />
+    </declare-styleable>
+    <declare-styleable name="RoundView">
+        <attr name="android:strokeWidth" format="float" />
+        <attr name="android:strokeColor" format="color" />
+        <attr name="android:radius" format="dimension" />
+        <attr name="android:topLeftRadius" format="dimension" />
+        <attr name="android:topRightRadius" format="dimension" />
+        <attr name="android:bottomLeftRadius" format="dimension" />
+        <attr name="android:bottomRightRadius" format="dimension" />
+    </declare-styleable>
+</resources>
