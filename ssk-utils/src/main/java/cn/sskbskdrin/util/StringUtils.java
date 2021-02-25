@@ -2,6 +2,7 @@ package cn.sskbskdrin.util;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,16 +53,27 @@ public class StringUtils {
         return (str == null || str.length() == 0);
     }
 
+    public static String join(CharSequence delimiter, Iterable tokens) {
+        final Iterator<?> it = tokens.iterator();
+        if (!it.hasNext()) {
+            return "";
+        }
+        final StringBuilder sb = new StringBuilder();
+        sb.append(it.next());
+        while (it.hasNext()) {
+            sb.append(delimiter);
+            sb.append(it.next());
+        }
+        return sb.toString();
+    }
+
     /**
      * compare two string
      *
-     * @param actual
-     * @param expected
-     * @return
-     * @see ObjectUtils#isEquals(Object, Object)
+     * @see ObjectUtils#equals(Object, Object)
      */
-    public static boolean isEquals(String actual, String expected) {
-        return ObjectUtils.isEquals(actual, expected);
+    public static boolean equals(String actual, String expected) {
+        return ObjectUtils.equals(actual, expected);
     }
 
     /**
@@ -73,27 +85,10 @@ public class StringUtils {
      * length(\"abc\") = 3;
      * </pre>
      *
-     * @param str
      * @return if str is null or empty, return 0, else return {@link CharSequence#length()}.
      */
     public static int length(CharSequence str) {
         return str == null ? 0 : str.length();
-    }
-
-    /**
-     * null Object to empty string
-     * <p>
-     * <pre>
-     * nullStrToEmpty(null) = &quot;&quot;;
-     * nullStrToEmpty(&quot;&quot;) = &quot;&quot;;
-     * nullStrToEmpty(&quot;aa&quot;) = &quot;aa&quot;;
-     * </pre>
-     *
-     * @param str
-     * @return
-     */
-    public static String nullStrToEmpty(Object str) {
-        return (str == null ? "" : (str instanceof String ? (String) str : str.toString()));
     }
 
     /**
@@ -107,9 +102,6 @@ public class StringUtils {
      * capitalizeFirstLetter("ab")     =   "Ab"
      * capitalizeFirstLetter("Abc")    =   "Abc"
      * </pre>
-     *
-     * @param str
-     * @return
      */
     public static String capitalizeFirstLetter(String str) {
         if (isEmpty(str)) {
@@ -117,8 +109,9 @@ public class StringUtils {
         }
 
         char c = str.charAt(0);
-        return (!Character.isLetter(c) || Character.isUpperCase(c)) ? str : String.valueOf(Character.toUpperCase(c))
-            + str.substring(1);
+        return (!Character.isLetter(c) || Character.isUpperCase(c)) ? str :
+            String.valueOf(Character.toUpperCase(c)) + str
+            .substring(1);
     }
 
     /**
@@ -130,10 +123,6 @@ public class StringUtils {
      * utf8Encode("aa")        =   "aa";
      * utf8Encode("啊啊啊啊")   = "%E5%95%8A%E5%95%8A%E5%95%8A%E5%95%8A";
      * </pre>
-     *
-     * @param str
-     * @return
-     * @throws UnsupportedEncodingException if an error occurs
      */
     public static String utf8Encode(String str) {
         if (!isEmpty(str) && str.getBytes().length != str.length()) {
@@ -148,10 +137,6 @@ public class StringUtils {
 
     /**
      * encoded in utf-8, if exception, return defaultReturn
-     *
-     * @param str
-     * @param defaultReturn
-     * @return
      */
     public static String utf8Encode(String str, String defaultReturn) {
         if (!isEmpty(str) && str.getBytes().length != str.length()) {
@@ -221,8 +206,10 @@ public class StringUtils {
      * @return
      */
     public static String htmlEscapeCharsToString(String source) {
-        return StringUtils.isEmpty(source) ? source : source.replaceAll("&lt;", "<").replaceAll("&gt;", ">")
-            .replaceAll("&amp;", "&").replaceAll("&quot;", "\"");
+        return StringUtils.isEmpty(source) ? source : source.replaceAll("&lt;", "<")
+            .replaceAll("&gt;", ">")
+            .replaceAll("&amp;", "&")
+            .replaceAll("&quot;", "\"");
     }
 
     /**

@@ -18,6 +18,7 @@ public class IOUtils {
 
     /**
      * Close closable object and wrap {@link IOException} with {@link RuntimeException}
+     *
      * @param closeable closeable object
      */
     public static void close(Closeable closeable) {
@@ -32,14 +33,14 @@ public class IOUtils {
 
     /**
      * Close closable and hide possible {@link IOException}
+     *
      * @param closeable closeable object
      */
     public static void closeQuietly(Closeable closeable) {
         if (closeable != null) {
             try {
                 closeable.close();
-            } catch (IOException e) {
-                // Ignored
+            } catch (IOException ignored) {
             }
         }
     }

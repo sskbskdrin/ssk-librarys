@@ -12,13 +12,14 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.annotation.Nullable;
+import cn.sskbskdrin.base.IView;
 
 /**
  * Created by keayuan on 2021/2/20.
  *
  * @author keayuan
  */
-public class CubicBezierView extends View {
+public class CubicBezierView extends View implements IView {
 
     public static final int[] colors = {Color.RED, Color.GRAY, Color.CYAN, Color.GREEN};
 

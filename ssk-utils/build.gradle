@@ -17,6 +17,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility = JAVA_SOURCE as float
+        targetCompatibility = JAVA_TARGET as float
+    }
 }
 
 dependencies {

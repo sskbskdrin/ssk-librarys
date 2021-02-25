@@ -13,7 +13,7 @@ import android.os.Bundle;
 public interface IA extends IWindow, IContext, IView, IPermission, IResource, IPost {
 
     @Override
-    Context context();
+    Context getContext();
 
     /**
      * 判断页面是否已经销毁

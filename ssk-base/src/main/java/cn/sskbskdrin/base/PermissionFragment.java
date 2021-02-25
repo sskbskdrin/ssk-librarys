@@ -29,6 +29,7 @@ public final class PermissionFragment extends Fragment {
         fragment.permission = new WeakReference<>(permission);
         Bundle bundle = new Bundle();
         bundle.putStringArray(KEY_PERMISSIONS, permissions);
+        bundle.putInt(KEY_CODE, requestCode);
         fragment.setArguments(bundle);
         Fragment temp = activity.getFragmentManager().findFragmentByTag(TAG);
         if (temp != null) {

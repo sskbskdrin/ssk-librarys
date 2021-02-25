@@ -85,7 +85,7 @@ public class MainActivity extends FragmentActivity implements IA {
     }
 
     @Override
-    public Context context() {
+    public Context getContext() {
         return this;
     }
 

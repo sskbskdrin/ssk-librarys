@@ -22,10 +22,12 @@ import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.io.File;
 import java.security.MessageDigest;
@@ -180,6 +182,37 @@ public class CommonUtils {
         return color;
     }
 
+    public static String getString(Context context, int resId, Object... args) {
+        if (context != null) {
+            return context.getString(resId, args);
+        }
+        return null;
+    }
+
+    public static void setDrawableSize(TextView view, int size) {
+        setDrawableSize(view, size, size);
+    }
+
+    public static void setDrawableSize(TextView view, int width, int height) {
+        if (view == null || width <= 0 || height <= 0) return;
+        Drawable[] drawables = view.getCompoundDrawables();
+        for (Drawable drawable : drawables) {
+            if (drawable != null) {
+                drawable.setBounds(0, 0, width, height);
+            }
+        }
+        view.setCompoundDrawables(drawables[0], drawables[1], drawables[2], drawables[3]);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (view instanceof CompoundButton) {
+                Drawable buttonDrawable = ((CompoundButton) view).getButtonDrawable();
+                if (buttonDrawable != null) {
+                    buttonDrawable.setBounds(0, 0, width, height);
+                    ((CompoundButton) view).setButtonDrawable(buttonDrawable);
+                }
+            }
+        }
+    }
+
     public static Drawable getDrawable(Context context, int resId) {
         Drawable drawable = null;
         if (context != null) {
@@ -189,9 +222,22 @@ public class CommonUtils {
                 drawable = context.getDrawable(resId);
             }
         }
+        if (drawable != null) {
+            drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+        }
         return drawable;
     }
 
+    public static Drawable getDrawable(Context context, int resId, int size) {
+        return getDrawable(context, resId, size, size);
+    }
+
+    public static Drawable getDrawable(Context context, int resId, int width, int height) {
+        Drawable drawable = getDrawable(context, resId);
+        if (drawable == null) return null;
+        drawable.setBounds(0, 0, width, height);
+        return drawable;
+    }
 
     public static float getScreenDensity(Context context) {
         return context.getResources().getDisplayMetrics().density;
@@ -221,8 +267,8 @@ public class CommonUtils {
      * 程序是否在前台运行
      */
     public static boolean isAppOnForeground(Context context) {
-        ActivityManager activityManager = (ActivityManager) context.getApplicationContext().getSystemService(Context
-            .ACTIVITY_SERVICE);
+        ActivityManager activityManager = (ActivityManager) context.getApplicationContext()
+            .getSystemService(Context.ACTIVITY_SERVICE);
         if (activityManager == null) {
             return false;
         }
@@ -232,8 +278,7 @@ public class CommonUtils {
         }
         String packageName = context.getApplicationContext().getPackageName();
         for (ActivityManager.RunningAppProcessInfo appProcess : appProcesses) {
-            if (appProcess.processName.equals(packageName) && appProcess.importance == ActivityManager
-                .RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+            if (appProcess.processName.equals(packageName) && appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
                 return true;
             }
         }
@@ -241,8 +286,8 @@ public class CommonUtils {
     }
 
     public static void showInputManager(EditText view) {
-        InputMethodManager manager = ((InputMethodManager) view.getContext().getSystemService(Context
-            .INPUT_METHOD_SERVICE));
+        InputMethodManager manager = ((InputMethodManager) view.getContext()
+            .getSystemService(Context.INPUT_METHOD_SERVICE));
         if (manager != null) {
             manager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
         }

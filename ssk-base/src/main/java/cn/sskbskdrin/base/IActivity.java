@@ -17,7 +17,7 @@ public class IActivity extends Activity implements IA {
     }
 
     @Override
-    public Context context() {
+    public Context getContext() {
         return this;
     }
 

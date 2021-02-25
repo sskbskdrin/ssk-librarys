@@ -1,6 +1,7 @@
 package cn.sskbskdrin.base;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.TypedValue;
@@ -10,6 +11,14 @@ import android.util.TypedValue;
  * 2020/3/27
  */
 public interface IResource extends IContext {
+
+    default Resources resources() {
+        Context context = context();
+        if (context != null) {
+            return context.getResources();
+        }
+        return null;
+    }
 
     default int color(int resId) {
         Context context = context();
@@ -37,6 +46,17 @@ public interface IResource extends IContext {
         return drawable;
     }
 
+    default Drawable drawable(int resId, int size) {
+        return drawable(resId, size, size);
+    }
+
+    default Drawable drawable(int resId, int width, int height) {
+        Drawable drawable = drawable(resId);
+        if (drawable == null) return null;
+        drawable.setBounds(0, 0, width, height);
+        return drawable;
+    }
+
     default String string(int resId, Object... args) {
         Context context = context();
         if (context != null) {
@@ -46,7 +66,6 @@ public interface IResource extends IContext {
     }
 
     default int dp2px(float dp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context().getResources()
-            .getDisplayMetrics());
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, resources().getDisplayMetrics());
     }
 }

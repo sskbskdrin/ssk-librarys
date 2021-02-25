@@ -1,7 +1,5 @@
 package cn.sskbskdrin.util;
 
-import android.text.TextUtils;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,7 +13,7 @@ public class JSONUtils {
 
     public static JSONObject generateJSONObject(String string) {
         JSONObject result = null;
-        if (!TextUtils.isEmpty(string)) {
+        if (!StringUtils.isEmpty(string)) {
             try {
                 result = new JSONObject(string);
             } catch (JSONException e) {
@@ -30,7 +28,7 @@ public class JSONUtils {
 
     public static JSONArray generateJSONArray(String string) {
         JSONArray result = null;
-        if (!TextUtils.isEmpty(string)) {
+        if (!StringUtils.isEmpty(string)) {
             try {
                 result = new JSONArray(string);
             } catch (JSONException e) {

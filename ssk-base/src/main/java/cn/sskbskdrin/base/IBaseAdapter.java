@@ -20,6 +20,11 @@ public abstract class IBaseAdapter<T> extends BaseAdapter implements IView {
 
     private View mCurrentView;
 
+    @Override
+    public Context getContext() {
+        return mCurrentView.getContext();
+    }
+
     public IBaseAdapter(List<T> list) {
         this(list, 0);
     }
@@ -27,9 +32,7 @@ public abstract class IBaseAdapter<T> extends BaseAdapter implements IView {
     public IBaseAdapter(List<T> list, int layoutId) {
         mLayoutId = layoutId;
         mList = list;
-        if (mList == null) {
-            mList = new ArrayList<>();
-        }
+        getList();
     }
 
     public final List<T> getList() {

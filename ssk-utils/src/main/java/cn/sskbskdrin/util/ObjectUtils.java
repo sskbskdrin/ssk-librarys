@@ -1,5 +1,7 @@
 package cn.sskbskdrin.util;
 
+import java.util.Comparator;
+
 /**
  * Object Utils
  */
@@ -12,15 +14,13 @@ public class ObjectUtils {
     /**
      * compare two object
      *
-     * @param actual
-     * @param expected
      * @return <ul>
      * <li>if both are null, return true</li>
      * <li>return actual.{@link Object#equals(Object)}</li>
      * </ul>
      */
-    public static boolean isEquals(Object actual, Object expected) {
-        return actual == expected || (actual != null && actual.equals(expected));
+    public static boolean equals(Object a, Object b) {
+        return a == b || (a != null && a.equals(b));
     }
 
     /**
@@ -32,67 +32,14 @@ public class ObjectUtils {
      * nullStrToEmpty(&quot;aa&quot;) = &quot;aa&quot;;
      * </pre>
      *
-     * @param str
      * @return
      */
     public static String nullStrToEmpty(Object str) {
-        return (str == null ? "" : (str instanceof String ? (String) str : str.toString()));
+        return (str == null ? "" : str.toString());
     }
 
-    /**
-     * convert long array to Long array
-     *
-     * @param source
-     * @return
-     */
-    public static Long[] transformLongArray(long[] source) {
-        Long[] destin = new Long[source.length];
-        for (int i = 0; i < source.length; i++) {
-            destin[i] = source[i];
-        }
-        return destin;
-    }
-
-    /**
-     * convert Long array to long array
-     *
-     * @param source
-     * @return
-     */
-    public static long[] transformLongArray(Long[] source) {
-        long[] destin = new long[source.length];
-        for (int i = 0; i < source.length; i++) {
-            destin[i] = source[i];
-        }
-        return destin;
-    }
-
-    /**
-     * convert int array to Integer array
-     *
-     * @param source
-     * @return
-     */
-    public static Integer[] transformIntArray(int[] source) {
-        Integer[] destin = new Integer[source.length];
-        for (int i = 0; i < source.length; i++) {
-            destin[i] = source[i];
-        }
-        return destin;
-    }
-
-    /**
-     * convert Integer array to int array
-     *
-     * @param source
-     * @return
-     */
-    public static int[] transformIntArray(Integer[] source) {
-        int[] destin = new int[source.length];
-        for (int i = 0; i < source.length; i++) {
-            destin[i] = source[i];
-        }
-        return destin;
+    public static <T> int compare(T a, T b, Comparator<? super T> c) {
+        return (a == b) ? 0 : c.compare(a, b);
     }
 
     /**
@@ -110,13 +57,77 @@ public class ObjectUtils {
      * <li>if v1 is not null, v2 is null, then return 1</li>
      * <li>return v1.{@link Comparable#compareTo(Object)}</li>
      * </ul>
-     *
-     * @param v1
-     * @param v2
-     * @return
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <V> int compare(V v1, V v2) {
-        return v1 == null ? (v2 == null ? 0 : -1) : (v2 == null ? 1 : ((Comparable) v1).compareTo(v2));
+    public static <V extends Comparable<V>> int compare(V v1, V v2) {
+        return v1 == null ? (v2 == null ? 0 : -1) : (v2 == null ? 1 : v1.compareTo(v2));
     }
+
+    /**
+     * Checks that the specified object reference is not {@code null}. This
+     * method is designed primarily for doing parameter validation in methods
+     * and constructors, as demonstrated below:
+     * <blockquote><pre>
+     * public Foo(Bar bar) {
+     *     this.bar = Objects.requireNonNull(bar);
+     * }
+     * </pre></blockquote>
+     *
+     * @param obj the object reference to check for nullity
+     * @param <T> the type of the reference
+     * @return {@code obj} if not {@code null}
+     * @throws NullPointerException if {@code obj} is {@code null}
+     */
+    public static <T> T requireNonNull(T obj) {
+        if (obj == null) throw new NullPointerException();
+        return obj;
+    }
+
+    /**
+     * Checks that the specified object reference is not {@code null} and
+     * throws a customized {@link NullPointerException} if it is. This method
+     * is designed primarily for doing parameter validation in methods and
+     * constructors with multiple parameters, as demonstrated below:
+     * <blockquote><pre>
+     * public Foo(Bar bar, Baz baz) {
+     *     this.bar = Objects.requireNonNull(bar, "bar must not be null");
+     *     this.baz = Objects.requireNonNull(baz, "baz must not be null");
+     * }
+     * </pre></blockquote>
+     *
+     * @param obj     the object reference to check for nullity
+     * @param message detail message to be used in the event that a {@code
+     *                NullPointerException} is thrown
+     * @param <T>     the type of the reference
+     * @return {@code obj} if not {@code null}
+     * @throws NullPointerException if {@code obj} is {@code null}
+     */
+    public static <T> T requireNonNull(T obj, String message) {
+        if (obj == null) throw new NullPointerException(message);
+        return obj;
+    }
+
+    /**
+     * Returns {@code true} if the provided reference is {@code null} otherwise
+     * returns {@code false}.
+     *
+     * @param obj a reference to be checked against {@code null}
+     * @return {@code true} if the provided reference is {@code null} otherwise
+     * {@code false}
+     */
+    public static boolean isNull(Object obj) {
+        return obj == null;
+    }
+
+    /**
+     * Returns {@code true} if the provided reference is non-{@code null}
+     * otherwise returns {@code false}.
+     *
+     * @param obj a reference to be checked against {@code null}
+     * @return {@code true} if the provided reference is non-{@code null}
+     * otherwise {@code false}
+     */
+    public static boolean nonNull(Object obj) {
+        return obj != null;
+    }
+
 }

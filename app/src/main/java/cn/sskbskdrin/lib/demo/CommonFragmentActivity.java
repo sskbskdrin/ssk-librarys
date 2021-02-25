@@ -15,7 +15,7 @@ public class CommonFragmentActivity extends AppCompatActivity implements IA {
     private List<IFragment> mFragments;
 
     @Override
-    public Context context() {
+    public Context getContext() {
         return this;
     }
 

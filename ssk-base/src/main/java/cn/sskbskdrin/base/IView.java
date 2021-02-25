@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.util.TypedValue;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -14,10 +13,10 @@ public interface IView extends IContext, IResource, IPost {
      * 通过id查找view
      *
      * @param id  view 的 id
-     * @param <T> view 的类型
+     * @param <V> view 的类型
      * @return 返回找到的view，找不到则返回空
      */
-    default <T extends View> T getView(int id) {
+    default <V extends View> V getView(int id) {
         if (this instanceof Activity) {
             return getView(((Activity) this).getWindow().getDecorView(), id);
         }
@@ -25,9 +24,9 @@ public interface IView extends IContext, IResource, IPost {
     }
 
     @SuppressWarnings("unchecked")
-    static <T extends View> T getView(View parent, int id) {
+    static <V extends View> V getView(View parent, int id) {
         if (parent != null) {
-            return (T) parent.findViewById(id);
+            return (V) parent.findViewById(id);
         }
         return null;
     }

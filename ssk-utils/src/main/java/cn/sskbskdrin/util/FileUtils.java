@@ -44,8 +44,6 @@ import java.util.List;
  * <li>{@link #makeFolders(String)}</li>
  * <li>{@link #makeDirs(String)}</li>
  * </ul>
- *
- * @author <a href="http://www.trinea.cn" target="_blank">Trinea</a> 2012-5-12
  */
 public class FileUtils {
 
