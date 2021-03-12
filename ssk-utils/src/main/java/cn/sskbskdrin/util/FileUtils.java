@@ -3,6 +3,7 @@ package cn.sskbskdrin.util;
 import android.text.TextUtils;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -66,11 +67,11 @@ public class FileUtils {
             return null;
         }
         File file = new File(filePath);
-        StringBuilder fileContent = new StringBuilder("");
         if (!file.isFile()) {
             return null;
         }
 
+        StringBuilder fileContent = new StringBuilder();
         BufferedReader reader = null;
         try {
             InputStreamReader is = new InputStreamReader(new FileInputStream(file), charsetName);
@@ -78,7 +79,7 @@ public class FileUtils {
             String line = null;
             while ((line = reader.readLine()) != null) {
                 if (!fileContent.toString().equals("")) {
-                    fileContent.append("\r\n");
+                    fileContent.append("\n");
                 }
                 fileContent.append(line);
             }
@@ -87,6 +88,34 @@ public class FileUtils {
             throw new RuntimeException("IOException occurred. ", e);
         } finally {
             IOUtils.close(reader);
+        }
+    }
+
+    public static byte[] readFile(String filePath) {
+        if (StringUtils.isEmpty(filePath)) {
+            return null;
+        }
+        File file = new File(filePath);
+        if (!file.isFile()) {
+            return null;
+        }
+
+        InputStream is = null;
+        try {
+            is = new FileInputStream(file);
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            int ret;
+            byte[] buff = new byte[1024 * 10];
+            is.available();
+            file.length();
+            while ((ret = is.read(buff)) != -1) {
+                os.write(buff, 0, ret);
+            }
+            return os.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("IOException occurred. ", e);
+        } finally {
+            IOUtils.close(is);
         }
     }
 
