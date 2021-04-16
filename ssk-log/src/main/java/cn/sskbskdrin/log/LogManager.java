@@ -3,7 +3,6 @@ package cn.sskbskdrin.log;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.regex.Pattern;
 
 import cn.sskbskdrin.log.console.ConsolePrinter;
 import cn.sskbskdrin.log.logcat.LogcatPrinter;
@@ -19,7 +18,6 @@ class LogManager implements LogHelper {
     static boolean enableJson = false;
     static boolean enableXML = false;
 
-    private final Pattern patternPercent = Pattern.compile("%%");
     private StringBuilder builder = new StringBuilder();
 
     LogManager() {
@@ -28,7 +26,6 @@ class LogManager implements LogHelper {
         } catch (ClassNotFoundException ignored) {
             log(SSKLog.WARN, "", "环境不支持 logcat, 没有找到android.util.Log");
         }
-        logcat = false;
         defaultPrint = logcat ? LogcatPrinter.getInstance(null) : ConsolePrinter.getInstance(null);
         logPrinters.add(defaultPrint);
     }
