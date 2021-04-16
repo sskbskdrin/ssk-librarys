@@ -3,17 +3,13 @@ package cn.sskbskdrin.log;
 /**
  * @author ex-keayuan001
  */
-public abstract class Printer implements LogStrategy, Format {
+public abstract class Printer implements LogStrategy {
+
+    protected static final String NEW_LINE = System.getProperty("line.separator");
 
     private Format format;
     private LogStrategy strategy;
     private Filter filter;
-    private static Filter DEFAULT = new Filter() {
-        @Override
-        public boolean filter(int priority, String tag) {
-            return true;
-        }
-    };
 
     public Printer() {
     }
@@ -51,11 +47,8 @@ public abstract class Printer implements LogStrategy, Format {
      * @return is used to determine if log should printed.
      * If it is true, it will be printed, otherwise it'll be ignored.
      */
-    protected final boolean isLoggable(int priority, String tag) {
-        if (filter != null) {
-            return filter.filter(priority, tag);
-        }
-        return DEFAULT.filter(priority, tag);
+    private boolean isLoggable(int priority, String tag) {
+        return filter != null ? filter.filter(priority, tag) : filter(priority, tag);
     }
 
     /**
@@ -65,30 +58,37 @@ public abstract class Printer implements LogStrategy, Format {
      * @param tag      is the given tag for the log message.
      * @param message  is the given message for the log message.
      */
-    public final synchronized void log(int priority, String tag, String message) {
-        if (format != null) {
-            tag = format.formatTag(priority, tag);
-            message = format.format(message);
-        } else {
-            tag = formatTag(priority, tag);
-            message = format(message);
-        }
-        if (strategy != null) {
-            strategy.print(priority, tag, message);
-        } else {
-            print(priority, tag, message);
+    final synchronized void log(int priority, String tag, String message) {
+        if (isLoggable(priority, tag)) {
+            if (format != null) {
+                tag = format.formatTag(priority, tag);
+                message = format.format(message);
+            } else {
+                tag = formatTag(priority, tag);
+                message = format(message);
+            }
+            if (strategy != null) {
+                strategy.print(priority, tag, message);
+            } else {
+                print(priority, tag, message);
+            }
         }
     }
 
-    public String formatTag(int priority, String tag) {
+    protected String formatTag(int priority, String tag) {
         return tag;
     }
 
-    public String format(String msg) {
+    protected String format(String msg) {
         return msg;
     }
 
-    interface Filter {
-        boolean filter(int priority, String tag);
+    protected boolean filter(int priority, String tag) {
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().getName().hashCode();
     }
 }

@@ -4,7 +4,7 @@ package cn.sskbskdrin.log;
  * A proxy interface to enable additional operations.
  * Contains all possible Log message usages.
  */
-public interface LogHelper {
+interface LogHelper {
 
     /**
      * 添加打印者
@@ -16,29 +16,23 @@ public interface LogHelper {
     /**
      * 清除所有打印者
      */
-    void clearPrinters();
+    void clearAdapters();
 
     /**
-     * 是否使用全局tag
+     * 格式化json 或者 xml
      *
-     * @return 默认返回 全局tag==null||tag.length()==0;
+     * @param json 是否格式化json
+     * @param xml  是否格式化xml
      */
-    boolean useGlobalTag();
-
-    /**
-     * 设置全局tag
-     *
-     * @param tag 全局tag
-     */
-    void tag(String tag);
+    void formatJSONorXML(boolean json, boolean xml);
 
     /**
      * 打印日志
      *
-     * @param priority  优先级
-     * @param tag       打印的tag
-     * @param message   打印的内容
-     * @param throwable 异常打印
+     * @param priority 优先级
+     * @param tag      打印的tag
+     * @param message  打印的内容
+     * @param obj      异常打印
      */
-    void log(int priority, String tag, String message, Throwable throwable);
+    void log(int priority, String tag, String message, Object... obj);
 }

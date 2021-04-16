@@ -43,6 +43,7 @@ public class CommonFragmentActivity extends AppCompatActivity implements IA {
                 e.printStackTrace();
             }
         }
+        postDelayed(() -> new Work().en(), 1000);
     }
 
     public void replaceFragment(IFragment fragment) {

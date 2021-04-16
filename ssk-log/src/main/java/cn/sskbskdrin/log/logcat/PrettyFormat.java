@@ -1,7 +1,7 @@
 package cn.sskbskdrin.log.logcat;
 
 import cn.sskbskdrin.log.Format;
-import cn.sskbskdrin.log.L;
+import cn.sskbskdrin.log.SSKLog;
 
 /**
  * Draws borders around the given log message along with additional information such as :
@@ -43,8 +43,8 @@ public class PrettyFormat implements Format {
     private static final String BOTTOM_BORDER = "└" + MIDDLE_BORDER + MIDDLE_BORDER + MIDDLE_BORDER;
     private static final String METHOD_INFO = "%s%s.%s (%s:%s)";
 
-    private int methodCount = 10;
-    private int methodOffset = 0;
+    private int methodCount;
+    private int methodOffset;
     private boolean logMethod = true;
 
     private final StringBuilder mBuilder;
@@ -83,8 +83,8 @@ public class PrettyFormat implements Format {
             }
             builder.append(NEW_LINE);
             builder.append(HORIZONTAL_LINE);
-            builder.append(String.format(METHOD_INFO, level.toString(), trace[i].getClassName(), trace[i]
-                .getMethodName(), trace[i].getFileName(), trace[i].getLineNumber()));
+            builder.append(String.format(METHOD_INFO, level.toString(), trace[i].getClassName(),
+                trace[i].getMethodName(), trace[i].getFileName(), trace[i].getLineNumber()));
             level.append("  ");
         }
         builder.append(NEW_LINE);
@@ -112,7 +112,7 @@ public class PrettyFormat implements Format {
         for (int i = MIN_STACK_OFFSET; i < trace.length; i++) {
             StackTraceElement e = trace[i];
             String name = e.getClassName();
-            if (!name.equals(L.class.getName())) {
+            if (!name.equals(SSKLog.class.getName())) {
                 return i;
             }
         }
@@ -121,7 +121,7 @@ public class PrettyFormat implements Format {
 
     @Override
     public String formatTag(int priority, String tag) {
-        logMethod = priority >= L.WARN;
+        logMethod = priority >= SSKLog.WARN;
         return tag;
     }
 

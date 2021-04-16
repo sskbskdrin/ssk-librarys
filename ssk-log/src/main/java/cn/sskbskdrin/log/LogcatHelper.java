@@ -20,18 +20,17 @@ import java.util.Locale;
  *
  * @author ex-keayuan001
  */
-public class LogcatHelper {
+class LogcatHelper {
 
     private static final int MAX_LENGTH = 10 * 1024 * 1024;
     private static LogcatHelper INSTANCE = null;
     private static String PATH_LOGCAT;
     private LogDumper mLogDumper = null;
     private int mPId;
-    
+
     public void init(Context context) {
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            PATH_LOGCAT = Environment.getExternalStorageDirectory().getAbsolutePath() + File
-                    .separator + "baby";
+            PATH_LOGCAT = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "baby";
         } else {
             PATH_LOGCAT = context.getFilesDir().getAbsolutePath() + File.separator + "baby";
         }
@@ -89,11 +88,11 @@ public class LogcatHelper {
 
             // 日志等级：*:v , *:d , *:w , *:e , *:f , *:s
 
-            // cmds = "logcat *:e *:w | grep \"(" + mPID + ")\"";
-            // cmds = "logcat  | grep \"(" + mPID + ")\"";//打印所有日志信息
-            // cmds = "logcat -s way";//打印标签过滤信息
-            //            cmd = "logcat *:d | grep \"(" + mPID + ")\"";
-            cmd = "logcat | grep " + mPID + ")";
+            // cmds = "cn.sskbskdrin.log.logcat *:e *:w | grep \"(" + mPID + ")\"";
+            // cmds = "cn.sskbskdrin.log.logcat  | grep \"(" + mPID + ")\"";//打印所有日志信息
+            // cmds = "cn.sskbskdrin.log.logcat -s way";//打印标签过滤信息
+            //            cmd = "cn.sskbskdrin.log.logcat *:d | grep \"(" + mPID + ")\"";
+            cmd = "cn.sskbskdrin.log.logcat | grep " + mPID + ")";
         }
 
         public void stopLogs() {
@@ -102,8 +101,7 @@ public class LogcatHelper {
 
         private FileOutputStream getOut() {
             try {
-                String fileName = "log_" + new SimpleDateFormat("MM-dd'_'HH:mm:ss", Locale.US)
-                        .format(new Date());
+                String fileName = "log_" + new SimpleDateFormat("MM-dd'_'HH:mm:ss", Locale.US).format(new Date());
                 return new FileOutputStream(new File(mDir, fileName + ".log"));
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -116,8 +114,7 @@ public class LogcatHelper {
             FileOutputStream out = getOut();
             try {
                 logcatProc = Runtime.getRuntime().exec(cmd);
-                mReader = new BufferedReader(new InputStreamReader(logcatProc.getInputStream()),
-                        1024);
+                mReader = new BufferedReader(new InputStreamReader(logcatProc.getInputStream()), 1024);
                 String line;
                 while (mRunning && (line = mReader.readLine()) != null) {
                     if (!mRunning) {

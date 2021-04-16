@@ -99,7 +99,7 @@ public class SpfUtil {
 
     public static boolean getBoolean(SharedPreferences sp, String key, boolean defaultValue) {
         if (check(sp)) {
-            return sp.getBoolean(key, false);
+            return sp.getBoolean(key, defaultValue);
         }
         return defaultValue;
     }

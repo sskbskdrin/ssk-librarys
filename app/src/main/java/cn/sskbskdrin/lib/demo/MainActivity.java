@@ -80,7 +80,8 @@ public class MainActivity extends FragmentActivity implements IA {
             }).main((flowProcess, last, params) -> {
                 Log.d(TAG, "process: " + Thread.currentThread().getName() + " " + id + " " + last);
                 return null;
-            }).start();
+            });
+//                .start();
         }
     }
 

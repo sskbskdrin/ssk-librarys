@@ -4,27 +4,21 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import cn.sskbskdrin.log.LogStrategy;
 import cn.sskbskdrin.log.Printer;
-
-import static cn.sskbskdrin.log.L.ASSERT;
-import static cn.sskbskdrin.log.L.DEBUG;
-import static cn.sskbskdrin.log.L.ERROR;
-import static cn.sskbskdrin.log.L.INFO;
-import static cn.sskbskdrin.log.L.VERBOSE;
-import static cn.sskbskdrin.log.L.WARN;
+import cn.sskbskdrin.log.SSKLog;
 
 public class DiskPrinter extends Printer {
 
     private static final String SEPARATOR = " ";
     private final Date date = new Date();
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale
-            .US);
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.US);
 
     public DiskPrinter(String path) {
         this(new DiskLogStrategy(path));
     }
 
-    public DiskPrinter(DiskLogStrategy strategy) {
+    public DiskPrinter(LogStrategy strategy) {
         super(strategy);
     }
 
@@ -34,7 +28,8 @@ public class DiskPrinter extends Printer {
             tag = "";
         }
         date.setTime(System.currentTimeMillis());
-        return dateFormat.format(date) + SEPARATOR + logLevel(priority) + SEPARATOR + tag;
+        return dateFormat.format(date) + SEPARATOR + Thread.currentThread()
+            .getId() + SEPARATOR + logLevel(priority) + SEPARATOR + tag;
     }
 
     @Override
@@ -44,17 +39,17 @@ public class DiskPrinter extends Printer {
 
     private static String logLevel(int value) {
         switch (value) {
-            case VERBOSE:
+            case SSKLog.VERBOSE:
                 return "VERBOSE";
-            case DEBUG:
+            case SSKLog.DEBUG:
                 return "DEBUG";
-            case INFO:
+            case SSKLog.INFO:
                 return "INFO";
-            case WARN:
+            case SSKLog.WARN:
                 return "WARN";
-            case ERROR:
+            case SSKLog.ERROR:
                 return "ERROR";
-            case ASSERT:
+            case SSKLog.ASSERT:
                 return "ASSERT";
             default:
                 return "UNKNOWN";

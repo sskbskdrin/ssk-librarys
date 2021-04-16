@@ -1,15 +1,11 @@
 package cn.sskbskdrin.log.disk;
 
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Looper;
-import android.os.Message;
-import android.os.Process;
-
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import cn.sskbskdrin.log.LogStrategy;
 
@@ -19,27 +15,26 @@ import cn.sskbskdrin.log.LogStrategy;
  *
  * @author ex-keayuan001
  */
-class DiskLogStrategy extends HandlerThread implements LogStrategy {
+public class DiskLogStrategy implements LogStrategy {
 
     private static final int WHAT_CLOSE_FILE = 1001;
 
-    private int mMaxFileSize;
+    private int mMaxFileSize = 1024 * 1024;// 1M
     private String fileName = "log";
 
-    private String mPath;
-    private Handler mHandler;
+    private final String mPath;
+    private final BlockingQueue<String> queue = new LinkedBlockingQueue<>();
+    private WriteThread thread;
 
     public DiskLogStrategy(String path) {
-        this(path, 1024 * 1024);
+        this(path, 0);
     }
 
     public DiskLogStrategy(String path, int maxFile) {
-        super("DiskLog", Process.THREAD_PRIORITY_BACKGROUND);
         mPath = path;
-        if (maxFile > 1024) {
+        if (maxFile > mMaxFileSize) {
             mMaxFileSize = maxFile;
         }
-        start();
     }
 
     public DiskLogStrategy fileName(String name) {
@@ -48,68 +43,54 @@ class DiskLogStrategy extends HandlerThread implements LogStrategy {
     }
 
     @Override
-    protected void onLooperPrepared() {
-        mHandler = new WriteHandler(Looper.myLooper(), mPath, mMaxFileSize, fileName);
-    }
-
-    @Override
     public void print(int level, String tag, String message) {
-        if (mHandler != null) {
-            mHandler.removeMessages(WHAT_CLOSE_FILE);
-            Message.obtain(mHandler, level, tag + " " + message).sendToTarget();
-            mHandler.sendEmptyMessageDelayed(WHAT_CLOSE_FILE, 1000);
+        queue.offer(tag + ":" + message);
+        if (thread == null || !thread.isAlive()) {
+            synchronized (DiskLogStrategy.class) {
+                if (thread == null || !thread.isAlive()) {
+                    thread = new WriteThread(mPath, mMaxFileSize, fileName);
+                    thread.start();
+                }
+            }
         }
     }
 
-    private static class WriteHandler extends Handler {
+    private class WriteThread extends Thread {
 
-        private final String folder;
         private final int maxFileSize;
-        private FileOutputStream out;
-        private long length = 0;
-        private String fileName;
+        private final String folder;
+        private final String fileName;
+        private RandomAccessFile out;
 
-        WriteHandler(Looper looper, String folder, int maxFileSize, String fileName) {
-            super(looper);
+        WriteThread(String folder, int maxFileSize, String fileName) {
             this.folder = folder;
             this.maxFileSize = maxFileSize;
             this.fileName = fileName;
         }
 
         @Override
-        public void handleMessage(Message msg) {
-            String content = (String) msg.obj;
-
-            if (WHAT_CLOSE_FILE == msg.what) {
+        public void run() {
+            while (true) {
                 try {
-                    if (out != null) {
-                        out.close();
+                    String item = queue.take();
+                    if (out == null) {
+                        out = getFileOutputStream(folder, this.fileName);
                     }
+                    out.write(item.getBytes());
+                    if (out.length() > maxFileSize) {
+                        out.close();
+                        out = null;
+                    }
+                } catch (InterruptedException | FileNotFoundException e) {
+                    e.printStackTrace();
+                    break;
                 } catch (IOException e) {
                     e.printStackTrace();
-                } finally {
-                    out = null;
                 }
-                return;
-            }
-
-            try {
-                if (out == null) {
-                    out = getFileOutputStream(folder, fileName);
-                }
-                length += content.length();
-                out.write(content.getBytes());
-                out.flush();
-                if (length > maxFileSize) {
-                    out.close();
-                    out = null;
-                }
-            } catch (IOException e) {
             }
         }
 
-        private FileOutputStream getFileOutputStream(String folderName, String fileName) throws
-                FileNotFoundException {
+        private RandomAccessFile getFileOutputStream(String folderName, String fileName) throws FileNotFoundException {
             File folder = new File(folderName);
             if (!folder.exists()) {
                 folder.mkdirs();
@@ -117,20 +98,19 @@ class DiskLogStrategy extends HandlerThread implements LogStrategy {
 
             File newFile = new File(folder, fileName + ".log");
             if (newFile.exists()) {
-                length = newFile.length();
+                long length = newFile.length();
                 if (length > maxFileSize) {
                     File temp;
                     int newFileCount = 0;
                     do {
-                        temp = new File(folder, String.format("%s%s.log", fileName,
-                                newFileCount++));
+                        temp = new File(folder, String.format("%s_%s.log", fileName, newFileCount++));
                     } while (temp.exists());
                     newFile.renameTo(temp);
                     newFile = new File(folder, fileName + ".log");
                 }
             }
 
-            return new FileOutputStream(newFile, true);
+            return new RandomAccessFile(newFile, "rw");
         }
     }
 }

