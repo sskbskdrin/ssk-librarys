@@ -26,4 +26,11 @@ public interface IParseResult<T> {
      * @return 结果
      */
     T getT();
+
+    String getCode();
+
+    String getMessage();
+
+    Exception getException();
+
 }

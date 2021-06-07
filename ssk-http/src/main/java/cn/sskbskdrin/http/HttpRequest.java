@@ -200,7 +200,7 @@ class HttpRequest<V> implements IRequest<V>, IRequestBody {
                         }
                         success(parseResult.getT(), parseResult);
                     } else {
-                        error(ERROR_PARSE, "解析失败", null);
+                        error(parseResult.getCode(), parseResult.getMessage(), parseResult.getException());
                     }
                 }
                 Platform.safeClose(res);
