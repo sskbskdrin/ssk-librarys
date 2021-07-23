@@ -49,19 +49,19 @@ public interface IA extends IWindow, IContext, IView, IPermission, IResource, IP
         }
     }
 
-    default void openActivity(Class clazz) {
+    default void openActivity(Class<? extends Activity> clazz) {
         openActivity(clazz, null);
     }
 
-    default void openActivity(Class clazz, int requestCode) {
+    default void openActivity(Class<? extends Activity> clazz, int requestCode) {
         openActivity(clazz, null, requestCode);
     }
 
-    default void openActivity(Class clazz, Bundle bundle) {
+    default void openActivity(Class<? extends Activity> clazz, Bundle bundle) {
         openActivity(clazz, bundle, -1);
     }
 
-    default void openActivity(Class clazz, Bundle bundle, int requestCode) {
+    default void openActivity(Class<? extends Activity> clazz, Bundle bundle, int requestCode) {
         Context context = context();
         if (context != null) {
             Intent intent = new Intent(context, clazz);

@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cn.sskbskdrin.base.IFragment;
+import cn.sskbskdrin.lib.demo.CommonUtils;
 import cn.sskbskdrin.lib.demo.R;
-import cn.sskbskdrin.util.CommonUtils;
 import cn.sskbskdrin.widget.FlowLabelAdapter;
 import cn.sskbskdrin.widget.FlowLayout;
 
@@ -22,7 +22,7 @@ public class FlowFragment extends IFragment {
     }
 
     @Override
-    protected void onInitView(View view,  Bundle savedInstanceState) {
+    protected void onInitView(View view, Bundle savedInstanceState) {
         SeekBar seed_h = getView(R.id.flow_seek_h);
         SeekBar seed_v = getView(R.id.flow_seek_v);
         SeekBar.OnSeekBarChangeListener listener = new SeekBar.OnSeekBarChangeListener() {

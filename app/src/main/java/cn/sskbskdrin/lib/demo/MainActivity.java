@@ -3,20 +3,20 @@ package cn.sskbskdrin.lib.demo;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.ListView;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.fragment.app.FragmentActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import cn.sskbskdrin.base.IA;
-import cn.sskbskdrin.flow.FlowProcess;
+import cn.sskbskdrin.base.adapter.IHolder;
 import cn.sskbskdrin.lib.demo.simple.SampleListFragment;
 import cn.sskbskdrin.lib.demo.simple.SimpleAdapter;
 import cn.sskbskdrin.lib.demo.tool.HttpFragment;
 import cn.sskbskdrin.lib.demo.widget.BannerFragment;
+import cn.sskbskdrin.lib.demo.widget.CalendarFragment;
 import cn.sskbskdrin.lib.demo.widget.FlowFragment;
 import cn.sskbskdrin.lib.demo.widget.GridFragment;
 import cn.sskbskdrin.lib.demo.widget.PickerFragment;
@@ -26,7 +26,7 @@ import cn.sskbskdrin.lib.demo.widget.TabHostFragment;
 import cn.sskbskdrin.lib.demo.widget.swipe.ScrollFragment;
 import cn.sskbskdrin.lib.demo.widget.swipe.WebFragment;
 
-public class MainActivity extends FragmentActivity implements IA {
+public class MainActivity extends AppCompatActivity implements IA {
     private static final String TAG = "MainActivity";
 
     private static List<ClassItem> mList = new ArrayList<>();
@@ -43,46 +43,33 @@ public class MainActivity extends FragmentActivity implements IA {
         mList.add(new ClassItem(WebFragment.class, "SwipeWebLayout"));
         mList.add(new ClassItem(ScrollFragment.class, "SwipeScrollLayout"));
         mList.add(new ClassItem(GridFragment.class, "GridLayout"));
+        mList.add(new ClassItem(CalendarFragment.class, "Calendar"));
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //        StatusBar.hideStatusBar(this);
+        StatusBar.setMarginTop(this, true);
+        //        StatusBar.setDarkMode(this, true);
+        //        StatusBar.hideStatusBar(this);
+        //        StatusBar.setTranslucentColor(this, 0x8800a000);
+        StatusBar.setTranslucentColor(this, color(R.color.colorPrimaryDark));
         ListView listView = findViewById(R.id.main_list);
-        listView.setAdapter(new SimpleAdapter<>(mList));
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            ClassItem item = (ClassItem) parent.getAdapter().getItem(position);
-            if (Activity.class.isAssignableFrom(item.clazz)) {
-                openActivity(item.clazz);
-            } else {
-                Bundle bundle = new Bundle();
-                bundle.putString("fragment", item.clazz.getName());
-                openActivity(CommonFragmentActivity.class, bundle);
+        listView.setAdapter(new SimpleAdapter<ClassItem>(mList) {
+            @Override
+            public void onClickItem(IHolder<ClassItem> holder) {
+                ClassItem item = holder.bean();
+                if (Activity.class.isAssignableFrom(item.clazz)) {
+                    openActivity(item.clazz);
+                } else {
+                    Bundle bundle = new Bundle();
+                    bundle.putString("fragment", item.clazz.getName());
+                    openActivity(CommonFragmentActivity.class, bundle);
+                }
             }
         });
-        for (int i = 0; i < 30; i++) {
-            final int id = i;
-            FlowProcess.create("1").io((flowProcess, last, params) -> {
-                Log.d(TAG, "process: " + Thread.currentThread().getName() + " " + id + " " + last);
-                return 2;
-            }).main((flowProcess, last, params) -> {
-                Log.d(TAG, "process: " + Thread.currentThread().getName() + " " + id + " " + last);
-                return 3;
-            }).io("", (flowProcess, last, params) -> {
-                Log.d(TAG, "process: " + Thread.currentThread().getName() + " " + id + " " + last);
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                return "s+" + last;
-            }).main((flowProcess, last, params) -> {
-                Log.d(TAG, "process: " + Thread.currentThread().getName() + " " + id + " " + last);
-                return null;
-            });
-//                .start();
-        }
     }
 
     @Override

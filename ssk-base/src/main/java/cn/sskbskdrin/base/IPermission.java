@@ -10,6 +10,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import cn.sskbskdrin.util.CollectionUtils;
+import cn.sskbskdrin.util.function.Consumer;
 
 /**
  * 权限请求工具，需要用到Activity
@@ -191,5 +195,80 @@ public interface IPermission extends IContext {
          * @param grantedList 请求成功的列表
          */
         void onRequestPermissions(int requestCode, List<String> deniedList, List<String> grantedList);
+    }
+
+    static Builder create(IPermission iPermission) {
+        return new Builder(iPermission);
+    }
+
+    class Builder {
+        private final IPermission iPermission;
+        private final List<String> permissionList = new ArrayList<>();
+        private Consumer<List<String>> granted;
+        private Consumer<List<String>> denied;
+        private Consumer<Consumer<Boolean>> startRequest;
+        private static final AtomicInteger sId = new AtomicInteger(0);
+        private final int id;
+        private final Consumer<Boolean> nextRequest = new Consumer<Boolean>() {
+            @Override
+            public void accept(Boolean request) {
+                if (request) {
+                    iPermission.checkPermission(id, permissionCallback, permissionList.toArray(new String[0]));
+                }
+            }
+        };
+        private final PermissionCallback permissionCallback = new PermissionCallback() {
+            @Override
+            public void onRequestPermissions(int requestCode, List<String> deniedList, List<String> grantedList) {
+                if (requestCode == id) {
+                    if (CollectionUtils.isEmpty(deniedList)) {
+                        if (granted != null) {
+                            granted.accept(grantedList);
+                        }
+                    } else {
+                        if (denied != null) {
+                            denied.accept(deniedList);
+                        }
+                    }
+                }
+            }
+        };
+
+        private Builder(IPermission iPermission) {
+            this.iPermission = iPermission;
+            id = sId.incrementAndGet();
+        }
+
+        public Builder permission(String... permissions) {
+            permissionList.addAll(Arrays.asList(permissions));
+            return this;
+        }
+
+        public Builder preRequest(Consumer<Consumer<Boolean>> request) {
+            startRequest = request;
+            return this;
+        }
+
+        public Builder granted(Consumer<List<String>> granted) {
+            this.granted = granted;
+            return this;
+        }
+
+        public Builder denied(Consumer<List<String>> denied) {
+            this.denied = denied;
+            return this;
+        }
+
+        public void request() {
+            if (iPermission.hasPermission(permissionList.toArray(new String[0]))) {
+                if (granted != null) {
+                    granted.accept(permissionList);
+                }
+            } else if (startRequest == null) {
+                nextRequest.accept(true);
+            } else {
+                startRequest.accept(nextRequest);
+            }
+        }
     }
 }

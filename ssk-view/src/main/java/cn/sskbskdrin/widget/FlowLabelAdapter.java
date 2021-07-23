@@ -112,9 +112,7 @@ public class FlowLabelAdapter extends BaseAdapter {
     };
 
     public FlowLabelAdapter(List<?> list, OnItemClickListener listener) {
-        this.list = list;
-        selected = new boolean[list.size()];
-        this.listener = listener;
+        this(list, null, listener);
     }
 
     public FlowLabelAdapter(List<?> list, Option option, OnItemClickListener listener) {
@@ -124,11 +122,22 @@ public class FlowLabelAdapter extends BaseAdapter {
         }
         selected = new boolean[list.size()];
         this.listener = listener;
-        if (option != null) {
-            this.option = option;
+        this.option = option;
+        if (option == null) {
+            this.option = createOption();
         }
     }
 
+    public void updateList(List<?> list) {
+        this.list = list;
+        selected = new boolean[list.size()];
+        notifyDataSetChanged();
+    }
+
+    public Option getOption() {
+        return option;
+    }
+	
     public List<?> getSelected() {
         List<Object> list = new ArrayList<>();
         for (int i = 0; i < getCount(); i++) {
@@ -184,8 +193,8 @@ public class FlowLabelAdapter extends BaseAdapter {
             obj.toString());
         view.setOnClickListener(clickListener);
 
-        ShapeDrawable drawable = new ShapeDrawable(new RoundRectShape(dp2px(option.bgRadius, parent.getResources()),
-            selected[position] ? 0 : dp2px(option.strokeWidth, parent
+        ShapeDrawable drawable = new ShapeDrawable(new RoundRectShape(dp2px(option.bgRadius, view.getResources()),
+            selected[position] ? 0 : dp2px(option.strokeWidth, view
             .getResources())));
         drawable.getPaint().setColor(option.color);
         view.setTextColor(selected[position] ? Color.WHITE : option.color);

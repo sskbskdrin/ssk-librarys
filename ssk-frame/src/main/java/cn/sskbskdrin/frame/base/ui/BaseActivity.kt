@@ -25,7 +25,7 @@ open class BaseActivity : FragmentActivity(), IA, LifeOwner {
     private val TAG = javaClass.simpleName
     private var isStop = false
 
-    override fun context() = this
+    override fun getContext() = this
 
     override fun isFinish() = isFinishing
 
@@ -67,9 +67,7 @@ open class BaseActivity : FragmentActivity(), IA, LifeOwner {
                         openActivity(obj1 as Intent, obj2 as Int)
                     } else if (obj1 is Class<*>) {
                         openActivity(
-                            obj1 as Class<*>,
-                            if (obj2 == null) null else obj2 as Bundle,
-                            obj3 as Int
+                            obj1 as Class<*>, if (obj2 == null) null else obj2 as Bundle, obj3 as Int
                         )
                     } else if (obj1 is BaseFragment) {
                         if ("add" == obj3) {
@@ -168,8 +166,7 @@ open class BaseActivity : FragmentActivity(), IA, LifeOwner {
     private fun addFragment(fragment: BaseFragment, id: Int) {
         val transaction = supportFragmentManager.beginTransaction()
         transaction.setCustomAnimations(
-            R.anim.right_enter, R.anim.left_exit,
-            R.anim.left_enter, R.anim.right_exit
+            R.anim.right_enter, R.anim.left_exit, R.anim.left_enter, R.anim.right_exit
         )
         transaction.addToBackStack(fragment.javaClass.name)
         transaction.replace(id, fragment).commit()

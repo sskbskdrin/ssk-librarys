@@ -13,10 +13,11 @@ class MainFragment : BaseFragment() {
 
     private lateinit var viewModel: MainViewModel
 
-    override fun onViewCreated(rootView: View?, arguments: Bundle?, savedInstanceState: Bundle?) {
-    }
-
     override fun getLayoutId() = R.layout.main_fragment
+
+    override fun onInitView(rootView: View?, savedInstanceState: Bundle?) {
+        TODO("Not yet implemented")
+    }
 
     override fun initView() {
     }

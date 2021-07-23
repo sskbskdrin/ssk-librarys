@@ -12,14 +12,17 @@ import android.widget.TextView;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import cn.sskbskdrin.base.IFragment;
+import cn.sskbskdrin.base.IPermission;
 import cn.sskbskdrin.http.HTTP;
 import cn.sskbskdrin.http.HttpUtils;
 import cn.sskbskdrin.http.IRequest;
 import cn.sskbskdrin.lib.demo.R;
 import cn.sskbskdrin.lib.demo.simple.SimpleAdapter;
+import cn.sskbskdrin.util.function.Consumer;
 
 /**
  * Created by keayuan on 2020/8/10.
@@ -38,7 +41,7 @@ public class HttpFragment extends IFragment {
     }
 
     @Override
-    protected void onInitView(View rootView,  Bundle savedInstanceState) {
+    protected void onInitView(View rootView, Bundle savedInstanceState) {
         resultView = getView(R.id.http_result);
         resultView.setMovementMethod(ScrollingMovementMethod.getInstance());
         urlView = getView(R.id.http_url);
@@ -68,7 +71,27 @@ public class HttpFragment extends IFragment {
                         "success: " + res.getAbsolutePath()));
             }
         });
-        checkPermission(1001, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        IPermission.create(this)
+            .permission(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            .preRequest(new Consumer<Consumer<Boolean>>() {
+                @Override
+                public void accept(Consumer<Boolean> booleanConsumer) {
+
+                }
+            })
+            .denied(new Consumer<List<String>>() {
+                @Override
+                public void accept(List<String> strings) {
+
+                }
+            })
+            .granted(new Consumer<List<String>>() {
+                @Override
+                public void accept(List<String> strings) {
+
+                }
+            })
+            .request();
     }
 
     private Set<Closeable> closeable = new HashSet<>();

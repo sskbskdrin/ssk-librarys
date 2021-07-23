@@ -66,7 +66,7 @@ public abstract class IFragment extends Fragment implements IA {
     private boolean firstCreateView = true;
 
     @Override
-    public final View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (mRootView == null) {
             Log.v(TAG, "onCreateView new");
             int layoutId = getLayoutId();

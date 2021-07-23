@@ -4,10 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:swipe_isContentView="true">
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -61,7 +60,7 @@
                 android:textColor="@color/white"
                 android:textSize="30dp" />
         </LinearLayout>
-    </ScrollView>
+    </LinearLayout>
 
     <cn.sskbskdrin.widget.swipe.refresh.RefreshView
         android:id="@+id/list_top"

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Build;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -38,7 +37,6 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
     private static final String LOG_TAG = SwipeLayout.class.getSimpleName();
 
     private static final int INVALID_POINTER = -1;
-    private static final float DRAG_RATE = .5f;
 
     private static final int SCROLL_DURATION = 200;
 
@@ -140,7 +138,7 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
     }
 
     public void setEnabled(SwipePosition position, boolean enable) {
-        swipeHelper.getController(position).setEnable(enable);
+        swipeHelper.setEnable(position, enable);
     }
 
     private boolean isPinTarget = false;
@@ -401,7 +399,6 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (mActivePointerId == INVALID_POINTER) {
-                    Log.e(LOG_TAG, "Got ACTION_MOVE event but don't have an active pointer id.");
                     return false;
                 }
 
@@ -476,7 +473,6 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
                     consumed[1] = dy;
                 }
             }
-            Log.d(TAG, "onNestedPreScroll: offsetY=" + mCurrentOffsetY + " dy=" + dy + " consumedY=" + consumed[1]);
             moveSpinner(tempDy);
         }
         consumed[0] = dx > 0 ? Math.abs(consumed[0]) : -Math.abs(consumed[0]);
@@ -526,7 +522,6 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
         // 'offset in window 'functionality to see if we have been moved from the event.
         // This is a decent indication of whether we should take over the event stream or not.
         final int dy = dyUnconsumed + mParentOffsetInWindow[1];
-        Log.i(TAG, "onNestedScroll:dy=" + dy + " total=" + mCurrentOffsetY);
         if (dy != 0) {
             if (dy < 0) {
                 if (!canChildScrollUp()) {
@@ -606,17 +601,18 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
     }
 
     private void moveSpinner(int dy, boolean animation) {
-        Log.i(TAG, "moveSpinner: " + dy + " curr=" + mCurrentOffsetY);
         if (isAnimation == animation) {
-            setTargetOffsetTopAndBottom(dy);
-            swipeHelper.moveSpinner(0, dy, 0, mCurrentOffsetY, true);
+            if (setTargetOffsetTopAndBottom(dy)) {
+                swipeHelper.moveSpinner(0, dy, 0, mCurrentOffsetY, true);
+            }
         }
     }
 
     private void finishSpinner() {
-        Log.i(TAG, "finishSpinner: currX=" + mCurrentOffsetX + " currY=" + mCurrentOffsetY);
         swipeHelper.finishSpinner(mCurrentOffsetX, mCurrentOffsetY);
     }
+
+    private int lastPosition;
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
@@ -632,57 +628,55 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
             case MotionEvent.ACTION_DOWN:
                 mActivePointerId = ev.getPointerId(0);
                 mIsBeingDragged = false;
+                lastPosition = (int) ev.getY();
                 break;
-
-            case MotionEvent.ACTION_MOVE: {
+            case MotionEvent.ACTION_MOVE:
                 pointerIndex = ev.findPointerIndex(mActivePointerId);
                 if (pointerIndex < 0) {
-                    Log.e(LOG_TAG, "Got ACTION_MOVE event but have an invalid active pointer id.");
                     return false;
                 }
 
-                final float y = ev.getY(pointerIndex);
-                startDragging(y);
-
                 if (mIsBeingDragged) {
-                    final float overscrollTop = (y - mInitialMotionY) * DRAG_RATE;
-                    if (overscrollTop > 0) {
-                        moveSpinner((int) overscrollTop);
-                    } else {
-                        return false;
+                    int dy = (int) ((ev.getY(pointerIndex) - lastPosition) * swipeHelper.getResistance());
+                    if (mCurrentOffsetY > 0) {
+                        if (dy > mCurrentOffsetY) dy = mCurrentOffsetY;
                     }
+                    if (mCurrentOffsetY < 0) {
+                        if (dy < mCurrentOffsetY) dy = mCurrentOffsetY;
+                    }
+                    moveSpinner(dy);
                 }
+
+                lastPosition = (int) ev.getY();
                 break;
-            }
             case MotionEvent.ACTION_POINTER_DOWN: {
                 pointerIndex = ev.getActionIndex();
                 if (pointerIndex < 0) {
-                    Log.e(LOG_TAG, "Got ACTION_POINTER_DOWN event but have an invalid action index.");
                     return false;
                 }
                 mActivePointerId = ev.getPointerId(pointerIndex);
+                lastPosition = (int) ev.getY();
                 break;
             }
             case MotionEvent.ACTION_POINTER_UP:
                 onSecondaryPointerUp(ev);
                 break;
-            case MotionEvent.ACTION_UP: {
+
+            case MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_UP:
                 pointerIndex = ev.findPointerIndex(mActivePointerId);
                 if (pointerIndex < 0) {
-                    Log.e(LOG_TAG, "Got ACTION_UP event but don't have an active pointer id.");
                     return false;
                 }
                 if (mIsBeingDragged) {
-                    final float y = ev.getY(pointerIndex);
-                    final float overscrollTop = (y - mInitialMotionY) * DRAG_RATE;
-                    mIsBeingDragged = false;
+                    //                    final float y = ev.getY(pointerIndex);
+                    //                    final float overscrollTop = (y - mInitialMotionY) * DRAG_RATE;
+                    //                    mIsBeingDragged = false;
                     finishSpinner();
                 }
+                mIsBeingDragged = false;
                 mActivePointerId = INVALID_POINTER;
-                return false;
-            }
-            case MotionEvent.ACTION_CANCEL:
-                return false;
+                mIsBeingDragged = false;
         }
         return true;
     }
@@ -714,7 +708,6 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
 
             @Override
             protected void applyTransformation(float interpolatedTime, Transformation t) {
-                Log.i(TAG, "applyTransformation: " + interpolatedTime);
                 if (interpolatedTime == 1) {
                     moveSpinner(targetPos - mCurrentOffsetY, true);
                     finishSpinner();
@@ -747,10 +740,10 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
         return position;
     }
 
-    private void setTargetOffsetTopAndBottom(int offset) {
+    private boolean setTargetOffsetTopAndBottom(int offset) {
         if (mCurrentOffsetY == 0) {
             SwipePosition position = getPosition(offset);
-            if (!swipeHelper.getController(position).isEnable()) {
+            if (!swipeHelper.isEnable(position)) {
                 offset = 0;
             }
         } else {
@@ -762,11 +755,11 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
                 offset = -swipeHelper.getSwipeMax() - mCurrentOffsetY;
             }
         }
-        if (offset == 0) return;
+        if (offset == 0) return false;
         SwipePosition position = getPosition(offset);
         View view = mPositionView.get(position);
         if (view != null) {
-            if (swipeHelper.getController(position).isEnable()) {
+            if (swipeHelper.isEnable(position)) {
                 ViewCompat.offsetTopAndBottom(view, offset);
             } else {
                 if (position == SwipePosition.TOP) {
@@ -784,6 +777,7 @@ public class SwipeLayout extends ViewGroup implements NestedScrollingParent, Nes
             ViewCompat.offsetTopAndBottom(mTarget, offset);
         }
         mCurrentOffsetY += offset;
+        return true;
     }
 
     private void setTargetOffsetLeftAndRight(int offset) {

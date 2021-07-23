@@ -5,6 +5,8 @@ import android.view.View;
 import android.widget.TextView;
 
 import cn.sskbskdrin.lib.demo.R;
+import cn.sskbskdrin.widget.swipe.SwipeLayout;
+import cn.sskbskdrin.widget.swipe.SwipePosition;
 
 /**
  * Created by ayke on 2016/9/26 0026.
@@ -19,9 +21,11 @@ public class ScrollFragment extends BaseFragment {
     }
 
     @Override
-    protected void onInitView(View rootView,  Bundle savedInstanceState) {
+    protected void onInitView(View rootView, Bundle savedInstanceState) {
         super.onInitView(rootView, savedInstanceState);
         content = getView(R.id.scroll_text);
+        SwipeLayout swipeLayout = getRootView();
+        swipeLayout.setEnabled(SwipePosition.BOTTOM, false);
     }
 
     @Override

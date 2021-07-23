@@ -1,7 +1,5 @@
 package cn.sskbskdrin.widget.swipe;
 
-import android.util.Log;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -142,6 +140,22 @@ final class SwipeHelper {
         return viewHelperHashMap.get(position);
     }
 
+    void setEnable(SwipePosition position, boolean enable) {
+        SwipeController controller = viewHelperHashMap.get(position);
+        if (controller == null && enable) {
+            controller = new SwipeController(position, null);
+            viewHelperHashMap.put(position, controller);
+        }
+        if (controller != null) {
+            controller.setEnable(enable);
+        }
+    }
+
+    boolean isEnable(SwipePosition position) {
+        SwipeController controller = viewHelperHashMap.get(position);
+        return controller != null && controller.isEnable();
+    }
+
     public void addSwipeChangeListener(SwipePositionChangeListener listener) {}
 
     static class SwipeController {
@@ -270,7 +284,6 @@ final class SwipeHelper {
 
         private void notifyStatusChange(int status, boolean success) {
             if (mStatus == status) return;
-            Log.d(TAG, "notifyStatusChange: " + mPosition + " old=" + mStatus + " new=" + status);
             mStatus = status;
             updateStatus(handler, mStatus, success);
 

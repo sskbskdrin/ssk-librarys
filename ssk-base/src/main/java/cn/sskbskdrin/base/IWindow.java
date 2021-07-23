@@ -74,12 +74,12 @@ public interface IWindow extends IContext, IResource {
         iWindowC.dialog = null;
     }
 
-    default void showToast(int resId) {
-        showToast(resId, false, new Object[]{});
+    default Toast generateToast(String text, boolean isLong) {
+        return Toast.makeText(context(), text, isLong ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT);
     }
 
-    default void showToast(int resId, Object... args) {
-        showToast(resId, false, args);
+    default void showToast(int resId) {
+        showToast(resId, false);
     }
 
     default void showToast(int resId, boolean isLong, Object... args) {
@@ -90,18 +90,17 @@ public interface IWindow extends IContext, IResource {
         showToast(text, false);
     }
 
-    default void showToast(String text, Object... args) {
-        showToast(String.format(text, args), false);
-    }
-
-    default void showToast(String text, boolean isLong) {
+    default void showToast(String text, boolean isLong, Object... args) {
         Toast toast = iWindowC.toast == null ? null : iWindowC.toast.get();
         if (toast != null) {
             toast.cancel();
         }
         Context context = context();
         if (context != null) {
-            toast = Toast.makeText(context, text, isLong ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT);
+            if (args.length > 0) {
+                text = String.format(text, args);
+            }
+            toast = generateToast(text, isLong);
             toast.show();
             iWindowC.toast = new WeakReference<>(toast);
         }

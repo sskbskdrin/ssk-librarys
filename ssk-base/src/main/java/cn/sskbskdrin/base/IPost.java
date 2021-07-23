@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 public interface IPost {
     class InPost {
         private Handler mH = null;
-        private Executor executor = new ThreadPoolExecutor(5, 10, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        private Executor executor;
 
         private InPost() {
         }
@@ -64,6 +64,9 @@ public interface IPost {
     }
 
     default void postIO(Runnable runnable) {
+        if (inPost.executor == null) {
+            inPost.executor = new ThreadPoolExecutor(5, 10, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        }
         inPost.executor.execute(runnable);
     }
 

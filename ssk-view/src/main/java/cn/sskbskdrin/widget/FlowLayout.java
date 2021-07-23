@@ -182,7 +182,11 @@ public class FlowLayout extends ViewGroup {
         mAdapter.registerDataSetObserver(mDataSetObserver);
         changeAdapter();
     }
-
+    
+	public BaseAdapter getAdapter() {
+        return mAdapter;
+    }
+	
     private void changeAdapter() {
         BaseAdapter adapter = mAdapter;
         if (adapter == null) {

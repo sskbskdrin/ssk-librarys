@@ -1,4 +1,4 @@
-package cn.sskbskdrin.util;
+package cn.sskbskdrin.lib.demo;
 
 import android.app.Activity;
 import android.app.ActivityManager;
