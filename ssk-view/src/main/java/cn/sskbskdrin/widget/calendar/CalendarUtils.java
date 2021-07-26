@@ -7,18 +7,29 @@ import java.util.Calendar;
  *
  * @author keayuan
  */
-class Utils {
+public class CalendarUtils {
     public static final long DAY = 24 * 60 * 60 * 1000;
     private static final Calendar calendar = Calendar.getInstance();
 
     public static int timeToDay(long time) {
+        if (time < 0) {
+            time -= DAY;
+        }
         return Long.valueOf(time / DAY).intValue();
     }
 
     public static long dayToTime(int day) {
-        return day * DAY + 1;
+        if (day < 0) {
+            return day * DAY + 1;
+        }
+        return day * DAY;
     }
 
+    public static long dateToTime(int year, int month, int date) {
+        Calendar c = calendar;
+        c.set(year, month, date);
+        return c.getTimeInMillis();
+    }
 
     public static boolean isEqualDayOfMonth(long first, long second) {
         Calendar c = Calendar.getInstance();
@@ -44,8 +55,8 @@ class Utils {
         return month == c.get(Calendar.MONTH);
     }
 
-    public static boolean isDayInMonth(int dayTime, long monthTime) {
-        return isDayInMonth(dayTime * DAY, monthTime);
+    public static boolean isDayInMonth(int dayTime, int monthTime) {
+        return isDayInMonth(dayToTime(dayTime), dayToTime(monthTime));
     }
 
     public static int getWeek(long time) {
@@ -61,15 +72,15 @@ class Utils {
     public static long getMonthFirstDay(long time, int weekStart) {
         Calendar c = calendar;
         c.setTimeInMillis(time);
-        c.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), 1, 0, 0, 1);
-        return c.getTimeInMillis() - CalendarView.DAY * (((getWeek(c.getTimeInMillis()) + 7) - weekStart) % 7);
+        c.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), 1);
+        return c.getTimeInMillis() - ((getWeek(c.getTimeInMillis()) + 7 - weekStart) % 7) * DAY;
     }
 
     public static long getWeekFirstDay(long time, int weekStart) {
         Calendar c = calendar;
         c.setTimeInMillis(time);
-        c.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
-        return c.getTimeInMillis() - CalendarView.DAY * (((getWeek(c.getTimeInMillis()) + 7) - weekStart) % 7);
+        c.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+        return c.getTimeInMillis() - DAY * (((getWeek(c.getTimeInMillis()) + 7) - weekStart) % 7);
     }
 
 }

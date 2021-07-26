@@ -2,14 +2,13 @@ package cn.sskbskdrin.widget.calendar;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.util.AttributeSet;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Comparator;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by keayuan on 2021/7/23.
@@ -18,14 +17,13 @@ import java.util.Comparator;
  */
 public class CalendarView extends View {
 
-    public static final long DAY = 24 * 60 * 60 * 1000;
-
     private boolean showWeek = true;
-    private WeekDecoration week;
+    private final WeekDecoration weeks;
+    private boolean showDay = true;
+    private final DayDecoration days;
     private float itemWidth = 0;
     private float itemHeight = 0;
-    private final Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private int currentDay;
+    private long currentTime;
     private int firstDay;
     private boolean isMonthMode = true;
     private int startWeek = 0;
@@ -42,46 +40,52 @@ public class CalendarView extends View {
         super(context, attrs, defStyleAttr);
         Decoration.scaledDensity = context.getResources().getDisplayMetrics().scaledDensity;
         Decoration.density = context.getResources().getDisplayMetrics().density;
-        week = WeekDecoration.getInstance();
-        week.setStartWeek(startWeek);
-        mPaint.setColor(Color.RED);
-        mPaint.setTextSize(60);
-        setPadding(40, 40, 40, 40);
-        setTime(System.currentTimeMillis());
-        int t = firstDay;
-        for (int i = 0; i < 42; i++) {
-            DayDecoration decoration = new DayDecoration(t * DAY);
-            decoration.setEnable(Utils.isDayInMonth(t, currentDay * DAY));
-            if (i == 1) {
-                addPreDecoration(Utils.dayToTime(t), Utils.dayToTime(t+4), new Decoration() {
-                    @Override
-                    protected void onDraw(Canvas canvas, float width, float height) {
-                        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                        paint.setStyle(Paint.Style.STROKE);
-                        paint.setStrokeWidth(6);
-                        paint.setColor(Color.RED);
-                        canvas.drawCircle(width / 2, height / 2, width / 3, paint);
-                    }
-                });
-            }
-            addPreDecoration(Utils.dayToTime(t++), decoration);
-        }
+        weeks = new WeekDecoration();
+        weeks.setStartWeek(startWeek);
+        days = new DayDecoration();
+        setCurrentDateTime(System.currentTimeMillis());
     }
 
-    public void setTime(long time) {
+    public void setStartWeek(int startWeek) {
+        this.startWeek = startWeek;
+        weeks.setStartWeek(startWeek);
+        setCurrentDateTime(currentTime);
+    }
+
+    public int getStartWeek() {
+        return startWeek;
+    }
+
+    public void setCurrentDateTime(long time) {
         if (isMonthMode) {
-            firstDay = Utils.timeToDay(Utils.getMonthFirstDay(time, startWeek));
+            firstDay = CalendarUtils.timeToDay(CalendarUtils.getMonthFirstDay(time, startWeek));
         } else {
-            firstDay = Utils.timeToDay(Utils.getWeekFirstDay(time, startWeek));
+            firstDay = CalendarUtils.timeToDay(CalendarUtils.getWeekFirstDay(time, startWeek));
         }
-        currentDay = Utils.timeToDay(time);
+        currentTime = time;
+        days.setCurrentMonth(time);
         postInvalidate();
     }
 
-    public void setTime(int year, int month, int day) {
-        Calendar c = Calendar.getInstance();
-        c.set(year, month - 1, day);
-        setTime(c.getTimeInMillis());
+    public void setCurrentDateTime(int year, int month, int day) {
+        setCurrentDateTime(CalendarUtils.dateToTime(year, month, day));
+    }
+
+    public void setShowWeek(boolean show) {
+        if (showWeek != show) itemWidth = 0;
+        this.showWeek = show;
+        postInvalidate();
+    }
+
+    public void setShowDay(boolean show) {
+        showDay = show;
+        postInvalidate();
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        itemWidth = 0;
+        super.onSizeChanged(w, h, oldw, oldh);
     }
 
     @Override
@@ -94,25 +98,35 @@ public class CalendarView extends View {
         }
         canvas.save();
         canvas.translate(getPaddingLeft(), getPaddingTop());
-        if (showWeek && week != null) {
+        if (showWeek && weeks != null) {
             canvas.save();
-            week.onDraw(canvas, getMeasuredWidth() - getPaddingLeft() - getPaddingRight(), itemHeight);
+            weeks.onDraw(canvas, getMeasuredWidth() - getPaddingLeft() - getPaddingRight(), itemHeight, 0);
             canvas.restore();
+            canvas.translate(0, itemHeight);
         }
-        canvas.translate(0, itemHeight);
 
-        int t = firstDay;
+        List<Decoration> preDecorationList = getMonthDecorationList(true);
+        List<Decoration> postDecorationList = getMonthDecorationList(false);
+        int day = firstDay;
         for (int i = 0; i < (isMonthMode ? 6 : 1); i++) {
             for (int j = 0; j < 7; j++) {
                 canvas.save();
                 canvas.clipRect(0, 0, itemWidth, itemHeight);
-                int temp;
-                int lastIndex = 0;
-                while (lastIndex < size && (temp = find(list, t, lastIndex, size - 1)) >= 0) {
-                    list[temp].decoration.onDraw(canvas, itemWidth, itemHeight);
-                    lastIndex = temp + 1;
+                long time = CalendarUtils.dayToTime(day++);
+                for (Decoration decoration : preDecorationList) {
+                    if (decoration != null && decoration.isValid(time)) {
+                        decoration.onDraw(canvas, itemWidth, itemHeight, time);
+                    }
                 }
-                t++;
+                if (showDay && days != null) {
+                    days.setTime(time);
+                    days.onDraw(canvas, itemWidth, itemHeight, time);
+                }
+                for (Decoration decoration : postDecorationList) {
+                    if (decoration != null && decoration.isValid(time)) {
+                        decoration.onDraw(canvas, itemWidth, itemHeight, time);
+                    }
+                }
                 canvas.restore();
                 canvas.translate(itemWidth, 0);
             }
@@ -121,66 +135,100 @@ public class CalendarView extends View {
         canvas.restore();
     }
 
-    private int size = 0;
-    private Item[] list = new Item[64];
-
-    public void addPreDecoration(long startTime, Decoration decoration) {
-        addPreDecoration(startTime, startTime, decoration);
-    }
-
-    public void addPreDecoration(long startTime, long endTime, Decoration decoration) {
-        int startDay = Utils.timeToDay(startTime);
-        int endDay = Utils.timeToDay(endTime);
-        if (startDay > endDay) {
-            startDay += endDay;
-            endDay = startDay - endDay;
-            startDay = startDay - endDay;
+    private List<Decoration> getMonthDecorationList(boolean pre) {
+        List<Decoration> list = null;
+        DecorationProvider provider = pre ? preDecorationProvider : postDecorationProvider;
+        if (provider != null) {
+            list = provider.getList(CalendarUtils.dayToTime(firstDay), CalendarUtils.dayToTime(firstDay + 42));
         }
-        if (size == list.length) {
-            list = Arrays.copyOf(list, size + 8);
-        }
-        list[size++] = new Item(startDay, endDay, decoration);
-        sort(list);
+        return list == null ? Collections.<Decoration>emptyList() : list;
     }
 
-    private static void sort(Item[] arr) {
-        Arrays.sort(arr, new Comparator<Item>() {
-            @Override
-            public int compare(Item o1, Item o2) {
-                if (o1 == null) return 1;
-                if (o2 == null) return -1;
-                return o1.startTime - o2.startTime;
-            }
-        });
-    }
+    private final GestureDetector detector = new GestureDetector(null, new GestureDetector.SimpleOnGestureListener() {
+        int lastDown = -1;
 
-    private static int find(Item[] list, int day, int left, int right) {
-        if (left > right) return -1;
-        Item item;
-        int mid;
-        while (left <= right) {
-            mid = (left + right) / 2;
-            item = list[mid];
-            if (item.startTime <= day && item.endTime >= day) {
-                return mid;
-            } else if (item.startTime > day) {
-                right = mid - 1;
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            if (getPosition(e) != lastDown) {
+                return false;
             } else {
-                left = mid + 1;
+                onClick(CalendarUtils.dayToTime(firstDay + lastDown));
+                return true;
             }
         }
-        return -1;
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+            if (getPosition(e) == lastDown) {
+                onLongClick(CalendarUtils.dayToTime(firstDay + lastDown));
+            }
+        }
+
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return (lastDown = getPosition(e)) >= 0;
+        }
+    });
+
+    private int getPosition(MotionEvent event) {
+        float x = event.getX() - getPaddingLeft();
+        float y = event.getY();
+        int top = getPaddingTop();
+        if (showWeek && weeks != null) {
+            top += itemHeight;
+        }
+        if (y <= top) return -1;
+        return (int) (x / itemWidth) + (int) ((y - top) / itemHeight) * 7;
     }
 
-    private static class Item {
-        int startTime;
-        int endTime;
-        Decoration decoration;
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return detector.onTouchEvent(event);
+    }
 
-        Item(int startTime, int endTime, Decoration decoration) {
-            this.startTime = startTime;
-            this.endTime = endTime;
-            this.decoration = decoration;
+    private void onClick(long time) {
+        if (onDateClickListener != null) {
+            onDateClickListener.onClick(time);
         }
+    }
+
+    private void onLongClick(long time) {
+        if (onDateLongClickListener != null) {
+            onDateLongClickListener.onLongClick(time);
+        }
+    }
+
+    private OnDateClickListener onDateClickListener;
+    private OnDateLongClickListener onDateLongClickListener;
+
+    private DecorationProvider preDecorationProvider;
+    private DecorationProvider postDecorationProvider;
+
+    public void setOnDateClickListener(OnDateClickListener onDateClickListener) {
+        this.onDateClickListener = onDateClickListener;
+    }
+
+    public void setOnDateLongClickListener(OnDateLongClickListener onDateLongClickListener) {
+        this.onDateLongClickListener = onDateLongClickListener;
+    }
+
+    public void setPreDecorationProvider(DecorationProvider preDecorationProvider) {
+        this.preDecorationProvider = preDecorationProvider;
+    }
+
+    public void setPostDecorationProvider(DecorationProvider postDecorationProvider) {
+        this.postDecorationProvider = postDecorationProvider;
+    }
+
+    public interface OnDateClickListener {
+        void onClick(long time);
+    }
+
+    public interface OnDateLongClickListener {
+        void onLongClick(long time);
+    }
+
+    public interface DecorationProvider {
+        List<Decoration> getList(long startDate, long endDate);
     }
 }

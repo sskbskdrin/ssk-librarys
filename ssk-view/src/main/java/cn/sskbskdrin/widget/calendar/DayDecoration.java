@@ -1,7 +1,6 @@
 package cn.sskbskdrin.widget.calendar;
 
 import android.graphics.Canvas;
-import android.graphics.Color;
 
 import java.util.Calendar;
 
@@ -12,49 +11,74 @@ import java.util.Calendar;
  */
 public final class DayDecoration extends Decoration {
 
-    private int enableColor = 0xffe03030;
-    private int disableColor = 0x80e03030;
-    private static long currentMonth;
+    private long currentMonth;
     private boolean enable;
+    private int date;
+    private long time;
 
-    public DayDecoration(long time) {
-        mPaint.setColor(0xffd03030);
+    DayDecoration() {
+        super(0);
+        mPaint.setColor(0xff303030);
         mPaint.setTextSize(sp2px(16));
-        setTime(time);
-    }
-
-    void setEnable(boolean enable) {
-        this.enable = enable;
-        if (enable) {
-            mPaint.setColor(enableColor);
-        } else {
-            mPaint.setColor(disableColor);
-        }
     }
 
     @Override
-    protected void onDraw(Canvas canvas, float width, float height) {
-        if (isEqualDayOfYear(System.currentTimeMillis(), getTime())) {
-            mPaint.setColor(Color.BLUE);
-            canvas.drawCircle(width / 2, height / 2, width / 3, mPaint);
-            mPaint.setColor(Color.RED);
-        }
-        drawText(canvas, getDay() + "", width / 2, height / 2, AlignMode.CENTER, mPaint);
+    public final boolean isValid(int day) {
+        return true;
     }
 
-    static DayDecoration[][] getDayDecoration(long time, int weekStart) {
-        currentMonth = time;
-        DayDecoration[][] days = new DayDecoration[6][7];
-        Calendar c = Calendar.getInstance();
-        c.setTimeInMillis(time);
-        c.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), 1);
-        long firstDay = c.getTimeInMillis() - CalendarView.DAY * (((getWeek(c.getTimeInMillis()) + 7) - weekStart) % 7);
-        for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 7; j++) {
-                days[i][j] = new DayDecoration(firstDay);
-                firstDay += CalendarView.DAY;
-            }
+    protected int getYear() {
+        return date >> 16;
+    }
+
+    protected int getMonth() {
+        return (date >> 12) & 0x0f;
+    }
+
+    protected int getWeek() {
+        return (date >> 8) & 0x0f;
+    }
+
+    protected int getDayOfMonth() {
+        return date & 0xff;
+    }
+
+    void setTime(long time) {
+        this.time = time;
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(time);
+        date = calendar.get(Calendar.YEAR) << 16;
+        date |= calendar.get(Calendar.MONTH) << 12;
+        int week = calendar.get(Calendar.DAY_OF_WEEK) - 2;
+        if (week < 0) {
+            week = 6;
         }
-        return days;
+        date |= week << 8;
+        date |= calendar.get(Calendar.DAY_OF_MONTH);
+        setEnable(CalendarUtils.isDayInMonth(time, currentMonth));
+    }
+
+    private void setEnable(boolean enable) {
+        this.enable = enable;
+        if (getWeek() >= 5) {
+            mPaint.setColor(0xf3704b);
+        } else {
+            mPaint.setColor(0x303030);
+        }
+        mPaint.setAlpha(enable ? 0xff : 0x80);
+    }
+
+    void setCurrentMonth(long monthTime) {
+        this.currentMonth = monthTime;
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas, float width, float height, long time) {
+        if (CalendarUtils.isEqualDayOfYear(System.currentTimeMillis(), this.time)) {
+            mPaint.setColor(0xff7bbfea);
+            canvas.drawCircle(width / 2, height / 2, width / 3, mPaint);
+            setEnable(enable);
+        }
+        drawText(canvas, getDayOfMonth() + "", width / 2, height / 2, AlignMode.CENTER, mPaint);
     }
 }

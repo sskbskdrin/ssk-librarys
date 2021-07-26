@@ -4,22 +4,65 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
-import java.util.Calendar;
-
 /**
  * Created by keayuan on 2021/7/23.
  *
  * @author keayuan
  */
 public abstract class Decoration {
-    final Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    protected final Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     static float scaledDensity = 3;
     static float density = 3;
 
-    private long time;
-    private int showMode;
-    private int date;
+    private int startDate;
+    private int endDate;
+
+    public Decoration(long startTime) {
+        this(startTime, startTime);
+    }
+
+    public Decoration(long startTime, long endTime) {
+        updateDate(startTime, endTime);
+    }
+
+    public Decoration(int year, int month, int day) {
+        this(year, month, day, year, month, day);
+    }
+
+    public Decoration(int year, int month, int day, int toYear, int toMonth, int toDay) {
+        this(CalendarUtils.dateToTime(year, month, day), CalendarUtils.dateToTime(toYear, toMonth, toDay));
+    }
+
+    public void updateDate(long startTime, long endTime) {
+        startDate = CalendarUtils.timeToDay(startTime);
+        endDate = CalendarUtils.timeToDay(endTime);
+        if (startDate > endDate) {
+            int t = startDate;
+            startDate = endDate;
+            endDate = t;
+        }
+    }
+
+    public void updateDate(int year, int month, int day, int toYear, int toMonth, int toDay) {
+        updateDate(CalendarUtils.dateToTime(year, month, day), CalendarUtils.dateToTime(toYear, toMonth, toDay));
+    }
+
+    public int getStartDate() {
+        return startDate;
+    }
+
+    public int getEndDate() {
+        return endDate;
+    }
+
+    public boolean isValid(int day) {
+        return startDate <= day && day <= endDate;
+    }
+
+    public boolean isValid(long time) {
+        return isValid(CalendarUtils.timeToDay(time));
+    }
 
     protected static float sp2px(float sp) {
         return sp * scaledDensity;
@@ -29,79 +72,7 @@ public abstract class Decoration {
         return density * dp;
     }
 
-    void setTime(long time) {
-        this.time = time;
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(time);
-        date = calendar.get(Calendar.YEAR) << 16;
-        date |= calendar.get(Calendar.MONTH) << 12;
-        int week = calendar.get(Calendar.DAY_OF_WEEK) - 2;
-        if (week < 0) {
-            week = 6;
-        }
-        date |= week << 8;
-        date |= calendar.get(Calendar.DAY_OF_MONTH);
-    }
-
-    long getTime() {
-        return time;
-    }
-
-    protected int getYear() {
-        return date >> 16;
-    }
-
-    protected int getMonth() {
-        return (date >> 12) & 0x0f;
-    }
-
-    protected int getWeek() {
-        return (date >> 8) & 0x0f;
-    }
-
-    protected int getDay() {
-        return date & 0xff;
-    }
-
-    protected abstract void onDraw(Canvas canvas, float width, float height);
-
-    void onClick(CalendarView view) {
-
-    }
-
-    public static boolean isEqualDayOfMonth(long first, long second) {
-        Calendar c = Calendar.getInstance();
-        c.setTimeInMillis(first);
-        int day = c.get(Calendar.DAY_OF_MONTH);
-        c.setTimeInMillis(second);
-        return day == c.get(Calendar.DAY_OF_MONTH);
-    }
-
-    public static boolean isEqualDayOfYear(long first, long second) {
-        Calendar c = Calendar.getInstance();
-        c.setTimeInMillis(first);
-        int day = c.get(Calendar.DAY_OF_YEAR);
-        c.setTimeInMillis(second);
-        return day == c.get(Calendar.DAY_OF_YEAR);
-    }
-
-    public static boolean isDayInMonth(long dayTime, long monthTime) {
-        Calendar c = Calendar.getInstance();
-        c.setTimeInMillis(dayTime);
-        int month = c.get(Calendar.MONTH);
-        c.setTimeInMillis(monthTime);
-        return month == c.get(Calendar.MONTH);
-    }
-
-    public static int getWeek(long time) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(time);
-        int week = calendar.get(Calendar.DAY_OF_WEEK) - 2;
-        if (week < 0) {
-            week = 6;
-        }
-        return week;
-    }
+    protected abstract void onDraw(Canvas canvas, float width, float height, long time);
 
     public enum AlignMode {
         LEFT_TOP, LEFT_CENTER, LEFT_BOTTOM, TOP_CENTER, RIGHT_TOP, RIGHT_CENTER, RIGHT_BOTTOM, BOTTOM_CENTER, CENTER
