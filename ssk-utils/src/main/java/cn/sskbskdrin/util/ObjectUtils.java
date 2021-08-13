@@ -25,14 +25,13 @@ public class ObjectUtils {
 
     /**
      * null Object to empty string
-     * <p>
      * <pre>
      * nullStrToEmpty(null) = &quot;&quot;;
      * nullStrToEmpty(&quot;&quot;) = &quot;&quot;;
      * nullStrToEmpty(&quot;aa&quot;) = &quot;aa&quot;;
      * </pre>
      *
-     * @return
+     * @return -
      */
     public static String nullStrToEmpty(Object str) {
         return (str == null ? "" : str.toString());
@@ -45,13 +44,13 @@ public class ObjectUtils {
     /**
      * compare two object
      * <ul>
-     * <strong>About result</strong>
-     * <li>if v1 > v2, return 1</li>
+     * <li><strong>About result</strong></li>
+     * <li>if v1 &gt; v2, return 1</li>
      * <li>if v1 = v2, return 0</li>
-     * <li>if v1 < v2, return -1</li>
+     * <li>if v1 &lt; v2, return -1</li>
      * </ul>
-     * <ul>
      * <strong>About rule</strong>
+     * <ul>
      * <li>if v1 is null, v2 is null, then return 0</li>
      * <li>if v1 is null, v2 is not null, then return -1</li>
      * <li>if v1 is not null, v2 is null, then return 1</li>

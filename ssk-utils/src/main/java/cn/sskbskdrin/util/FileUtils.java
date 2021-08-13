@@ -18,8 +18,8 @@ import java.util.List;
 
 /**
  * File Utils
- * <ul>
  * Read or write file
+ * <ul>
  * <li>{@link #readFile(String, String)} read file</li>
  * <li>{@link #readFileToList(String, String)} read file to string list</li>
  * <li>{@link #writeFile(String, String, boolean)} write file from String</li>
@@ -31,8 +31,8 @@ import java.util.List;
  * <li>{@link #writeFile(File, InputStream)} write file</li>
  * <li>{@link #writeFile(File, InputStream, boolean)} write file</li>
  * </ul>
- * <ul>
  * Operate file
+ * <ul>
  * <li>{@link #moveFile(File, File)} or {@link #moveFile(String, String)}</li>
  * <li>{@link #copyFile(String, String)}</li>
  * <li>{@link #getFileExtension(String)}</li>
@@ -204,10 +204,10 @@ public class FileUtils {
     /**
      * write file, the bytes will be written to the begin of the file
      *
-     * @param filePath
-     * @param stream
-     * @return
-     * @see {@link #writeFile(String, InputStream, boolean)}
+     * @param filePath -
+     * @param stream   -
+     * @return -
+     * @see #writeFile(String, InputStream, boolean)
      */
     public static boolean writeFile(String filePath, InputStream stream) {
         return writeFile(filePath, stream, false);
@@ -229,10 +229,10 @@ public class FileUtils {
     /**
      * write file, the bytes will be written to the begin of the file
      *
-     * @param file
-     * @param stream
-     * @return
-     * @see {@link #writeFile(File, InputStream, boolean)}
+     * @param file   -
+     * @param stream -
+     * @return -
+     * @see #writeFile(File, InputStream, boolean)
      */
     public static boolean writeFile(File file, InputStream stream) {
         return writeFile(file, stream, false);
@@ -368,7 +368,6 @@ public class FileUtils {
      *
      * @param filePath
      * @return file name from path, not include suffix
-     * @see
      */
     public static String getFileNameWithoutExtension(String filePath) {
         if (StringUtils.isEmpty(filePath)) {
@@ -485,15 +484,14 @@ public class FileUtils {
 
     /**
      * Creates the directory named by the trailing filename of this file, including the complete directory path required
-     * to create this directory. <br/>
-     * <br/>
-     * <ul>
+     * to create this directory.
      * <strong>Attentions:</strong>
+     * <ul>
      * <li>makeDirs("C:\\Users\\Trinea") can only create users folder</li>
      * <li>makeFolder("C:\\Users\\Trinea\\") can create Trinea folder</li>
      * </ul>
      *
-     * @param filePath
+     * @param filePath -
      * @return true if the necessary directories have been created or the target directory already exists, false one of
      * the directories can not be created.
      * <ul>
@@ -557,10 +555,10 @@ public class FileUtils {
      * <li>if path is null or empty, return true</li>
      * <li>if path not exist, return true</li>
      * <li>if path exist, delete recursion. return true</li>
-     * <ul>
+     * </ul>
      *
-     * @param path
-     * @return
+     * @param path -
+     * @return -
      */
     public static boolean deleteFile(String path) {
         if (StringUtils.isBlank(path)) {
@@ -595,9 +593,9 @@ public class FileUtils {
      * <ul>
      * <li>if path is null or empty, return -1</li>
      * <li>if path exist and it is a file, return file size, else return -1</li>
-     * <ul>
+     * </ul>
      *
-     * @param path
+     * @param path -
      * @return returns the length of this file in bytes. returns -1 if the file does not exist.
      */
     public static long getFileSize(String path) {

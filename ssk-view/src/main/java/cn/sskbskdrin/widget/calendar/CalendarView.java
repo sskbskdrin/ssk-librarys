@@ -82,6 +82,15 @@ public class CalendarView extends View {
         postInvalidate();
     }
 
+    public void updateDate(Long... time) {
+        preDecorationList = getMonthDecorationList(true);
+        postDecorationList = getMonthDecorationList(false);
+        postInvalidate();
+    }
+
+    private List<Decoration> preDecorationList;
+    private List<Decoration> postDecorationList;
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         itemWidth = 0;
@@ -89,12 +98,15 @@ public class CalendarView extends View {
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(final Canvas canvas) {
         if (itemWidth == 0) {
             int width = getMeasuredWidth() - getPaddingLeft() - getPaddingRight();
             itemWidth = width / 7f;
             int height = getMeasuredHeight() - getPaddingTop() - getPaddingBottom();
             itemHeight = height / 7f;
+            updateDate();
+            postInvalidate();
+            return;
         }
         canvas.save();
         canvas.translate(getPaddingLeft(), getPaddingTop());
@@ -105,8 +117,6 @@ public class CalendarView extends View {
             canvas.translate(0, itemHeight);
         }
 
-        List<Decoration> preDecorationList = getMonthDecorationList(true);
-        List<Decoration> postDecorationList = getMonthDecorationList(false);
         int day = firstDay;
         for (int i = 0; i < (isMonthMode ? 6 : 1); i++) {
             for (int j = 0; j < 7; j++) {

@@ -1,22 +1,13 @@
-apply plugin: 'com.github.dcendents.android-maven'
-apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven'
 
 // load properties
 Properties properties = new Properties()
-File localPropertiesFile = project.rootProject.file("local.properties")
-if (localPropertiesFile.exists()) {
-    properties.load(localPropertiesFile.newDataInputStream())
-}
-
-File projectPropertiesFile = project.file("project.properties")
-if (projectPropertiesFile.exists()) {
-    properties.load(projectPropertiesFile.newDataInputStream())
-}
-
-File modulePropertiesFile = project.file("module.properties")
-if (modulePropertiesFile.exists()) {
-    properties.load(modulePropertiesFile.newDataInputStream())
-}
+File file = project.rootProject.file("local.properties")
+if (file.exists()) properties.load(file.newDataInputStream())
+file = project.file("project.properties")
+if (file.exists()) properties.load(file.newDataInputStream())
+file = project.file("module.properties")
+if (file.exists()) properties.load(file.newDataInputStream())
 
 // read properties
 String proName = properties.getProperty("project.name")
@@ -30,7 +21,6 @@ String proScmDeveloperUrl = properties.getProperty("project.scm.developer")
 String proDescription = properties.getProperty("project.description")
 String proPkgExt = properties.getProperty("project.pkg.ext")
 String proPkg = properties.getProperty("project.pkg")
-String depend = properties.getProperty("dependencies")
 if (proPkgExt == null || proPkgExt.length() == 0) {
     proPkgExt = "aar"
 }
@@ -44,17 +34,16 @@ if (devEmail == null || devEmail.length() == 0) {
     devEmail = "keayuan_1991.com@163.com"
 }
 
-String bintrayUser = properties.getProperty("bintray.user")
-String bintrayApikey = properties.getProperty("bintray.apikey")
-String gpgPass = properties.getProperty("bintray.gpg.password")
-
 group = proGroupId
 
 // This generates POM.xml with proper parameters
-install {
-    repositories.mavenInstaller {
-        pom {
-            project {
+
+uploadArchives {
+    configuration = configurations.archives
+    repositories {
+        mavenDeployer {
+            repository(url: uri('../.repository'))
+            pom.project {
                 String count = properties.getProperty("dependencyCount")
                 if (count != null) {
                     dependencies {
@@ -76,30 +65,14 @@ install {
                 name proName
                 description proDescription
                 url proSiteUrl
-                licenses {
-                    license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    }
-                }
-                developers {
-                    developer {
-                        name devName
-                        email devEmail
-                    }
-                }
-                scm {
-                    connection proScmConnectionUrl
-                    developerConnection proScmDeveloperUrl
-                    url proSiteUrl
-                }
             }
         }
     }
 }
+
 // This generates sources.jar
 task sourcesJar(type: Jar) {
-    println("sourcesJar")
+    println("sourcesJar测试")
     from android.sourceSets.main.java.srcDirs
     classifier = 'sources'
 }
@@ -141,30 +114,5 @@ artifacts {
     archives javadocJar
     if (proPkgExt == 'jar') {
         archives makeJar
-    }
-}
-
-bintray {
-    user = bintrayUser
-    key = bintrayApikey
-    configurations = ['archives']
-    pkg {
-        repo = "maven"
-        name = proName
-        websiteUrl = proSiteUrl
-        vcsUrl = proGitUrl
-        licenses = ["Apache-2.0"]
-        publish = true
-        publicDownloadNumbers = true
-        version {
-            name = proVersion
-            desc = proDescription
-            vcsTag = 'master'
-            gpg {
-                sign = true
-                //Determines whether to GPG sign the files. The default is false
-                passphrase = gpgPass    //Optional. The passphrase for GPG signing'
-            }
-        }
     }
 }

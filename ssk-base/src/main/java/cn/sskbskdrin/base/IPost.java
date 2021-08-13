@@ -3,6 +3,7 @@ package cn.sskbskdrin.base;
 import android.os.Handler;
 import android.os.Looper;
 
+import java.util.WeakHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -14,29 +15,32 @@ import java.util.concurrent.TimeUnit;
  * @author keayuan
  */
 public interface IPost {
-    class InPost {
-        private Handler mH = null;
+    WeakHashMap<IPost, Handler> postMap = new WeakHashMap<>();
+    EXE exe = new EXE();
+
+    class EXE {
         private Executor executor;
-
-        private InPost() {
-        }
     }
-
-    InPost inPost = new InPost();
 
     static void setIOExecutor(Executor executor) {
         if (executor == null) throw new NullPointerException("executor is null");
-        inPost.executor = executor;
+        exe.executor = executor;
+    }
+
+    static Handler getMainHandler(IPost post) {
+        Handler handler = postMap.get(post);
+        if (handler == null) {
+            handler = new Handler(Looper.getMainLooper());
+            postMap.put(post, handler);
+        }
+        return handler;
     }
 
     default boolean post(Runnable runnable) {
-        if (inPost.mH == null) {
-            inPost.mH = new Handler(Looper.getMainLooper());
-        }
         if (isMainThread()) {
             runnable.run();
         } else {
-            inPost.mH.post(runnable);
+            return getMainHandler(this).post(runnable);
         }
         return true;
     }
@@ -46,31 +50,36 @@ public interface IPost {
     }
 
     default boolean postDelayed(Runnable runnable, boolean hasRemove, long delay) {
-        if (inPost.mH == null) {
-            inPost.mH = new Handler(Looper.getMainLooper());
-        }
         if (hasRemove) {
             removeCallbacks(runnable);
         }
-        inPost.mH.postDelayed(runnable, delay);
-        return true;
+        return getMainHandler(this).postDelayed(runnable, delay);
     }
 
     default boolean removeCallbacks(Runnable runnable) {
-        if (inPost.mH != null) {
-            inPost.mH.removeCallbacks(runnable);
+        Handler handler = postMap.get(this);
+        if (handler != null) {
+            handler.removeCallbacks(runnable);
         }
         return true;
     }
 
     default void postIO(Runnable runnable) {
-        if (inPost.executor == null) {
-            inPost.executor = new ThreadPoolExecutor(5, 10, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        if (exe.executor == null) {
+            exe.executor = new ThreadPoolExecutor(4, 4, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
         }
-        inPost.executor.execute(runnable);
+        exe.executor.execute(runnable);
     }
 
     default boolean isMainThread() {
         return Looper.myLooper() == Looper.getMainLooper();
+    }
+
+    abstract class Run<T> implements Runnable {
+        protected T target;
+
+        public Run(T t) {
+            target = t;
+        }
     }
 }

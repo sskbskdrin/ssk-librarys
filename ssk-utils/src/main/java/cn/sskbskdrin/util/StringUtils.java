@@ -19,7 +19,6 @@ public class StringUtils {
 
     /**
      * is null or its length is 0 or it is made by space
-     * <p>
      * <pre>
      * isBlank(null) = true;
      * isBlank(&quot;&quot;) = true;
@@ -39,7 +38,6 @@ public class StringUtils {
 
     /**
      * is null or its length is 0
-     * <p>
      * <pre>
      * isEmpty(null) = true;
      * isEmpty(&quot;&quot;) = true;
@@ -78,7 +76,6 @@ public class StringUtils {
 
     /**
      * get length of CharSequence
-     * <p>
      * <pre>
      * length(null) = 0;
      * length(\"\") = 0;
@@ -93,7 +90,6 @@ public class StringUtils {
 
     /**
      * capitalize first letter
-     * <p>
      * <pre>
      * capitalizeFirstLetter(null)     =   null;
      * capitalizeFirstLetter("")       =   "";
@@ -116,7 +112,6 @@ public class StringUtils {
 
     /**
      * encoded in utf-8
-     * <p>
      * <pre>
      * utf8Encode(null)        =   null
      * utf8Encode("")          =   "";
@@ -151,7 +146,6 @@ public class StringUtils {
 
     /**
      * get innerHtml from href
-     * <p>
      * <pre>
      * getHrefInnerHtml(null)                                  = ""
      * getHrefInnerHtml("")                                    = ""
@@ -167,7 +161,7 @@ public class StringUtils {
      * getHrefInnerHtml("&lt;a&gt;innerHtml1&lt;/a&gt;&lt;a&gt;innerHtml2&lt;/a&gt;")        = "innerHtml2";
      * </pre>
      *
-     * @param href
+     * @param href -
      * @return <ul>
      * <li>if href is null, return ""</li>
      * <li>if not match regx, return source</li>
@@ -190,20 +184,19 @@ public class StringUtils {
 
     /**
      * process special char in html
-     * <p>
      * <pre>
      * htmlEscapeCharsToString(null) = null;
      * htmlEscapeCharsToString("") = "";
      * htmlEscapeCharsToString("mp3") = "mp3";
-     * htmlEscapeCharsToString("mp3&lt;") = "mp3<";
-     * htmlEscapeCharsToString("mp3&gt;") = "mp3\>";
-     * htmlEscapeCharsToString("mp3&amp;mp4") = "mp3&mp4";
-     * htmlEscapeCharsToString("mp3&quot;mp4") = "mp3\"mp4";
-     * htmlEscapeCharsToString("mp3&lt;&gt;&amp;&quot;mp4") = "mp3\<\>&\"mp4";
+     * htmlEscapeCharsToString("mp3&lt;") = "mp3&lt;";
+     * htmlEscapeCharsToString("mp3&gt;") = "mp3&gt;";
+     * htmlEscapeCharsToString("mp3&amp;amp;mp4") = "mp3&amp;mp4";
+     * htmlEscapeCharsToString("mp3&amp;quot;mp4") = "mp3\"mp4";
+     * htmlEscapeCharsToString("mp3&amp;lt;&amp;gt;&amp;amp;&amp;quot;mp4") = "mp3&lt;&gt;&amp;\&quot;mp4";
      * </pre>
      *
-     * @param source
-     * @return
+     * @param source -
+     * @return -
      */
     public static String htmlEscapeCharsToString(String source) {
         return StringUtils.isEmpty(source) ? source : source.replaceAll("&lt;", "<")
@@ -214,16 +207,15 @@ public class StringUtils {
 
     /**
      * transform half width char to full width char
-     * <p>
      * <pre>
      * fullWidthToHalfWidth(null) = null;
      * fullWidthToHalfWidth("") = "";
      * fullWidthToHalfWidth(new String(new char[] {12288})) = " ";
-     * fullWidthToHalfWidth("！＂＃＄％＆) = "!\"#$%&";
+     * fullWidthToHalfWidth("！＂＃＄％＆) = "&#33;\"#$%&amp;";
      * </pre>
      *
-     * @param s
-     * @return
+     * @param s -
+     * @return -
      */
     public static String fullWidthToHalfWidth(String s) {
         if (isEmpty(s)) {
@@ -247,16 +239,14 @@ public class StringUtils {
 
     /**
      * transform full width char to half width char
-     * <p>
      * <pre>
      * halfWidthToFullWidth(null) = null;
      * halfWidthToFullWidth("") = "";
      * halfWidthToFullWidth(" ") = new String(new char[] {12288});
-     * halfWidthToFullWidth("!\"#$%&) = "！＂＃＄％＆";
+     * halfWidthToFullWidth("!\"#$%&amp;) = "！＂＃＄％＆";
      * </pre>
      *
-     * @param s
-     * @return
+     * @param s -
      */
     public static String halfWidthToFullWidth(String s) {
         if (isEmpty(s)) {

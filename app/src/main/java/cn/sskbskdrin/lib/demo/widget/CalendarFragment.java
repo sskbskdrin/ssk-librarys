@@ -36,8 +36,7 @@ public class CalendarFragment extends IFragment {
     @Override
     protected void onInitView(View rootView, Bundle savedInstanceState) {
         CalendarView view = getView(R.id.calendar);
-        view.setStartWeek(6);
-        view.setCurrentDateTime(2021, 6, 26);
+        view.setStartWeek(5);
         view.setOnDateClickListener(time -> {
             Calendar c = Calendar.getInstance();
             c.setTimeInMillis(time);
@@ -49,7 +48,7 @@ public class CalendarFragment extends IFragment {
                 select.updateDate(startTime, time);
                 step = 0;
             }
-            view.postInvalidate();
+            view.updateDate();
             showToast(c.get(Calendar.YEAR) + "-" + (c.get(Calendar.MONTH) + 1) + "-" + c.get(Calendar.DAY_OF_MONTH));
         });
         view.setOnDateLongClickListener(time -> {
@@ -64,7 +63,7 @@ public class CalendarFragment extends IFragment {
                 }
             };
             list.add(click);
-            view.postInvalidate();
+            view.updateDate();
         });
 
         view.setPreDecorationProvider((startDate, endDate) -> list);

@@ -25,4 +25,4 @@ dependencies {
     implementation project(path: ':ssk-flow')
 }
 
-apply from: "../bintray.gradle"
+apply from: "../maven.gradle"

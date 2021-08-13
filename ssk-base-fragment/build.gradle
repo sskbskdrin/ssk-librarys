@@ -20,7 +20,8 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    compileOnly 'androidx.fragment:fragment:1.2.5'
+    compileOnly "androidx.fragment:fragment:$androidx_fragment_v"
     api project(path: ':ssk-base')
 }
-apply from: "../bintray.gradle"
+
+apply from: "../maven.gradle"

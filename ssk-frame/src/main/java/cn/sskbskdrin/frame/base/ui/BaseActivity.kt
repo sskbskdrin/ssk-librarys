@@ -1,6 +1,7 @@
 package cn.sskbskdrin.frame.base.ui
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -67,7 +68,7 @@ open class BaseActivity : FragmentActivity(), IA, LifeOwner {
                         openActivity(obj1 as Intent, obj2 as Int)
                     } else if (obj1 is Class<*>) {
                         openActivity(
-                            obj1 as Class<*>, if (obj2 == null) null else obj2 as Bundle, obj3 as Int
+                            obj1 as Class<Activity>, if (obj2 == null) null else obj2 as Bundle, obj3 as Int
                         )
                     } else if (obj1 is BaseFragment) {
                         if ("add" == obj3) {

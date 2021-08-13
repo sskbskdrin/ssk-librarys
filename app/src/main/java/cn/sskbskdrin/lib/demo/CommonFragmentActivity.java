@@ -3,6 +3,10 @@ package cn.sskbskdrin.lib.demo;
 import android.content.Context;
 import android.os.Bundle;
 
+import com.alibaba.android.arouter.facade.annotation.Autowired;
+import com.alibaba.android.arouter.facade.annotation.Route;
+import com.alibaba.android.arouter.launcher.ARouter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,8 +15,15 @@ import androidx.fragment.app.FragmentTransaction;
 import cn.sskbskdrin.base.IA;
 import cn.sskbskdrin.base.IFragment;
 
+@Route(path = "/main/common")
 public class CommonFragmentActivity extends AppCompatActivity implements IA {
     private List<IFragment> mFragments;
+
+    @Autowired
+     int aa;
+
+    @Autowired
+    String ab;
 
     @Override
     public Context getContext() {
@@ -28,6 +39,7 @@ public class CommonFragmentActivity extends AppCompatActivity implements IA {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fragment);
+        ARouter.getInstance().inject(this);
         mFragments = new ArrayList<>();
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {

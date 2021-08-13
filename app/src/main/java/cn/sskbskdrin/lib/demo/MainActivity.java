@@ -5,6 +5,9 @@ import android.content.Context;
 import android.os.Bundle;
 import android.widget.ListView;
 
+import com.alibaba.android.arouter.facade.annotation.Route;
+import com.alibaba.android.arouter.launcher.ARouter;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +29,7 @@ import cn.sskbskdrin.lib.demo.widget.TabHostFragment;
 import cn.sskbskdrin.lib.demo.widget.swipe.ScrollFragment;
 import cn.sskbskdrin.lib.demo.widget.swipe.WebFragment;
 
+@Route(path = "/main/main")
 public class MainActivity extends AppCompatActivity implements IA {
     private static final String TAG = "MainActivity";
 
@@ -49,6 +53,9 @@ public class MainActivity extends AppCompatActivity implements IA {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ARouter.openDebug();
+        ARouter.openLog();
+        ARouter.init(getApplication());
         setContentView(R.layout.activity_main);
         //        StatusBar.hideStatusBar(this);
         StatusBar.setMarginTop(this, true);
@@ -62,11 +69,13 @@ public class MainActivity extends AppCompatActivity implements IA {
             public void onClickItem(IHolder<ClassItem> holder) {
                 ClassItem item = holder.bean();
                 if (Activity.class.isAssignableFrom(item.clazz)) {
-                    openActivity(item.clazz);
+                    ARouter.getInstance().build("common").navigation();
+                    //                    openActivity(item.clazz);
                 } else {
                     Bundle bundle = new Bundle();
                     bundle.putString("fragment", item.clazz.getName());
-                    openActivity(CommonFragmentActivity.class, bundle);
+                    //                    openActivity(CommonFragmentActivity.class, bundle);
+                    ARouter.getInstance().build("/main/common").with(bundle).navigation();
                 }
             }
         });

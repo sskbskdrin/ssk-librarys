@@ -8,6 +8,9 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
 public interface IView extends IContext, IResource, IPost {
     /**
      * 通过id查找view
@@ -49,6 +52,16 @@ public interface IView extends IContext, IResource, IPost {
             for (View view : views) {
                 if (view != null) {
                     view.setVisibility(visible);
+                }
+            }
+        }
+    }
+
+    default void invisibleView(View... views) {
+        if (views != null) {
+            for (View view : views) {
+                if (view != null) {
+                    view.setVisibility(View.INVISIBLE);
                 }
             }
         }
